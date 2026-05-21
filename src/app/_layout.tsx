@@ -1,16 +1,28 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import React from 'react';
-import { useColorScheme } from 'react-native';
+/* 
+ * Root layout for the app.
+ * Set up the stack navigator that manages the screens.
+ * Screens stack on top of each other and the "back" button pops the top screen off.
+ * Every screen file is registered here.
+*/
 
-import { AnimatedSplashOverlay } from '@/components/animated-icon';
-import AppTabs from '@/components/app-tabs';
+import { Stack } from 'expo-router';
 
-export default function TabLayout() {
-  const colorScheme = useColorScheme();
+// 
+export default function RootLayout() {
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <AnimatedSplashOverlay />
-      <AppTabs />
-    </ThemeProvider>
+    <Stack>
+      {/* Home screen */}
+      <Stack.Screen name="index" options={{ title: 'Home' }} />
+      <Stack.Screen name="explore" options={{ title: 'Explore' }} />
+      {/* Auth screen */}
+      <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
+      <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
+    </Stack>
   );
 }
+
+
+  
+   
+    
+     
