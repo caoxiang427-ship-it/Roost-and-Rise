@@ -37,7 +37,6 @@ export default function HomeScreen() {
       <Pressable style={styles.button} onPress={() => signOut()}>
         <Text style={styles.buttonText}>Log Out</Text>
       </Pressable>
-
     </View>
   );
 }
