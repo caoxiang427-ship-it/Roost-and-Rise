@@ -17,13 +17,19 @@ export default function HomeScreen() {
       const { data: {user} } = await supabase.auth.getUser();
 
       if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('display_name')
-          .eq('id', user.id)
-          .single();
+        const metadataName = user.user_metadata?.display_name;
 
-        if (data) setName(data.display_name ?? '');
+        if (metadataName) {
+          setName(metadataName);
+        } else {
+          const { data } = await supabase
+            .from('profiles')
+            .select('display_name')
+            .eq('id', user.id)
+            .single();
+
+          if (data) setName(data.display_name ?? '');
+        }
       }
     }
     getUserProfile();
