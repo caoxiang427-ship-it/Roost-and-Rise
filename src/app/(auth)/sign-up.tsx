@@ -1,92 +1,137 @@
 /*
 * Sign-up screen.
-* Allow a new user to create account with display name, email and password.
-* On success, redirects to sign-in screen.
+* Allow a new user to create account with name, email and password.
+* After the user is successfully signed up, will redirect to sign-in screen to log in. 
 */
 
 import { useState } from 'react';
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
-import { Link, router } from 'expo-router';
 import { signUp } from '@/lib/auth';
+import { Link, router } from 'expo-router';
+import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
 
 export default function SignUpScreen() {
-  // Tracks what the user types into each field with a loading flag for the button
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [displayName, setDisplayName] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState('');
+  const [isLoading, setLoading] = useState(false);
 
-  // Runs when the user taps "Sign Up"
-  async function handleSignUp() {
-    // Block submission if any of the three fields is empty
-    if (!email || !password || !displayName) {
+  function checkInputs() {
+    if (!email || !password || !name) {
       Alert.alert('Please fill in all fields');
-      return;
+      return false;
     }
+    
+    if (password.length < 6) {
+      Alert.alert('Password must be at least 6 characters');
+      return false;
+    }
+
+    return true;
+  }
+
+
+  async function handleSignUp() {
+    const isValid = checkInputs();
+    
+    if (!isValid) return;
+
     setLoading(true);
-    const { error } = await signUp(email, password, displayName);
+
+    const { error } = await signUp(email, password, name);
+
     setLoading(false);
 
-    // Show the results to the users
     if (error) {
       Alert.alert('Sign up failed', error.message);
     } else {
-      Alert.alert('Account created!', 'You can now sign in.');
+      Alert.alert('Account created! 🎉', 'Sign in and start your journey 🐣.');
+      // replace so the back button won't return to sign up
       router.replace('/(auth)/sign-in');
     }
   }
 
   return (
-    // Main container wrapper that groups all the elements
     <View style={styles.container}>
-      {/* Screen title */}
-      <Text style={styles.title}>Create Account</Text>
+      <Text style={styles.title}>Hatch your account 🥚</Text>
 
-      {/* Display name input */}
       <TextInput
         style={styles.input}
-        placeholder="Display name"
-        value={displayName}
-        onChangeText={setDisplayName}
+        onChangeText={setName}
+        value={name}
+        placeholder="What should we call you?"
         autoCapitalize="words"
       />
-      {/* Email input */}
       <TextInput
         style={styles.input}
-        placeholder="Email"
-        value={email}
         onChangeText={setEmail}
+        value={email}
+        placeholder="Email"
         autoCapitalize="none"
         keyboardType="email-address"
       />
-       {/* Password input (hidden characters) */}
       <TextInput
         style={styles.input}
+        onChangeText={setPassword}
         placeholder="Password (min 6 characters)"
         value={password}
-        onChangeText={setPassword}
         secureTextEntry
       />
       
-      {/* Submit button; shows loading text while waiting on Supabase */}
-      <Pressable style={styles.button} onPress={handleSignUp} disabled={loading}>
-        <Text style={styles.buttonText}>{loading ? 'Creating...' : 'Sign Up'}</Text>
+      <Pressable 
+        style={[styles.button, isLoading && styles.buttonDisabled]} 
+        onPress={handleSignUp} 
+        disabled={isLoading}
+      >
+        <Text style={styles.buttonText}>{isLoading ? 'Hatching...' : 'Sign Up'}</Text>
       </Pressable>
 
-      {/* Navigation link for users who already have an account */}
       <Link href="/(auth)/sign-in" style={styles.link}>
-        Already have an account? Sign in
+        Already have an account? Sign in now
       </Link>
     </View>
   );
 }
 
-// Visual styling for the sign-up screen
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 24, gap: 12 },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 16, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 12, fontSize: 16 },
-  button: { backgroundColor: '#000', padding: 14, borderRadius: 8, marginTop: 8 },
-  buttonText: { color: '#fff', textAlign: 'center', fontWeight: '600', fontSize: 16 },
-  link: { textAlign: 'center', marginTop: 16, color: '#555' },
+  container: { 
+    flex: 1,
+    padding: 24,
+    gap: 12, 
+    justifyContent: 'center',
+    backgroundColor: '#FFF9E6' 
+  },
+  title: { 
+    fontSize: 28, 
+    fontWeight: 'bold',
+    textAlign: 'center', 
+    marginBottom: 16,
+    color: '#5C4A1A' 
+  },
+  input: { 
+    fontSize: 16,
+    borderWidth: 1,
+    borderRadius: 8,
+    padding: 12,
+    borderColor: '#E0D4A8',
+    backgroundColor: '#FFFFFF', 
+    color: '#3D3220'
+  },
+  button: { 
+    padding: 14,
+    marginTop: 8,
+    borderRadius: 8,
+    backgroundColor: '#E8A33D'
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: '600',
+    textAlign: 'center',
+    color: '#FFFFFF'
+  }, 
+  link: { 
+    textAlign: 'center', 
+    marginTop: 16, 
+    color: '#A67C2E' 
+  },
+  buttonDisabled: { opacity: 0.6 },
 });
