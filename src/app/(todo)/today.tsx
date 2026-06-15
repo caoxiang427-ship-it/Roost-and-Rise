@@ -1,8 +1,37 @@
+import { useState } from 'react';
 import { Link } from 'expo-router';
-import { TextInput, Platform, KeyboardAvoidingView, Pressable, StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
+import { TextInput, Platform, KeyboardAvoidingView, Pressable, StyleSheet, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import Task from '@/components/todo/Task';
+import { TaskItem } from '../../types/todo';
 
 export default function TodoScreen() {
+  const [task, setTask] = useState<string>('');
+  const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
+
+  const handleAddTask = (): void => {
+    Keyboard.dismiss();
+    
+    if (!task.trim()) return;
+
+    setTaskItems(prev => [
+      ...prev, 
+      {index: Date.now(), text: task.trim(), completed: false}
+    ])
+    setTask('');
+  }
+
+  const toggleCompletion = (index: number) => {
+    setTaskItems(prev =>
+      prev.map(item => item.index === index ? {...item, completed: !item.completed} : item)
+    )
+  }
+
+  const deleteTask = (index: number) => {
+    setTaskItems(prev =>
+      prev.filter(item => item.index != index)
+    )
+  }
+
   return (
     <View style={styles.container}>
 
@@ -28,9 +57,14 @@ export default function TodoScreen() {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.createTaskWrapper}>
 
-          <TextInput style={styles.input} placeholder={'Write a Task'}></TextInput>
+          <TextInput 
+            style={styles.input} 
+            placeholder={'Write a Task'}
+            value={task} 
+            onChangeText={text => setTask(text)}></TextInput>
 
-           <TouchableOpacity>
+           <TouchableOpacity
+            onPress={() => handleAddTask()}>
             <View style={styles.addTaskBtn}>
               <Text style={styles.addTask}>+</Text>
             </View>
@@ -42,8 +76,16 @@ export default function TodoScreen() {
       <ScrollView 
         style={styles.taskWrapper}
         contentContainerStyle={styles.items}>
-          <Task text={"Task 1"}/>
-          <Task text={"Task 2"}/>
+          {
+            taskItems.map((item) => {
+              return <Task 
+                        key={item.index}
+                        completed={item.completed}
+                        text={item.text}
+                        onDelete={() => deleteTask(item.index)}
+                        onToggle={() => toggleCompletion(item.index)}/>
+            })
+          }
       </ScrollView>
 
     </View>

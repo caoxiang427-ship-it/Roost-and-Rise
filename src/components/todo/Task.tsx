@@ -1,21 +1,32 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { red } from 'react-native-reanimated/lib/typescript/Colors';
 
 type TaskProps = {
     text: string;
+    completed: boolean;
+    onDelete: () => void;
+    onToggle: () => void;
 }
 
 const Task = (props: TaskProps) => {
 
     return (
-        <View style={style.item}>
-            <View style={style.itemLeft}>
-                <View style={style.checkbox}></View>
-                <Text style={style.itemText}>{props.text}</Text>
+        <View style={styles.item}>
+            <View style={styles.itemLeft}>
+                <TouchableOpacity 
+                    style={styles.checkbox}
+                    onPress={props.onToggle}>
+                        {props.completed && <Text style={styles.tick}>✓</Text>}
+                </TouchableOpacity>
+                <Text style={[styles.itemText, props.completed && styles.completedText]}>
+                    {props.text}
+                </Text>
             </View>
-            <View style={style.itemRight}>
-            <TouchableOpacity style={style.editBtn}></TouchableOpacity>
-            <TouchableOpacity style={style.deleteBtn}></TouchableOpacity>
+            <View style={styles.itemRight}>
+            <TouchableOpacity style={styles.editBtn}></TouchableOpacity>
+            <TouchableOpacity 
+                style={styles.deleteBtn}
+                onPress={props.onDelete}>
+            </TouchableOpacity>
             </View>
         </View>
     )
@@ -23,7 +34,7 @@ const Task = (props: TaskProps) => {
 
 // uhh fix task text overflow bug later
 
-const style = StyleSheet.create({
+const styles = StyleSheet.create({
     item: {
         backgroundColor: '#FFF',
         borderRadius: 10,
@@ -46,10 +57,21 @@ const style = StyleSheet.create({
         borderRadius: 5,
         borderWidth: 2,
         borderColor: '#5C4A1A',
-        marginRight: 15
+        marginRight: 15,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    tick: {
+        fontSize: 20,
+        color: '#5C4A1A',
+        fontWeight: 'bold',
     },
     itemText: {
         fontSize: 18,
+    },
+    completedText: {
+        textDecorationLine: 'line-through',
+        opacity: 0.5,
     },
     itemRight: {
         flexDirection: 'row',
