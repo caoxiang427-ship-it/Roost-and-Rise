@@ -41,8 +41,8 @@
     "react-native-worklets": "0.5.1"
   },
   "devDependencies": {
-    "@types/react": "~19.0.10",
-    "typescript": "~5.8.3"
+    "@types/react": "~19.1.10",
+    "typescript": "~5.9.2"
   },
   "private": true
 }

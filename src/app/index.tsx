@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { signOut } from '@/lib/auth'; 
 import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { Link } from 'expo-router';
 
 export default function HomeScreen() {
   const[name, setName] = useState('');
@@ -39,6 +40,12 @@ export default function HomeScreen() {
     <View style={styles.container}>
       <Text style={styles.title}>Roost & Rise</Text>
       <Text style={styles.welcome}>Welcome, {name || 'friend'}!</Text>
+
+      <Link href="/(todo)/today" asChild>
+        <Pressable style={styles.button}>
+          <Text style={styles.buttonText}>To-do List</Text>
+        </Pressable>
+      </Link>
       
       <Pressable style={styles.button} onPress={() => signOut()}>
         <Text style={styles.buttonText}>Log Out</Text>
