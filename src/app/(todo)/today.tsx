@@ -1,26 +1,51 @@
 import { Link } from 'expo-router';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { TextInput, Platform, KeyboardAvoidingView, Pressable, StyleSheet, Text, View, TouchableOpacity, ScrollView } from 'react-native';
 import Task from '@/components/todo/Task';
 
 export default function TodoScreen() {
   return (
     <View style={styles.container}>
 
-      <View style={styles.taskWrapper}>
-        <Text style={styles.title}>Today's tasks</Text>
-        <Text style={styles.subtitle}>Plan your schedule for today here!</Text>
+      <View style={styles.headerWrapper}>
 
-        <View style={styles.items}>
-          <Task text={"Task 1"}/>
-          <Task text={"Task 2"}/>
+        <View>
+          <Text style={styles.title}>Today's tasks</Text>
+          <Text style={styles.subtitle}>Plan your schedule for today here!</Text>
         </View>
-      </View>
 
-      <Link href="/(todo)/later" asChild>
+        <View>
+          <Link href="/(todo)/later" asChild>
         <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>Backlog To-do List</Text>
+          <Text style={styles.buttonText}>Backlog</Text>
         </Pressable>
       </Link>
+        </View>
+
+      </View>
+
+      {/* Create new task */}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.createTaskWrapper}>
+
+          <TextInput style={styles.input} placeholder={'Write a Task'}></TextInput>
+
+           <TouchableOpacity>
+            <View style={styles.addTaskBtn}>
+              <Text style={styles.addTask}>+</Text>
+            </View>
+           </TouchableOpacity>
+
+      </KeyboardAvoidingView>
+
+      {/* tasks */}
+      <ScrollView 
+        style={styles.taskWrapper}
+        contentContainerStyle={styles.items}>
+          <Task text={"Task 1"}/>
+          <Task text={"Task 2"}/>
+      </ScrollView>
+
     </View>
   );
 }
@@ -28,10 +53,15 @@ export default function TodoScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#FFF9E6',
+  },
+  headerWrapper: {
+    paddingTop: 20,
+    paddingHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: "space-between"
   },
   taskWrapper: {
-    paddingTop: 20,
     paddingHorizontal: 20,
   },
   items: {
@@ -40,22 +70,53 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 24,
     fontWeight: 'bold',
+    marginTop: 10
   },
   subtitle: {
     fontSize: 18,
   },
   button: {
-    marginHorizontal: 20,
-    width: 180,
-    height: 50,
-    padding: 14,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
     borderRadius: 8,
-    marginTop: 16,
-    backgroundColor: '#E8A33D'
+    backgroundColor: '#E8A33D',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   buttonText: { 
-    fontSize: 16,
-    fontWeight: '600', 
+    fontSize: 15,
+    fontWeight: 'bold',
     color: '#fff' 
+  },
+  createTaskWrapper: {
+    marginTop: 10,
+    marginHorizontal: 20,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center'
+  },
+  input: {
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: "#434343",
+    width: 300,
+    height: 45,
+    backgroundColor: '#FFF',
+  },
+  addTaskBtn: {
+    width: 50,
+    height: 50,
+    borderRadius: 50,
+    borderColor: '#434343',
+    borderWidth: 1,
+    backgroundColor: "#FFF",
+    justifyContent: 'center',
+    alignItems: 'center'
+  },
+  addTask: {
+    fontSize: 30,
+    color: '#434343',
   },
 });
