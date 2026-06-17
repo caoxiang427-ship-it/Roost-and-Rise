@@ -1,35 +1,113 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'expo-router';
 import { TextInput, Platform, KeyboardAvoidingView, Pressable, StyleSheet, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import Task from '@/components/todo/Task';
 import { TaskItem } from '../../types/todo';
+import { supabase } from '@/lib/supabase';
 
 export default function TodoScreen() {
+  const [userID, setUserID] = useState<string | null>(null)
   const [task, setTask] = useState<string>('');
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
 
-  const handleAddTask = (): void => {
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  useEffect(() => {
+  if (userID) {
+    fetchTasks();
+  }
+}, [userID]);
+
+  const loadUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setUserID(user?.id ?? null);
+    };
+
+  const fetchTasks = async () => {
+
+    if (!userID) return;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error){
+      console.log(error);
+      return;
+    }
+
+    setTaskItems(
+      data.map(task => ({
+        id: task.id,
+        text: task.text,
+        completed: task.completed
+      }))
+    );
+  };
+
+  const handleAddTask = async (): Promise<void> => {
     Keyboard.dismiss();
     
     if (!task.trim()) return;
 
-    setTaskItems(prev => [
-      ...prev, 
-      {index: Date.now(), text: task.trim(), completed: false}
-    ])
+    if (!userID) return;
+
+    const { error } = await supabase
+      .from('tasks')
+      .insert({
+        user_id: userID,
+        text: task.trim(),
+        completed: false,
+      });
+
+    if (error) {
+      console.log(error);
+      return;
+    }
+
     setTask('');
+    fetchTasks();
   }
 
-  const toggleCompletion = (index: number) => {
-    setTaskItems(prev =>
-      prev.map(item => item.index === index ? {...item, completed: !item.completed} : item)
-    )
+  const toggleCompletion = async (
+    id: number,
+    completed: boolean
+  ) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        completed: !completed,
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.log(error);
+      return;
+    };
+
+    fetchTasks();
+
   }
 
-  const deleteTask = (index: number) => {
-    setTaskItems(prev =>
-      prev.filter(item => item.index != index)
-    )
+  const deleteTask = async (id: number) => {
+
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.log(error);
+      return;
+    }
+
+    fetchTasks();
   }
 
   return (
@@ -79,11 +157,11 @@ export default function TodoScreen() {
           {
             taskItems.map((item) => {
               return <Task 
-                        key={item.index}
+                        key={item.id}
                         completed={item.completed}
                         text={item.text}
-                        onDelete={() => deleteTask(item.index)}
-                        onToggle={() => toggleCompletion(item.index)}/>
+                        onDelete={() => deleteTask(item.id)}
+                        onToggle={() => toggleCompletion(item.id, item.completed)}/>
             })
           }
       </ScrollView>

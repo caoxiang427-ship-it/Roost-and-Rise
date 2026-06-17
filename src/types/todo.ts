@@ -1,5 +1,5 @@
 export type TaskItem = {
-    index: number;
+    id: number;
     text: string;
     completed: boolean;
 };
