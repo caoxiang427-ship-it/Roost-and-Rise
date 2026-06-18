@@ -1,32 +1,33 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
 
 type TaskProps = {
     text: string;
     completed: boolean;
-    onDelete: () => void;
-    onToggle: () => void;
+    //onDelete: () => void;
+    //onToggle: () => void;
 }
 
 const Task = (props: TaskProps) => {
 
     return (
-        <View style={styles.item}>
-            <View style={styles.itemLeft}>
-                <TouchableOpacity 
-                    style={styles.checkbox}
-                    onPress={props.onToggle}>
-                        {props.completed && <Text style={styles.tick}>✓</Text>}
-                </TouchableOpacity>
-                <Text style={[styles.itemText, props.completed && styles.completedText]}>
+        <View style={styles.task}>
+            <TouchableOpacity
+                onPress={() => console.log("finish task")}>
+                <Ionicons name="square-outline" size={30} color="#5E4833"/>
+            </TouchableOpacity>
+
+            <View style={styles.textContainer}>
+                <Text style={[styles.taskText, props.completed && styles.completedText]}>
                     {props.text}
                 </Text>
             </View>
-            <View style={styles.itemRight}>
-            <TouchableOpacity style={styles.editBtn}></TouchableOpacity>
-            <TouchableOpacity 
-                style={styles.deleteBtn}
-                onPress={props.onDelete}>
-            </TouchableOpacity>
+
+            <View style={styles.flagContainer}>
+                <TouchableOpacity
+                    onPress={() => console.log("flag as dread doing")}>
+                        <Ionicons name="flag-outline" size={18} color="#937254"/>
+                    </TouchableOpacity>
             </View>
         </View>
     )
@@ -35,60 +36,42 @@ const Task = (props: TaskProps) => {
 // uhh fix task text overflow bug later
 
 const styles = StyleSheet.create({
-    item: {
-        backgroundColor: '#FFF',
+    task: {
+        flexDirection: 'row',
         borderRadius: 10,
-        padding: 15,
-        borderWidth: 1,
-        borderColor: '#5C4A1A',
-        marginBottom: 20,
-        flexDirection: 'row',
-        alignItems: 'center',
+        backgroundColor: "#f7f4e1",
         justifyContent: 'space-between',
-
-    },
-    itemLeft: {
-        flexDirection: 'row',
         alignItems: 'center',
+        paddingHorizontal: 10,
+        borderLeftWidth: 7,
+        borderLeftColor: "#00BC22",
+        marginHorizontal: 20,
+        marginBottom: 20,
+        paddingVertical: 10,
     },
-    checkbox: {
-        width: 24,
-        height: 24,
-        borderRadius: 5,
+    textContainer: {
+        flex: 1,
+        marginHorizontal: 10,
+    },
+    taskText: {
+        fontFamily: "InterSemiBold",
+        color: "#5E4833",
+        fontSize: 15,
+        flexWrap: 'wrap'
+    },
+    completedText: {},
+    flagContainer: {
+        borderColor: "#937254",
         borderWidth: 2,
-        borderColor: '#5C4A1A',
-        marginRight: 15,
-        justifyContent: 'center',
-        alignItems: 'center',
+        borderRadius: 50,
+        height: 30,
+        width: 30,
+        justifyContent: "center",
+        alignItems: "center",
     },
-    tick: {
-        fontSize: 20,
-        color: '#5C4A1A',
-        fontWeight: 'bold',
-    },
-    itemText: {
-        fontSize: 18,
-    },
-    completedText: {
-        textDecorationLine: 'line-through',
-        opacity: 0.5,
-    },
-    itemRight: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        flexShrink: 0,
-    },
-    editBtn: {
-        width: 20,
-        height: 20,
-        backgroundColor: '#c6c6c6',
-        marginRight: 15
-    },
-    deleteBtn: {
-        width: 20,
-        height: 20,
-        backgroundColor: '#a50000'
-    }
+
+
+
 
 
         
