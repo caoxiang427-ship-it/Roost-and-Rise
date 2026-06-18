@@ -83,7 +83,8 @@ export const styles = StyleSheet.create({
     paddingRight: 20,
   },
   todoTasks: {
-    alignItems: "center"
+    alignItems: "center",
+    marginHorizontal: 20,
   },
   addBtn: {
     position: "absolute",

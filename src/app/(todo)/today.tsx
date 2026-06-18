@@ -5,6 +5,7 @@ import Task from '@/components/todo/Task';
 import { TaskItem } from '../../types/todo';
 import { supabase } from '@/lib/supabase';
 import { styles } from '../../styles/todo_styles';
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function TodoScreen() {
   const [userID, setUserID] = useState<string | null>(null)
@@ -112,62 +113,64 @@ export default function TodoScreen() {
   }
 
   return (
-    <View style={styles.container}>
+    <GestureHandlerRootView style={{ flex: 1}}>
+      <View style={styles.container}>
 
-      <View style={styles.headerWrapper}>
+        <View style={styles.headerWrapper}>
 
-        <View>
-          <Text style={styles.title}>Today's tasks</Text>
-          <Text style={styles.subtitle}>Plan your schedule for today here!</Text>
+          <View>
+            <Text style={styles.title}>Today's tasks</Text>
+            <Text style={styles.subtitle}>Plan your schedule for today here!</Text>
+          </View>
+
+          <View>
+            <Link href="/(todo)/later" asChild>
+          <Pressable style={styles.button}>
+            <Text style={styles.buttonText}>test</Text>
+          </Pressable>
+        </Link>
+          </View>
+
         </View>
 
-        <View>
-          <Link href="/(todo)/later" asChild>
-        <Pressable style={styles.button}>
-          <Text style={styles.buttonText}>test</Text>
-        </Pressable>
-      </Link>
-        </View>
+        {/* Create new task */}
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          style={styles.createTaskWrapper}>
+
+            <TextInput 
+              style={styles.input} 
+              placeholder={'Write a Task'}
+              value={task} 
+              onChangeText={text => setTask(text)}></TextInput>
+
+            <TouchableOpacity
+              onPress={() => handleAddTask()}>
+              <View style={styles.addTaskBtn}>
+                <Text style={styles.addTask}>+</Text>
+              </View>
+            </TouchableOpacity>
+
+        </KeyboardAvoidingView>
+
+        {/* tasks */}
+        <ScrollView 
+          style={styles.taskWrapper}
+          contentContainerStyle={styles.items}>
+            {
+              taskItems.map((item) => {
+                return <Task 
+                          key={item.id}
+                          completed={item.completed}
+                          text={item.text}
+                          //onDelete={() => deleteTask(item.id)}
+                          //onToggle={() => toggleCompletion(item.id, item.completed)}
+                          />
+              })
+            }
+        </ScrollView>
 
       </View>
-
-      {/* Create new task */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
-        style={styles.createTaskWrapper}>
-
-          <TextInput 
-            style={styles.input} 
-            placeholder={'Write a Task'}
-            value={task} 
-            onChangeText={text => setTask(text)}></TextInput>
-
-           <TouchableOpacity
-            onPress={() => handleAddTask()}>
-            <View style={styles.addTaskBtn}>
-              <Text style={styles.addTask}>+</Text>
-            </View>
-           </TouchableOpacity>
-
-      </KeyboardAvoidingView>
-
-      {/* tasks */}
-      <ScrollView 
-        style={styles.taskWrapper}
-        contentContainerStyle={styles.items}>
-          {
-            taskItems.map((item) => {
-              return <Task 
-                        key={item.id}
-                        completed={item.completed}
-                        text={item.text}
-                        //onDelete={() => deleteTask(item.id)}
-                        //onToggle={() => toggleCompletion(item.id, item.completed)}
-                        />
-            })
-          }
-      </ScrollView>
-
-    </View>
+    </GestureHandlerRootView>
   );
 }

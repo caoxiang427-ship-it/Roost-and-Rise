@@ -1,5 +1,6 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, Touchable, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
+import { Swipeable } from 'react-native-gesture-handler';
 
 type TaskProps = {
     text: string;
@@ -11,6 +12,19 @@ type TaskProps = {
 const Task = (props: TaskProps) => {
 
     return (
+        <Swipeable
+            containerStyle={styles.container}
+            overshootRight={true}
+            rightThreshold={40}
+            onSwipeableOpen={() => console.log("Delete Task")}
+            renderRightActions={() => (
+                <TouchableOpacity
+                    style={styles.deleteBtn}
+                    onPress={() => console.log("Delete Task")}>
+                    <Ionicons name="trash" size={24} color="#FFF"/>
+                </TouchableOpacity>
+
+            )}>
         <View style={styles.task}>
             <TouchableOpacity
                 onPress={() => console.log("finish task")}>
@@ -30,12 +44,16 @@ const Task = (props: TaskProps) => {
                     </TouchableOpacity>
             </View>
         </View>
+        </Swipeable>
     )
 }
 
 // uhh fix task text overflow bug later
 
 const styles = StyleSheet.create({
+    container: {
+        width: '100%',
+    },
     task: {
         flexDirection: 'row',
         borderRadius: 10,
@@ -43,21 +61,20 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         paddingHorizontal: 10,
+        paddingVertical: 10,
         borderLeftWidth: 7,
         borderLeftColor: "#00BC22",
-        marginHorizontal: 20,
         marginBottom: 20,
-        paddingVertical: 10,
     },
     textContainer: {
         flex: 1,
+        flexShrink: 1,
         marginHorizontal: 10,
     },
     taskText: {
         fontFamily: "InterSemiBold",
         color: "#5E4833",
         fontSize: 15,
-        flexWrap: 'wrap'
     },
     completedText: {},
     flagContainer: {
@@ -69,6 +86,14 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     },
+    deleteBtn: {
+        backgroundColor: "#BC0000",
+        borderRadius: 10,
+        marginBottom: 20,
+        paddingHorizontal: 25,
+        justifyContent: "center",
+        alignItems: "center",
+    }
 
 
 

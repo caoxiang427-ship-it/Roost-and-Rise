@@ -35,11 +35,13 @@ const styles = StyleSheet.create({
         fontFamily: "InterBold",
         fontSize: 15,
         color: "#937254",
+        paddingHorizontal: 3,
     },
     date: {
         fontFamily: "InterBold",
         fontSize:36,
-        color: "#937254"
+        color: "#937254",
+        paddingHorizontal: 1,
     },
     selectedCard: {
         backgroundColor: "#937254",
