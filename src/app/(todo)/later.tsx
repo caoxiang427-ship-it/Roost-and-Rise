@@ -12,6 +12,8 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Progress from 'react-native-progress';
 import AddTask from '@/components/todo/AddTask';
+import EditTask from '@/components/todo/EditTask';
+import CalendarSheet from '@/components/todo/CalendarSheet';
 
 
 // uhh layout looks weird on android for some reason, fix ltr
@@ -23,9 +25,17 @@ export default function TodoScreen() {
     InterBold: require("../../../assets/fonts/Inter_18pt-Bold.ttf")
   });
 
-  const bottomSheetRef = useRef<BottomSheet>(null);
+  const addTaskRef = useRef<BottomSheet>(null);
+  const editTaskRef = useRef<BottomSheet>(null);
+  const calendarRef = useRef<BottomSheet>(null);
   
-  const openSheet = () => bottomSheetRef.current?.expand();
+  const openAddTaskSheet = () => addTaskRef.current?.expand();
+  const openEditTaskSheet = () => editTaskRef.current?.expand();
+  const openCalendarSheet = () => calendarRef.current?.expand();
+
+  const closeAddTaskSheet = () => addTaskRef.current?.close();
+  const closeEditTaskSheet = () => editTaskRef.current?.close();
+  const closeCalendarSheet = () => calendarRef.current?.close();
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -57,7 +67,7 @@ export default function TodoScreen() {
               <View style={styles.topDisplayRight}>
                 <View style = {styles.topButtons}>
                   <TouchableOpacity
-                    onPress={() => console.log("calendar")}>
+                    onPress={openCalendarSheet}>
                       <Ionicons name="calendar-outline" size={25} color="#FFF"/>
                   </TouchableOpacity>
 
@@ -115,7 +125,7 @@ export default function TodoScreen() {
             </View>
 
             <View style={styles.todoTasks}>
-              <Task text={"Finsish implementing app UI"} completed={true} difficulty='easy' dread={true}></Task>
+              <Task onPress={openEditTaskSheet} text={"Finsish implementing app UI"} completed={true} difficulty='easy' dread={true}></Task>
               <Task text={"Code functionality for todo list"} completed={false} difficulty='moderate'
                 taskDesc={"Add, Create, Read, Update, Delete functionality"}
                 subtasks={[
@@ -137,11 +147,13 @@ export default function TodoScreen() {
 
         <TouchableOpacity 
               style={styles.addBtn}
-              onPress={openSheet}>
+              onPress={openAddTaskSheet}>
               <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <AddTask ref={bottomSheetRef}></AddTask>
+        <AddTask ref={addTaskRef} close={closeAddTaskSheet}></AddTask>
+        <EditTask ref={editTaskRef} close={closeEditTaskSheet}></EditTask>
+        <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
         
 
       </View>

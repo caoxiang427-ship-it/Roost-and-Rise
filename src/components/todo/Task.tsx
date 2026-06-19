@@ -11,6 +11,7 @@ type TaskProps = {
     difficulty: "easy" | "moderate" | "hard";
     taskDesc?: string;
     subtasks?: SubtaskItem[];
+    onPress?: () => void;
     //onDelete: () => void;
     //onToggle: () => void;
 }
@@ -47,31 +48,30 @@ const Task = (props: TaskProps) => {
                     onPress={() => console.log("Delete Task")}>
                     <Ionicons name="trash" size={24} color="#FFF"/>
                 </TouchableOpacity>
-
             )}>
-        <View style={[styles.task, difficultyStyles[props.difficulty]]}>
-            <TouchableOpacity
-                onPress={() => console.log("finish task")}>
-                <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
-            </TouchableOpacity>
+            <TouchableOpacity onPress={props.onPress} style={[styles.task, difficultyStyles[props.difficulty]]}>
+                <TouchableOpacity
+                    onPress={() => console.log("finish task")}>
+                    <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
+                </TouchableOpacity>
 
-            <View style={styles.textContainer}>
-                <Text style={[styles.taskText, props.completed && styles.completedText]}>
-                    {props.text}
-                </Text>
+                <View style={styles.textContainer}>
+                    <Text style={[styles.taskText, props.completed && styles.completedText]}>
+                        {props.text}
+                    </Text>
 
-                {taskDescSection}
+                    {taskDescSection}
 
-                {subtaskSection}
-            </View>
-
-            <TouchableOpacity
-              onPress={() => console.log("flag as dread doing")}>
-                <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
-                    <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
+                    {subtaskSection}
                 </View>
+
+                <TouchableOpacity
+                onPress={() => console.log("flag as dread doing")}>
+                    <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
+                        <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
+                    </View>
+                </TouchableOpacity>
             </TouchableOpacity>
-        </View>
         </Swipeable>
     )
 }

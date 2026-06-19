@@ -11,7 +11,7 @@ type AddTaskProps = {
 
 type Ref = BottomSheet;
 
-const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
+const EditTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     
     const renderBackdrop = useCallback(
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
@@ -96,6 +96,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
 
 const styles = StyleSheet.create({
     container: {
+        position: 'absolute',
         backgroundColor: '#f7f4e1',
     },
     innerContainer: {
@@ -173,4 +174,4 @@ const styles = StyleSheet.create({
 
 });
 
-export default AddTask;
+export default EditTask;
