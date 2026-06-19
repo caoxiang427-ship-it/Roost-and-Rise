@@ -65,12 +65,12 @@ const Task = (props: TaskProps) => {
                 {subtaskSection}
             </View>
 
-            <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
-                <TouchableOpacity
-                    onPress={() => console.log("flag as dread doing")}>
-                        <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
-                    </TouchableOpacity>
-            </View>
+            <TouchableOpacity
+              onPress={() => console.log("flag as dread doing")}>
+                <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
+                    <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
+                </View>
+            </TouchableOpacity>
         </View>
         </Swipeable>
     )

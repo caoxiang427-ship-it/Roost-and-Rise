@@ -11,6 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Progress from 'react-native-progress';
+import AddTask from '@/components/todo/AddTask';
 
 
 // uhh layout looks weird on android for some reason, fix ltr
@@ -20,12 +21,10 @@ export default function TodoScreen() {
     InterRegular: require("../../../assets/fonts/Inter_18pt-Regular.ttf"),
     InterSemiBold: require("../../../assets/fonts/Inter_18pt-SemiBold.ttf"),
     InterBold: require("../../../assets/fonts/Inter_18pt-Bold.ttf")
-  });  
+  });
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-
-  const snapPoints = useMemo(() => ['25%', '50%', '75%'], []);
-
+  
   const openSheet = () => bottomSheetRef.current?.expand();
 
   return (
@@ -142,12 +141,7 @@ export default function TodoScreen() {
               <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints} index={-1} enablePanDownToClose={true}>
-          <BottomSheetView>
-            <Text>This is a bottom sheet</Text>
-          </BottomSheetView>
-        </BottomSheet>
-
+        <AddTask ref={bottomSheetRef}></AddTask>
         
 
       </View>
