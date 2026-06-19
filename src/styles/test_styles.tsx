@@ -3,9 +3,10 @@ import { StyleSheet } from 'react-native';
 export const styles = StyleSheet.create({
     container: {
       backgroundColor: '#0492b5',
+      flex: 1,
   },
   image: {
-    width: 410,
+    width: '100%',
     height: 340,
   },
   topDisplay: {
@@ -58,6 +59,29 @@ export const styles = StyleSheet.create({
     fontFamily: "InterSemiBold",
     fontSize: 10,
     color: "#FFF"
+  },
+  progressBarWrapper: {
+    flex: 1,
+    paddingHorizontal: 10,
+    paddingBottom: 8,
+    justifyContent: 'flex-end',
+  },
+  progressBar: {
+    height: 60,
+    width: '100%',
+  },
+  progressBarInner: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingTop: 36,
+    paddingLeft: 20,
+    paddingRight: 20,
+  },
+  progressPercentTxt: {
+    fontFamily: "InterBold",
+    fontSize: 13,
+    color: "#9D7957",
+    paddingHorizontal: 5
   },
   calendarContainer: {
     width: 400,

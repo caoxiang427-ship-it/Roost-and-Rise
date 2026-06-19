@@ -1,6 +1,6 @@
 import { StyleSheet, Text, Touchable, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
-import { Swipeable } from 'react-native-gesture-handler';
+import { Swipeable } from "react-native-gesture-handler";
 
 type TaskProps = {
     text: string;
@@ -15,8 +15,7 @@ const Task = (props: TaskProps) => {
         <Swipeable
             containerStyle={styles.container}
             overshootRight={true}
-            rightThreshold={40}
-            onSwipeableOpen={() => console.log("Delete Task")}
+            // look into editing this so big swipe -> delete btn fills up space and triggers the delete function
             renderRightActions={() => (
                 <TouchableOpacity
                     style={styles.deleteBtn}
@@ -94,11 +93,6 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     }
-
-
-
-
-
         
 });
 
