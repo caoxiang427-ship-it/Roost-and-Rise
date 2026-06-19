@@ -3,3 +3,9 @@ export type TaskItem = {
     text: string;
     completed: boolean;
 };
+
+export type SubtaskItem = {
+    id: number;
+    text: string;
+    completed: boolean
+}

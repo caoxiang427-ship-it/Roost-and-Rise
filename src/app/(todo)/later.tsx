@@ -116,13 +116,20 @@ export default function TodoScreen() {
             </View>
 
             <View style={styles.todoTasks}>
-              <Task text={"Finsish implementing app UI"} completed={false}></Task>
-              <Task text={"The quick brown fox jumped over the hedge "} completed={false}></Task>
-              <Task text={"Implement todo list with CRUD features"} completed={false}></Task>
-              <Task text={"Finsish implementing app UI"} completed={false}></Task>
-              <Task text={"Finsish implementing app UI"} completed={false}></Task>
-              <Task text={"Finsish implementing app UI"} completed={false}></Task>
-              <Task text={"Finsish implementing app UI"} completed={false}></Task>
+              <Task text={"Finsish implementing app UI"} completed={true} difficulty='easy' dread={true}></Task>
+              <Task text={"Code functionality for todo list"} completed={false} difficulty='moderate'
+                taskDesc={"Add, Create, Read, Update, Delete functionality"}
+                subtasks={[
+                  { id: 1, text: "Set up Supabase", completed: true },
+                  { id: 2, text: "Create fetchTasks()", completed: false },
+                  { id: 3, text: "Display tasks in FlatList", completed: false }
+                ]
+                } dread={false}></Task>
+              <Task text={"Implement todo list with CRUD features"} completed={false} difficulty='hard' dread={false}></Task>
+              <Task text={"Finsish implementing app UI"} completed={true} difficulty='easy' dread={true}></Task>
+              <Task text={"Finsish implementing app UI"} completed={false} difficulty='hard' dread={false}></Task>
+              <Task text={"Finsish implementing app UI"} completed={false} difficulty='easy' dread={false}></Task>
+              <Task text={"Finsish implementing app UI"} completed={false} difficulty='moderate' dread={true}></Task>
             </View>
 
           </View>
@@ -135,7 +142,7 @@ export default function TodoScreen() {
               <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints} index={-1}>
+        <BottomSheet ref={bottomSheetRef} snapPoints={snapPoints} index={-1} enablePanDownToClose={true}>
           <BottomSheetView>
             <Text>This is a bottom sheet</Text>
           </BottomSheetView>

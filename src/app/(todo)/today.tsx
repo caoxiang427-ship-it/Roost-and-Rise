@@ -158,16 +158,17 @@ export default function TodoScreen() {
         <ScrollView 
           style={styles.taskWrapper}
           contentContainerStyle={styles.items}>
-            {
-              taskItems.map((item) => {
-                return <Task 
-                          key={item.id}
-                          completed={item.completed}
-                          text={item.text}
+            { 
+              //taskItems.map((item) => {
+                //return <Task 
+                  //        key={item.id}
+                    //      completed={item.completed}
+                      //    text={item.text}
                           //onDelete={() => deleteTask(item.id)}
                           //onToggle={() => toggleCompletion(item.id, item.completed)}
-                          />
-              })
+                        //  />
+                          
+              //})
             }
         </ScrollView>
 
