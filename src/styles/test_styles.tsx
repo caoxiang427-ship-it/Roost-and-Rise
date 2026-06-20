@@ -11,12 +11,12 @@ export const styles = StyleSheet.create({
   },
   topDisplay: {
     flexDirection: 'row',
-    justifyContent: "space-between"
+    justifyContent: "space-between",
+    paddingHorizontal: 20
   },
 
   topDisplayLeft: {
     marginTop: 110,
-    marginLeft: 15,
   },
   header: {
     fontFamily: "InterBold",
@@ -36,7 +36,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: "center",
     marginTop: 107,
-    marginRight: 30,
   },
   topButtons: {
     flexDirection: 'row',
@@ -69,13 +68,14 @@ export const styles = StyleSheet.create({
   progressBar: {
     height: 60,
     width: '100%',
+    justifyContent: "center",
   },
   progressBarInner: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    paddingTop: 36,
-    paddingLeft: 20,
-    paddingRight: 20,
+    paddingTop: '8%',
+    paddingLeft: '2%',
+    paddingRight: '5%',
   },
   progressPercentTxt: {
     fontFamily: "InterBold",

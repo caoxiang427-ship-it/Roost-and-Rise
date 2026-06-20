@@ -22,7 +22,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     return (
         <BottomSheet 
             ref={ref} 
-            snapPoints={['30%']} 
+            snapPoints={['35%']} 
             index={-1} 
             enablePanDownToClose={true}
             backgroundStyle={styles.container}
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 40,
-        paddingBottom: 20,
+        paddingBottom: 40,
         marginTop: 'auto',
     },
     difficultyBtn: {

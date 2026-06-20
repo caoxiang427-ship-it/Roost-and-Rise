@@ -38,6 +38,7 @@ export default function TodoScreen() {
   const closeCalendarSheet = () => calendarRef.current?.close();
 
   return (
+    //layout weird on phone, the header part fix it 
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
 
@@ -89,10 +90,10 @@ export default function TodoScreen() {
             <ImageBackground 
                 source={require("../../../assets/images/progress_bar.png")}
                 style={styles.progressBar}
-                imageStyle={{resizeMode: 'contain', justifyContent: 'flex-end'}}>
+                imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
                   <View style={styles.progressBarInner}>
                     <Progress.Bar 
-                      progress={0.8} width={300} height={10} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
+                      progress={0.8} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
                     </Progress.Bar>
                     <Text style={styles.progressPercentTxt}>80%</Text>
                 </View>
