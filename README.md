@@ -6,6 +6,7 @@ A gamified study companion mobile app built with React Native + Expo and Supabas
 - React Native + Expo (SDK 54) — frontend
 - Supabase — authentication and PostgreSQL database
 - TypeScript
+- Jest - testing
 
 ## Get started
 
@@ -49,6 +50,15 @@ A gamified study companion mobile app built with React Native + Expo and Supabas
 - `src/app/(auth)/` — sign-in and sign-up screens
 - `src/lib/` — Supabase client and auth helpers
 - `supabase/migrations/` — database schema
+
+## Testing
+Roost & Rise includes a Jest unit test suite covering the timer display formatting, wellness score calculation, Pomodoro session cycle logic, and late-night detection. The tests are written in TypeScript and run using the jest-expo preset.
+
+To run the tests:
+
+```bash
+   npm test
+```
 
 ## Team
 - Cao Xiang
