@@ -1,6 +1,7 @@
 import 'react-native-gesture-handler';
 import { ImageBackground, KeyboardAvoidingView, Pressable, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import { useRef, useMemo } from 'react';
+import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { styles } from '../../styles/test_styles';
 import Task from '@/components/todo/Task';
@@ -36,6 +37,16 @@ export default function TodoScreen() {
   const closeAddTaskSheet = () => addTaskRef.current?.close();
   const closeEditTaskSheet = () => editTaskRef.current?.close();
   const closeCalendarSheet = () => calendarRef.current?.close();
+
+  // to hide header when calendar bottom sheet opens
+  const navigation = useNavigation();
+  const hideNavigationHeader = (index: number) => {
+    const isOpen = index >= 0;
+
+    navigation.setOptions({
+      headerShown: !isOpen,
+    });
+  };
 
   return (
     //layout weird on phone, the header part fix it 
@@ -154,7 +165,7 @@ export default function TodoScreen() {
 
         <AddTask ref={addTaskRef} close={closeAddTaskSheet}></AddTask>
         <EditTask ref={editTaskRef} close={closeEditTaskSheet}></EditTask>
-        <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
+        <CalendarSheet ref={calendarRef} close={closeCalendarSheet} onChange={hideNavigationHeader}></CalendarSheet>
         
 
       </View>
