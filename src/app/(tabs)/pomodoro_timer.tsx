@@ -3,7 +3,7 @@
 */
 
 import { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { sessionRecorder, getTodayStudyMinutes, getTodaysFocusSessionCount } from '@/lib/sessions';
 
 export default function TimerScreen() {
@@ -14,6 +14,9 @@ export default function TimerScreen() {
   const [mode, setMode] = useState<'focus' | 'break'>('focus');
   const [todayFocusCount, setTodayFocusCount] = useState(0);
   const [todayStudyMinutes, setTodayStudyMinutes] = useState(0);
+
+  const SESSIONS_BEFORE_LONG_BREAK = 4;
+  const LONG_BREAK_MINUTES = 15;
 
   // countDown
   useEffect(() => {
@@ -31,11 +34,16 @@ export default function TimerScreen() {
     if (remainingSeconds > 0) return;
 
     async function handleZero() {
-      if (mode === 'focus' && remainingSeconds === 0) {
+      if (mode == 'focus') {
         await sessionRecorder(focusDuration, 'focus');
         await loadSummary();
+
+        const newCount = todayFocusCount + 1;
+        const isLongBreak = newCount % SESSIONS_BEFORE_LONG_BREAK == 0;
+        const nextBreakMinutes = isLongBreak ? LONG_BREAK_MINUTES : breakDuration;
+
         setMode('break');
-        setRemainingSeconds(breakDuration * 60);
+        setRemainingSeconds(nextBreakMinutes * 60);
       } else {
         await sessionRecorder(breakDuration, 'break');
         await loadSummary();
@@ -45,11 +53,22 @@ export default function TimerScreen() {
     }
     handleZero();
   }, [remainingSeconds]);
-  
+
   useEffect(() => {
     loadSummary();
   }, []);
-  
+
+  // Late-night alert
+  useEffect(() => {
+    if (isLateNight()) {
+      Alert.alert(
+        "It's getting late 🌙",
+        "Consider getting some rest and coming back tomorrow.",
+        [{ text: 'I understand' }]
+      );
+    }
+  }, []);
+
   async function loadSummary() {
     const count = await getTodaysFocusSessionCount();
     const minutes = await getTodayStudyMinutes();
@@ -124,6 +143,11 @@ export default function TimerScreen() {
     if (mode === 'break') {
       setRemainingSeconds(newDuration * 60);
     }
+  }
+
+  function isLateNight(): boolean {
+    const hour = new Date().getHours();
+    return hour >= 23 || hour < 5;
   }
 
   // Replace 'sunny' with chicken name later.
