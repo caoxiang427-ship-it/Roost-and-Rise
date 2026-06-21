@@ -3,7 +3,7 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { forwardRef, useCallback, useMemo } from 'react';
 import { Ionicons } from "@expo/vector-icons";
-import SubtaskInput from './SubtaskInput';
+import SubtaskInput from './SubtaskInput (delete ltr)';
 
 type AddTaskProps = {
     close: () => void;
@@ -132,6 +132,7 @@ const styles = StyleSheet.create({
         marginHorizontal: 5,
         textAlignVertical: 'top',
         fontFamily: "InterBold",
+        color: "#5E4833"
     },
     flagContainer: {
         borderColor: "#937254",
@@ -148,7 +149,8 @@ const styles = StyleSheet.create({
         borderRadius: 10,
         padding: 10,
         marginVertical: 5,
-        marginHorizontal: 40
+        marginHorizontal: 40,
+        color: "#937254"
     },
     footer: {
         flexDirection: 'row',

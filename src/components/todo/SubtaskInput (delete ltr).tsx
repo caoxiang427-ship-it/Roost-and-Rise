@@ -32,7 +32,8 @@ const styles = StyleSheet.create({
     },
     subtaskInput: {
         marginLeft: 5,
-        flex: 1    
+        flex: 1,
+        color: '#937254'
     },
 });
 

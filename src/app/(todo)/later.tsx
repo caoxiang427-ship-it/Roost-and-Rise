@@ -1,12 +1,12 @@
 import 'react-native-gesture-handler';
 import { ImageBackground, KeyboardAvoidingView, Pressable, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
-import { useRef, useMemo } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { styles } from '../../styles/test_styles';
 import Task from '@/components/todo/Task';
 import DateCard from '@/components/todo/CalendarDate';
-import { TaskItem } from '../../types/todo';
+import { TaskItem, NewSubtaskItem, SubtaskItem } from '../../types/todo';
 import {  useFonts } from 'expo-font';
 import { Ionicons } from "@expo/vector-icons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -15,6 +15,7 @@ import * as Progress from 'react-native-progress';
 import AddTask from '@/components/todo/AddTask';
 import EditTask from '@/components/todo/EditTask';
 import CalendarSheet from '@/components/todo/CalendarSheet';
+import { supabase } from '@/lib/supabase';
 
 
 // uhh layout looks weird on android for some reason, fix ltr
@@ -26,10 +27,227 @@ export default function TodoScreen() {
     InterBold: require("../../../assets/fonts/Inter_18pt-Bold.ttf")
   });
 
+  const [userID, setUserID] = useState<string | null>(null);
+  const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
+
+  useEffect(() => {
+    loadUser();
+  }, []);
+
+  useEffect(() => {
+  if (userID) {
+    fetchTasks();
+  }
+}, [userID]);
+
+  const loadUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      setUserID(user?.id ?? null);
+    };
+
+    // function to fetch tasks from database
+  const fetchTasks = async () => {
+
+    if (!userID) return;
+
+    const { data, error } = await supabase
+      .from('tasks')
+      .select(`
+        *,
+        subtasks (
+          id,
+          text,
+          completed
+        )
+      `)
+      .eq("user_id", userID)
+      .order('created_at', { ascending: false })
+      .order('id', { referencedTable: 'subtasks', ascending: true });
+
+    if (error){
+      console.log(error);
+      return;
+    }
+
+    const formattedTasks: TaskItem[] = data.map(task => ({
+    id: task.id,
+    text: task.text,
+    completed: task.completed,
+    dread: task.dread,
+    difficulty: task.difficulty,
+    taskDesc: task.task_desc,
+    subtasks: task.subtasks ?? []
+  }));
+
+  setTaskItems(formattedTasks);
+  };
+
+  // function to add new task
+  const handleAddTask = async (
+      text: string,
+      dread: boolean,
+      complete: boolean,
+      taskDesc = '',
+      subtasks: NewSubtaskItem[] = []
+     ): Promise<void> => {
+      Keyboard.dismiss();
+      
+      if (!text.trim()) return;
+  
+      if (!userID) return;
+  
+      const { data, error } = await supabase
+        .from('tasks')
+        .insert({
+          user_id: userID,
+          text: text.trim(),
+          completed: complete,
+          dread: dread,
+          difficulty: 'easy',
+          task_desc: taskDesc ?? ''
+        })
+        .select()
+        .single();
+  
+      if (error) {
+        console.log(error);
+        return;
+      }
+  
+      if (subtasks.length > 0) {
+        const { error: subtaskError } = await supabase
+          .from('subtasks')
+          .insert(
+            subtasks.map(subtask => ({
+              task_id: data.id,
+              text: subtask.text,
+              completed: subtask.completed,
+            }))
+          );
+  
+        if (subtaskError) {
+          console.log(subtaskError);
+        }
+      }
+      setTaskItems(prev => [...prev, data])
+      fetchTasks();
+    }
+
+    // function to delete task
+    const deleteTask = async (id: number) => {
+
+      const { error } = await supabase
+        .from('tasks')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.log(error);
+        return;
+      }
+
+      fetchTasks();
+  }
+
+  // function to delete subtask
+  const deleteSubtask = async (subtaskId: number) => {
+    const { error } = await supabase
+        .from('subtasks')
+        .delete()
+        .eq('id', subtaskId);
+
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    fetchTasks();
+};
+  
+  // function to toggle task completion
+  const toggleCompletion = async (
+    id: number,
+    completed: boolean,
+    subtasks: SubtaskItem[],
+  ) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        completed: !completed,
+      })
+      .eq('id', id);
+
+    if (subtasks.length > 0) {
+        const { error: subtaskError } = await supabase
+            .from('subtasks')
+            .update({ completed: !completed })
+            .eq('task_id', id);
+
+        if (subtaskError) console.log(subtaskError);
+    }
+
+    if (error) {
+      console.log(error);
+      return;
+    };
+
+    fetchTasks();
+
+  };
+
+  // function to toggle dread
+  const toggleDread = async (
+    id: number,
+    dread: boolean
+  ) => {
+    const { error } = await supabase
+      .from('tasks')
+      .update({
+        dread: !dread,
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.log(error);
+      return;
+    };
+
+    fetchTasks();
+
+  };
+  
+  // function to toggle subtask completion
+  const toggleSubtaskCompletion = async (
+    id: number,
+    completed: boolean
+  ) => {
+    const { error } = await supabase
+      .from('subtasks')
+      .update({
+        completed: !completed,
+      })
+      .eq('id', id);
+
+    if (error) {
+      console.log(error);
+      return;
+    };
+
+    fetchTasks();
+
+  };
+
+
+
+  // bottom sheet references
   const addTaskRef = useRef<BottomSheet>(null);
   const editTaskRef = useRef<BottomSheet>(null);
   const calendarRef = useRef<BottomSheet>(null);
   
+    // open/ close functions for bottom sheet
   const openAddTaskSheet = () => addTaskRef.current?.expand();
   const openEditTaskSheet = () => editTaskRef.current?.expand();
   const openCalendarSheet = () => calendarRef.current?.expand();
@@ -137,20 +355,25 @@ export default function TodoScreen() {
             </View>
 
             <View style={styles.todoTasks}>
-              <Task onPress={openEditTaskSheet} text={"Finsish implementing app UI"} completed={true} difficulty='easy' dread={true}></Task>
-              <Task text={"Code functionality for todo list"} completed={false} difficulty='moderate'
-                taskDesc={"Add, Create, Read, Update, Delete functionality"}
-                subtasks={[
-                  { id: 1, text: "Set up Supabase", completed: true },
-                  { id: 2, text: "Create fetchTasks()", completed: false },
-                  { id: 3, text: "Display tasks in FlatList", completed: false }
-                ]
-                } dread={false}></Task>
-              <Task text={"Implement todo list with CRUD features"} completed={false} difficulty='hard' dread={false}></Task>
-              <Task text={"Finsish implementing app UI"} completed={true} difficulty='easy' dread={true}></Task>
-              <Task text={"Finsish implementing app UI"} completed={false} difficulty='hard' dread={false}></Task>
-              <Task text={"Finsish implementing app UI"} completed={false} difficulty='easy' dread={false}></Task>
-              <Task text={"Finsish implementing app UI"} completed={false} difficulty='moderate' dread={true}></Task>
+              { 
+              taskItems.map((item) => {
+                return <Task 
+                          key={item.id}
+                          text={item.text}
+                          completed={item.completed}
+                          dread={item.dread}
+                          difficulty={item.difficulty}
+                          taskDesc={item.taskDesc}
+                          subtasks={item.subtasks}
+                          onPress={openEditTaskSheet}
+                          onDelete={() => deleteTask(item.id)}
+                          onToggleCompletion={() => toggleCompletion(item.id, item.completed, item.subtasks)}
+                          onToggleDread={() => toggleDread(item.id, item.dread)}
+                          onToggleSubtaskCompletion={(subtaskId, completed) => toggleSubtaskCompletion(subtaskId, completed)}
+                          />
+                          
+              })
+            }
             </View>
 
           </View>
@@ -163,7 +386,7 @@ export default function TodoScreen() {
               <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <AddTask ref={addTaskRef} close={closeAddTaskSheet}></AddTask>
+        <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask}></AddTask>
         <EditTask ref={editTaskRef} close={closeEditTaskSheet}></EditTask>
         <CalendarSheet ref={calendarRef} close={closeCalendarSheet} onChange={hideNavigationHeader}></CalendarSheet>
         

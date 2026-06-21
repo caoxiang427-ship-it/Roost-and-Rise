@@ -12,8 +12,10 @@ type TaskProps = {
     taskDesc?: string;
     subtasks?: SubtaskItem[];
     onPress?: () => void;
-    //onDelete: () => void;
-    //onToggle: () => void;
+    onDelete: () => void;
+    onToggleCompletion: () => void;
+    onToggleDread: () => void;
+    onToggleSubtaskCompletion: (subtaskId: number, completed: boolean) => void;
 }
 
 const Task = (props: TaskProps) => {
@@ -24,8 +26,8 @@ const Task = (props: TaskProps) => {
 
     const subtaskSection = props.subtasks ? (
         <View style={styles.subtaskWrapper}>
-            {props.subtasks.map((subtask) => (
-                <Subtask key={subtask.id} text={subtask.text} completed={subtask.completed}/>
+            {props.subtasks.map((subtask, index) => (
+                <Subtask key={subtask.id} text={subtask.text} completed={subtask.completed} onToggle={() => props.onToggleSubtaskCompletion(subtask.id, subtask.completed)}/>
             ))}
         </View>
     ) : null;
@@ -45,13 +47,13 @@ const Task = (props: TaskProps) => {
             renderRightActions={() => (
                 <TouchableOpacity
                     style={styles.deleteBtn}
-                    onPress={() => console.log("Delete Task")}>
+                    onPress={props.onDelete}>
                     <Ionicons name="trash" size={24} color="#FFF"/>
                 </TouchableOpacity>
             )}>
             <TouchableOpacity onPress={props.onPress} style={[styles.task, difficultyStyles[props.difficulty]]}>
                 <TouchableOpacity
-                    onPress={() => console.log("finish task")}>
+                    onPress={props.onToggleCompletion}>
                     <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
                 </TouchableOpacity>
 
@@ -66,7 +68,7 @@ const Task = (props: TaskProps) => {
                 </View>
 
                 <TouchableOpacity
-                onPress={() => console.log("flag as dread doing")}>
+                onPress={props.onToggleDread}>
                     <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
                         <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
                     </View>
@@ -102,6 +104,7 @@ const styles = StyleSheet.create({
         fontFamily: "InterSemiBold",
         color: "#5E4833",
         fontSize: 15,
+        paddingBottom: 3,
     },
     completedText: {
         color: 'rgb(94, 72, 51, 0.7)',
@@ -132,7 +135,7 @@ const styles = StyleSheet.create({
         fontFamily: "InterRegular",
         fontSize: 12,
         color: "#9D7957",
-        paddingVertical: 3,
+        paddingBottom: 3,
         paddingLeft: 10,
     },
     subtaskWrapper: {

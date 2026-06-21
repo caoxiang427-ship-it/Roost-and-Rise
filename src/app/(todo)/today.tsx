@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'expo-router';
 import { TextInput, Platform, KeyboardAvoidingView, Pressable, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import Task from '@/components/todo/Task';
-import { TaskItem } from '../../types/todo';
+import { TaskItem, SubtaskItem } from '../../types/todo';
 import { supabase } from '@/lib/supabase';
 import { styles } from '../../styles/todo_styles';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
@@ -37,7 +37,15 @@ export default function TodoScreen() {
 
     const { data, error } = await supabase
       .from('tasks')
-      .select('*')
+      .select(`
+        *,
+        subtasks (
+          id,
+          text,
+          completed
+        )
+      `)
+      .eq("user_id", userID)
       .order('created_at', { ascending: false });
 
     if (error){
@@ -45,33 +53,63 @@ export default function TodoScreen() {
       return;
     }
 
-    setTaskItems(
-      data.map(task => ({
-        id: task.id,
-        text: task.text,
-        completed: task.completed
-      }))
-    );
+    const formattedTasks: TaskItem[] = data.map(task => ({
+    id: task.id,
+    text: task.text,
+    completed: task.completed,
+    dread: task.dread,
+    difficulty: task.difficulty,
+    taskDesc: task.task_desc,
+    subtasks: task.subtasks ?? []
+  }));
+
+  setTaskItems(formattedTasks);
   };
 
-  const handleAddTask = async (): Promise<void> => {
+  const handleAddTask = async (
+    text: string,
+    dread: boolean,
+    taskDesc = '',
+    subtasks: SubtaskItem[] = []
+   ): Promise<void> => {
     Keyboard.dismiss();
     
-    if (!task.trim()) return;
+    if (!text.trim()) return;
 
     if (!userID) return;
 
-    const { error } = await supabase
+    const { data, error } = await supabase
       .from('tasks')
       .insert({
         user_id: userID,
-        text: task.trim(),
+        text: text.trim(),
         completed: false,
-      });
+        dread: dread,
+        difficulty: 'easy',
+        task_desc: taskDesc ?? ''
+      })
+      .select()
+      .single();
 
     if (error) {
       console.log(error);
       return;
+    }
+
+    if (subtasks.length > 0) {
+      const { error: subtaskError } = await supabase
+        .from('subtasks')
+        .insert(
+          subtasks.map(subtask => ({
+            task_id: data.id,
+            text: subtask.text,
+            completed: subtask.completed,
+          }))
+        );
+
+      if (subtaskError) {
+        console.log(subtaskError);
+      }
     }
 
     setTask('');
@@ -146,7 +184,7 @@ export default function TodoScreen() {
               onChangeText={text => setTask(text)}></TextInput>
 
             <TouchableOpacity
-              onPress={() => handleAddTask()}>
+              onPress={() => console.log('add task')}>
               <View style={styles.addTaskBtn}>
                 <Text style={styles.addTask}>+</Text>
               </View>
