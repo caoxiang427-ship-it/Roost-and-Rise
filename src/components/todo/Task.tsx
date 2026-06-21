@@ -8,7 +8,7 @@ type TaskProps = {
     text: string;
     completed: boolean;
     dread: boolean;
-    difficulty: "easy" | "moderate" | "hard";
+    difficulty: "easy" | "moderate" | "difficult" | "";
     taskDesc?: string;
     subtasks?: SubtaskItem[];
     onPress?: () => void;
@@ -35,7 +35,7 @@ const Task = (props: TaskProps) => {
     const difficultyStyles = {
         easy: styles.easy,
         moderate: styles.moderate,
-        hard: styles.hard,
+        difficult: styles.difficult,
     }
 
     return (
@@ -51,7 +51,7 @@ const Task = (props: TaskProps) => {
                     <Ionicons name="trash" size={24} color="#FFF"/>
                 </TouchableOpacity>
             )}>
-            <TouchableOpacity onPress={props.onPress} style={[styles.task, difficultyStyles[props.difficulty]]}>
+            <TouchableOpacity onPress={props.onPress} style={[styles.task, props.difficulty && difficultyStyles[props.difficulty]]}>
                 <TouchableOpacity
                     onPress={props.onToggleCompletion}>
                     <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
@@ -147,7 +147,7 @@ const styles = StyleSheet.create({
     moderate: {
         borderLeftColor: "#EE8F00"
     },
-    hard: {
+    difficult: {
         borderLeftColor: "#BC0000"
     },
         

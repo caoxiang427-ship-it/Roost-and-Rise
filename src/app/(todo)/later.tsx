@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { ImageBackground, KeyboardAvoidingView, Pressable, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
+import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
@@ -91,8 +91,9 @@ export default function TodoScreen() {
       text: string,
       dread: boolean,
       complete: boolean,
+      difficulty: 'easy' | 'moderate' | 'difficult' | '',
       taskDesc = '',
-      subtasks: NewSubtaskItem[] = []
+      subtasks: NewSubtaskItem[] = [],
      ): Promise<void> => {
       Keyboard.dismiss();
       
@@ -107,7 +108,7 @@ export default function TodoScreen() {
           text: text.trim(),
           completed: complete,
           dread: dread,
-          difficulty: 'easy',
+          difficulty: difficulty,
           task_desc: taskDesc ?? ''
         })
         .select()
@@ -174,6 +175,7 @@ export default function TodoScreen() {
     text: string,
     dread: boolean,
     complete: boolean,
+    difficulty: 'easy' | 'moderate' |'difficult' | '',
     taskDesc = '',
     subtasks: SubtaskItem[] = []
 ): Promise<void> => {
@@ -187,6 +189,7 @@ export default function TodoScreen() {
             text: text.trim(),
             completed: complete,
             dread: dread,
+            difficulty: difficulty,
             task_desc: taskDesc ?? ''
         })
         .eq('id', id);

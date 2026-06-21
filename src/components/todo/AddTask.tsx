@@ -1,14 +1,20 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { useState, forwardRef, useCallback, useMemo } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { NewSubtaskItem, SubtaskItem } from '@/types/todo';
 import Subtask from './Subtask';
+import Animated, { SlideInLeft, SlideOutLeft, Easing } from 'react-native-reanimated';
 
 type AddTaskProps = {
     close: () => void;
-    onAddTask: (text: string, dread: boolean, complete: boolean, taskDesc?: string, subtasks?: NewSubtaskItem[]) => Promise<void>;
+    onAddTask: (text: string,
+        dread: boolean,
+        complete: boolean,
+        difficulty: 'easy' | 'moderate' | 'difficult' | '',
+        taskDesc?: string,
+        subtasks?: NewSubtaskItem[]) => Promise<void>;
     openCalendar: () => void;
 };
 
@@ -28,7 +34,21 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     const [isComplete, setIsComplete] = useState<boolean>(false);
     const [newSubtasks, setNewSubtasks] = useState<NewSubtaskItem[]>([]);
     const [subtaskInput, setSubtaskInput] = useState<string>('');
-    
+    const [difficulty, setDifficulty] = useState<'easy'|'moderate'|'difficult'|''>('');
+    // for expandable difficulty button
+    const [expanded, setExpanded] = useState<boolean>(false);
+
+    const difficultyStyles = {
+        easy: { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E' },
+        moderate: { backgroundColor: '#EE8F00', borderLeftColor: '#BB7102' },
+        difficult: { backgroundColor: '#BC0000', borderLeftColor: '#810303' },
+    };
+
+    const difficultyLabels = {
+        easy: 'Easy 😌',
+        moderate: 'Moderate 🙂',
+        difficult: 'Difficult 😥',
+    };
 
     const handleAddSubtask = () => {
         if (!subtaskInput.trim()) return;
@@ -47,7 +67,16 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     }
 
     const handleSubmit = async () => {
-        await props.onAddTask(task, dread, isComplete, taskDesc, newSubtasks);
+        if (difficulty === '') {
+            Alert.alert(
+                "Difficulty Required",          
+                "Please select a difficulty level before adding the task.", 
+                [{ text: "OK" }]                
+            );
+            return;
+        };
+
+        await props.onAddTask(task, dread, isComplete, difficulty, taskDesc, newSubtasks);
         // Reset local state after submit
         setTask('');
         setTaskDesc('');
@@ -55,8 +84,11 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
         setDread(false);
         setNewSubtasks([]);
         setSubtaskInput('');
+        setExpanded(false);
+        setDifficulty('');
         props.close();
     };
+    
 
     return (
         <BottomSheet 
@@ -142,11 +174,44 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                 </View>
 
                 <View style={styles.footer}>
-                    <TouchableOpacity
-                        style={styles.difficultyBtn}
-                        onPress={() => console.log("choose difficulty")}>
-                            <Text style={styles.difficultyTxt}>Difficulty *</Text>
+
+                    <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
+                            <Text style={[styles.difficultyTxt, difficulty && {color: '#FFF'}]}>{difficulty ? difficultyLabels[difficulty] : 'Difficulty *'}</Text>
                     </TouchableOpacity>
+
+                    {expanded && (
+                        <>
+                            <Animated.View
+                            entering={SlideInLeft.duration(500).easing(Easing.inOut(Easing.quad))}
+                            exiting={ SlideOutLeft.duration(500).easing(Easing.inOut(Easing.quad))}>
+                                <TouchableOpacity
+                                    style={[styles.difficultyBtn, { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E'}]}
+                                    onPress={() => {setDifficulty('easy'); setExpanded(false);}}>
+                                        <Text style={[styles.difficultyTxt, styles.optionTxt]}>Easy 😌</Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+
+                            <Animated.View
+                            entering={SlideInLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}
+                            exiting={ SlideOutLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}>
+                                <TouchableOpacity
+                                    style={[styles.difficultyBtn, { backgroundColor: '#EE8F00', borderLeftColor: '#BB7102'}]}
+                                    onPress={() => {setDifficulty('moderate'); setExpanded(false);}}>
+                                        <Text style={[styles.difficultyTxt, styles.optionTxt]}>Moderate 🙂</Text>
+                                </TouchableOpacity>
+                                </Animated.View>
+                            
+                            <Animated.View
+                            entering={SlideInLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}
+                            exiting={ SlideOutLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}>
+                                <TouchableOpacity
+                                    style={[styles.difficultyBtn, {backgroundColor: '#BC0000', borderLeftColor: '#810303'}]}
+                                    onPress={() => {setDifficulty('difficult'); setExpanded(false);}}>
+                                        <Text style={[styles.difficultyTxt, styles.optionTxt]}>Difficult 😥</Text>
+                                </TouchableOpacity>
+                            </Animated.View>
+                        </>
+                    )}
 
                     <TouchableOpacity
                       onPress={props.openCalendar}>
@@ -228,17 +293,23 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginHorizontal: 40,
+        marginHorizontal: 22,
         paddingBottom: 40,
         marginTop: 'auto',
     },
+
     difficultyBtn: {
         backgroundColor: "#D9D9D9",
-        paddingHorizontal: 10,
+        paddingHorizontal: 5,
         paddingVertical: 5,
         borderRadius: 10,
         borderLeftWidth: 4,
-        borderLeftColor: "#787878"
+        borderLeftColor: "#787878",
+        marginRight: 2,
+    },
+    optionTxt: {
+        color: "#FFF",
+        lineHeight: 17,
     },
     difficultyTxt: {
         fontFamily: "InterSemiBold",

@@ -3,7 +3,7 @@ export type TaskItem = {
     text: string;
     completed: boolean;
     dread: boolean;
-    difficulty: "easy" | "moderate" | "hard"
+    difficulty: "easy" | "moderate" | "difficult"
     taskDesc: string;
     subtasks: SubtaskItem[];
 };
