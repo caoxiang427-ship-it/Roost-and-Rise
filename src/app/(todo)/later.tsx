@@ -306,6 +306,29 @@ export default function TodoScreen() {
 
   };
 
+  // calculate progress percentage
+  const calculateProgress = () => {
+    if (taskItems.length === 0) return 0;
+
+    const percentPerTask = 1 / taskItems.length;
+
+    return taskItems.reduce((total, task) => {
+      let taskProgress = 0;
+
+      // If no subtasks, use task completion
+      if (!task.subtasks || task.subtasks.length === 0) {
+        taskProgress = task.completed ? 1 : 0;
+      } else {
+        const completedSubtasks = task.subtasks.filter(
+          subtask => subtask.completed
+        ).length;
+
+        taskProgress = completedSubtasks / task.subtasks.length;
+      }
+
+      return total + taskProgress * percentPerTask;
+    }, 0);
+  };
 
   // bottom sheet references
   const addTaskRef = useRef<BottomSheet>(null);
@@ -387,9 +410,9 @@ export default function TodoScreen() {
                 imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
                   <View style={styles.progressBarInner}>
                     <Progress.Bar 
-                      progress={0.8} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
+                      progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
                     </Progress.Bar>
-                    <Text style={styles.progressPercentTxt}>80%</Text>
+                    <Text style={styles.progressPercentTxt}>{Math.round(calculateProgress()*100)}%</Text>
                 </View>
               </ImageBackground>
             </View>
