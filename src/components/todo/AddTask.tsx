@@ -9,6 +9,7 @@ import Subtask from './Subtask';
 type AddTaskProps = {
     close: () => void;
     onAddTask: (text: string, dread: boolean, complete: boolean, taskDesc?: string, subtasks?: NewSubtaskItem[]) => Promise<void>;
+    openCalendar: () => void;
 };
 
 type Ref = BottomSheet;
@@ -27,7 +28,6 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     const [isComplete, setIsComplete] = useState<boolean>(false);
     const [newSubtasks, setNewSubtasks] = useState<NewSubtaskItem[]>([]);
     const [subtaskInput, setSubtaskInput] = useState<string>('');
-
     
 
     const handleAddSubtask = () => {
@@ -101,7 +101,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                       onPress={() => setDread(prev => !prev)}>
                         <View style={[styles.flagContainer, dread && styles.flagDread]}>
                             <Ionicons name={dread ? "flag" : "flag-outline"} size={18} color={dread ? "#FFF" : "#937254"}/>
-                    </View>
+                        </View>
                     </TouchableOpacity>
                 </View>
 
@@ -113,7 +113,6 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                   onChangeText={text => setTaskDesc(text)}
                   value={taskDesc}>
                 </BottomSheetTextInput>
-                    {/* fix height thing, as more subtasks, height of bottom sheet grows with it until it reachses max, then scroll */}
 
                 <View style={styles.subtaskContainer}>
                 {newSubtasks.map((subtask, index) => (
@@ -150,7 +149,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      onPress={() => console.log("reschedule task")}>
+                      onPress={props.openCalendar}>
                         <Ionicons name="calendar-clear-outline" size={25} color="#937254"/>
                     </TouchableOpacity>
 

@@ -1,17 +1,23 @@
 import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import { forwardRef, useCallback, useMemo } from 'react';
+import { useState, forwardRef, useCallback, useEffect } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import SubtaskInput from './SubtaskInput (delete ltr)';
+import { SubtaskItem, TaskItem } from '@/types/todo';
+import Subtask from './Subtask';
 
-type AddTaskProps = {
+type EditTaskProps = {
     close: () => void;
+    task: TaskItem | null;
+    onEditTask: (id: number, text: string, dread: boolean, complete: boolean, taskDesc?: string, subtasks?: SubtaskItem[]) => Promise<void>;
+    openCalendar: () => void;
+    onDeleteSubtask: (subtaskId: number) => void;
 }
 
 type Ref = BottomSheet;
 
-const EditTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
+const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
     
     const renderBackdrop = useCallback(
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
@@ -19,16 +25,65 @@ const EditTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
 
     );
 
+    const [task, setTask] = useState<string>(props.task?.text ?? '');
+    const [taskDesc, setTaskDesc] = useState<string>(props.task?.taskDesc ?? '');
+    const [dread, setDread] = useState<boolean>(props.task?.dread ?? false);
+    const [isComplete, setIsComplete] = useState<boolean>(props.task?.completed ?? false);
+    const [subtasks, setSubtasks] = useState<SubtaskItem[]>(props.task?.subtasks ?? [])
+    const [subtaskInput, setSubtaskInput] = useState<string>('');
+
+    useEffect(() => {
+        if (props.task) {
+            setTask(props.task.text);
+            setTaskDesc(props.task.taskDesc ?? '');
+            setDread(props.task.dread);
+            setIsComplete(props.task.completed);
+            setSubtasks(props.task.subtasks ?? []);
+        }
+    }, [props.task]);
+
+    const handleSubmit = async () => {
+        if (!props.task) return;
+        await props.onEditTask(props.task.id, task, dread, isComplete, taskDesc, subtasks);
+        props.close();
+    };
+
+    const handleAddSubtask = () => {
+        if (!subtaskInput.trim()) return;
+        // id: Date.now() for newly added subtasks is a temp local id, handleEditTask will filter out existing and new subtasks and replace the Date.now() id with supabase assigned ones
+        setSubtasks(prev => [...prev, { id: Date.now(), text: subtaskInput.trim(), completed: false }]);
+        setSubtaskInput('');
+    };
+
+    const removeSubtask = (index: number) => {
+        const subtask = subtasks[index];
+    
+        // only delete from database if it's an existing subtask (not a temp Date.now() id)
+        if (subtask.id < 1e12) {
+            props.onDeleteSubtask(subtask.id);
+        }
+
+        // remove from local state
+        setSubtasks(prev => prev.filter((_, i) => i !== index));
+    };
+
+    const toggleNewSubtaskCompletion = (index: number) => {
+        setSubtasks(prev => prev.map((subtask, i) => 
+            i === index ? { ...subtask, completed: !subtask.completed } : subtask
+        ));
+    }
+
     return (
         <BottomSheet 
             ref={ref} 
-            snapPoints={['35%']} 
             index={-1} 
+            enableDynamicSizing={true}
+            maxDynamicContentSize={700} 
             enablePanDownToClose={true}
             backgroundStyle={styles.container}
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
-            <BottomSheetView style={styles.innerContainer}>
+            <BottomSheetScrollView style={styles.innerContainer}>
                 <View style={styles.header}>
                     <TouchableOpacity
                         onPress={props.close}>
@@ -36,41 +91,70 @@ const EditTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                        style={styles.addTaskBtn}
-                        onPress={() => console.log("close bottom sheet")}>
-                            <Text style={styles.addTaskTxt}>Add Task</Text>
+                        style={styles.updateTaskBtn}
+                        onPress={handleSubmit}>
+                            <Text style={styles.addTaskTxt}>Update Task </Text>
                     </TouchableOpacity>
                 </View>
 
                 <View style={styles.addTaskTitle}>
                     <TouchableOpacity
-                      onPress={() => console.log("finish task")}>
-                        <Ionicons name="square-outline" size={30} color="#5E4833"/>
+                      onPress={() => setIsComplete(!isComplete)}>
+                        <Ionicons name={isComplete ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
                     </TouchableOpacity>
 
                     <BottomSheetTextInput 
                       multiline 
-                      style={styles.taskInput} 
+                      style={[styles.taskInput, isComplete && styles.completedText]}
+                      value={task} 
                       placeholder='Write your task here! *'
-                      placeholderTextColor={'#AF947B'} >
+                      placeholderTextColor={'#AF947B'}
+                      onChangeText={text => setTask(text)} >
                     </BottomSheetTextInput>
 
                     <TouchableOpacity
-                      onPress={() => console.log("flag as dread doing")}>
-                        <View style={styles.flagContainer}>
-                            <Ionicons name="flag-outline" size={18} color="#937254"/>
-                    </View>
+                      onPress={() => setDread(!dread)}>
+                        <View style={[styles.flagContainer, dread && styles.flagDread]}>
+                            <Ionicons name={dread ? "flag" : "flag-outline"} size={18} color={dread ? "#FFF" : "#937254"}/>
+                        </View>
                     </TouchableOpacity>
                 </View>
 
                 <BottomSheetTextInput
                   multiline
                   style={styles.taskDescInput}
+                  value={taskDesc}
                   placeholder='Task description...'
-                  placeholderTextColor={'#AF947B'}>
+                  placeholderTextColor={'#AF947B'}
+                  onChangeText={text => setTaskDesc(text)}>
                 </BottomSheetTextInput>
-                    {/* fix height thing, as more subtasks, height of bottom sheet grows with it until it reachses max, then scroll */}
-                <SubtaskInput></SubtaskInput>
+
+                <View style={styles.subtaskContainer}>
+                {subtasks.map((subtask, index) => (
+                    <Subtask
+                        key={index}
+                        text={subtask.text}
+                        completed={subtask.completed}
+                        onToggle={() => toggleNewSubtaskCompletion(index)}
+                        onDelete={() => removeSubtask(index)}></Subtask>
+                ))}
+                </View>
+
+                <View style={styles.subtaskInputContainer}>
+                    <TouchableOpacity
+                        onPress={handleAddSubtask}>
+                        <Ionicons name="add-circle-outline" size={30} color="#937254"/>
+                    </TouchableOpacity>
+
+                    <BottomSheetTextInput
+                        multiline
+                        style={styles.subtaskInput}
+                        placeholder='Add subtask here'
+                        placeholderTextColor={'#AF947B'}
+                        onChangeText={text => setSubtaskInput(text)}
+                        value={subtaskInput}>
+                    </BottomSheetTextInput>
+                </View>
 
                 <View style={styles.footer}>
                     <TouchableOpacity
@@ -80,14 +164,14 @@ const EditTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      onPress={() => console.log("reschedule task")}>
+                      onPress={props.openCalendar}>
                         <Ionicons name="calendar-clear-outline" size={25} color="#937254"/>
                     </TouchableOpacity>
 
                 </View>
 
                 
-            </BottomSheetView>
+            </BottomSheetScrollView>
         </BottomSheet>
         
         
@@ -109,7 +193,7 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
     },
-    addTaskBtn: {
+    updateTaskBtn: {
         backgroundColor: "#937254",
         borderRadius: 10,
         justifyContent: "center",
@@ -143,6 +227,10 @@ const styles = StyleSheet.create({
         justifyContent: "center",
         alignItems: "center",
     },
+    flagDread: {
+        backgroundColor: '#BC0000',
+        borderColor: '#BC0000',
+    },
     taskDescInput: {
         borderWidth: 2,
         borderColor: '#937254',
@@ -172,6 +260,27 @@ const styles = StyleSheet.create({
         fontFamily: "InterSemiBold",
         fontSize: 13,
         color: '#787878',
+    },
+    subtaskContainer: {
+        paddingHorizontal: 75,
+        paddingTop: 5,
+    },
+    subtaskInputContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingBottom: 5,
+        marginHorizontal: 40,
+        marginVertical: 5,
+    },
+    subtaskInput: {
+        marginLeft: 5,
+        flex: 1,
+        color: '#937254'
+    },
+    completedText: {
+        color: 'rgb(94, 72, 51, 0.7)',
+        textDecorationLine: 'line-through',
     },
 
 });

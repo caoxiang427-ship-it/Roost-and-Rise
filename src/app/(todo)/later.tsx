@@ -28,6 +28,7 @@ export default function TodoScreen() {
   });
 
   const [userID, setUserID] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
 
   useEffect(() => {
@@ -167,6 +168,68 @@ export default function TodoScreen() {
     fetchTasks();
 };
   
+// function to edit task
+ const handleEditTask = async (
+    id: number,
+    text: string,
+    dread: boolean,
+    complete: boolean,
+    taskDesc = '',
+    subtasks: SubtaskItem[] = []
+): Promise<void> => {
+    Keyboard.dismiss();
+
+    if (!text.trim()) return;
+
+    const { error } = await supabase
+        .from('tasks')
+        .update({
+            text: text.trim(),
+            completed: complete,
+            dread: dread,
+            task_desc: taskDesc ?? ''
+        })
+        .eq('id', id);
+
+    if (error) {
+        console.log(error);
+        return;
+    }
+
+    // seperate existing subtasks from new created subtasks
+    const existingSubtasks = subtasks.filter(s => s.id < 1e12); // existing supabase ids are small
+    const newSubtasks = subtasks.filter(s => s.id >= 1e12); // temp Date.now() ids are large
+
+    // update existing
+    if (existingSubtasks.length > 0) {
+      for (const subtask of existingSubtasks) {
+          const { error: updateError } = await supabase
+              .from('subtasks')
+              .update({
+                  text: subtask.text,
+                  completed: subtask.completed,
+              })
+              .eq('id', subtask.id);
+
+          if (updateError) console.log(updateError);
+      }
+    }
+    // insert new
+    if (newSubtasks.length > 0) {
+        const { error: insertError } = await supabase
+            .from('subtasks')
+            .insert(
+                newSubtasks.map(subtask => ({
+                    task_id: id,
+                    text: subtask.text,
+                    completed: subtask.completed,
+                }))
+            );
+        if (insertError) console.log(insertError);
+    }
+        fetchTasks();
+};
+  
   // function to toggle task completion
   const toggleCompletion = async (
     id: number,
@@ -239,7 +302,6 @@ export default function TodoScreen() {
     fetchTasks();
 
   };
-
 
 
   // bottom sheet references
@@ -365,7 +427,7 @@ export default function TodoScreen() {
                           difficulty={item.difficulty}
                           taskDesc={item.taskDesc}
                           subtasks={item.subtasks}
-                          onPress={openEditTaskSheet}
+                          onPress={() => {setSelectedTask(item); openEditTaskSheet();}}
                           onDelete={() => deleteTask(item.id)}
                           onToggleCompletion={() => toggleCompletion(item.id, item.completed, item.subtasks)}
                           onToggleDread={() => toggleDread(item.id, item.dread)}
@@ -386,8 +448,8 @@ export default function TodoScreen() {
               <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask}></AddTask>
-        <EditTask ref={editTaskRef} close={closeEditTaskSheet}></EditTask>
+        <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask} openCalendar={openCalendarSheet}></AddTask>
+        <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} onDeleteSubtask={deleteSubtask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
         <CalendarSheet ref={calendarRef} close={closeCalendarSheet} onChange={hideNavigationHeader}></CalendarSheet>
         
 
