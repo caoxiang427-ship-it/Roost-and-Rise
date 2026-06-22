@@ -6,7 +6,7 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-    container: {
+  container: {
       backgroundColor: '#FFF',
       flex: 1,
   },
@@ -33,7 +33,7 @@ export const styles = StyleSheet.create({
     fontFamily: "InterBold",
     fontSize: 15,
     color: "#FFF",
-    opacity: 0.6,
+    opacity: 0.7,
     paddingRight: 20,
   },
   topDisplayRight: {
@@ -55,7 +55,7 @@ export const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.4)",
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: "#FFF",
+    borderColor: "#ffffff",
     alignItems: "center",
     justifyContent: "center",
   },
@@ -96,9 +96,6 @@ export const styles = StyleSheet.create({
   content: {
     alignItems: "center",
   },
-  bottomDisplay: {
-    backgroundColor: "#FFF",
-  },
   todoHeader: {
     marginHorizontal: 20,
     marginVertical: 10,
@@ -112,7 +109,6 @@ export const styles = StyleSheet.create({
     paddingRight: 20,
   },
   todoTasks: {
-    alignItems: "center",
     marginHorizontal: 20,
   },
   addBtn: {

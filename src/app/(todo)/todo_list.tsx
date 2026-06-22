@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator } from 'react-native';
+import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, FlatList } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
@@ -15,6 +15,7 @@ import AddTask from '@/components/todo/AddTask';
 import EditTask from '@/components/todo/EditTask';
 import CalendarSheet from '@/components/todo/CalendarSheet';
 import { supabase } from '@/lib/supabase';
+import { CalendarProvider, WeekCalendar } from 'react-native-calendars';
 
 
 // uhh layout looks weird on android for some reason, fix ltr
@@ -25,6 +26,16 @@ export default function TodoScreen() {
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
   const [tasksLoading, setTasksLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState<string>(
+    new Date().toISOString().split('T')[0]
+  );
+  const selectedDayName = new Date(selectedDate).toLocaleDateString('en-US', {
+    weekday: 'long',
+  });
+  const formattedSelectedDate = new Date(selectedDate).toLocaleDateString('en-GB');
+  // get today's date, complicated implementation to avoid timezone bugs
+  const now = new Date();
+  const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
   useEffect(() => {
     loadUser();
@@ -357,12 +368,18 @@ export default function TodoScreen() {
     )
   }
 
+  // to calculate if selected date is past or future -> used to conditonally render bg image
+  const dayState = () => {
+    if (selectedDate < todayDate) return 'past';
+    if (selectedDate === todayDate) return 'today';
+    return 'future';
+  };
+
   return (
     //layout weird on phone, the header part fix it 
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
 
-        <ScrollView style={styles.container} contentInsetAdjustmentBehavior="never">
           <Stack.Screen
             options={{
               // make header transparent 
@@ -374,103 +391,120 @@ export default function TodoScreen() {
               headerBackButtonDisplayMode: 'minimal',
               title: "", 
             }}/>
-
-          <ImageBackground
-            source={require("../../../assets/images/todo_today.png")}
-            style={styles.image}>
-            
-            <View style={styles.topDisplay}>
-              <View style={styles.topDisplayLeft}>
-                <Text style={styles.header}>Today </Text>
-                <Text style={styles.date}>17/06/2026 </Text>
-              </View>
-
-              <View style={styles.topDisplayRight}>
-                <View style = {styles.topButtons}>
-                  <TouchableOpacity
-                    onPress={openCalendarSheet}>
-                      <Ionicons name="calendar-outline" size={25} color="#FFF"/>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={() => console.log("search")}>
-                      <Ionicons name="search" size={25} color="#FFF"/>
-                  </TouchableOpacity>
-                </View>
-
-                <TouchableOpacity
-                  style={styles.pendingTaskBtn}
-                  onPress={() => console.log("Pending Tasks")}>
-                  <Text style={styles.pendingTaskTxt}>Pending Tasks</Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-
-            <View style={styles.progressBarWrapper}>
-            <ImageBackground 
-                source={require("../../../assets/images/progress_bar.png")}
-                style={styles.progressBar}
-                imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
-                  <View style={styles.progressBarInner}>
-                    <Progress.Bar 
-                      progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
-                    </Progress.Bar>
-                    <Text style={styles.progressPercentTxt}>{Math.round(calculateProgress()*100)}%</Text>
-                </View>
-              </ImageBackground>
-            </View>
-
-          </ImageBackground>
-
-          <ScrollView 
-            style={styles.calendarContainer}
-            contentContainerStyle={styles.content}
-            horizontal
-            showsHorizontalScrollIndicator={false}>
-              <DateCard day="Mon" date={15} isSelected={false} isToday={false}></DateCard>
-              <DateCard day="Tue" date={16} isSelected={false} isToday={false}></DateCard>
-              <DateCard day="Wed" date={17} isSelected={false} isToday={false}></DateCard>
-              <DateCard day="Thur" date={18} isSelected={true} isToday={true}></DateCard>
-              <DateCard day="Fri" date={19} isSelected={false} isToday={false}></DateCard>
-              <DateCard day="Sat" date={20} isSelected={false} isToday={false}></DateCard>
-              <DateCard day="Sun" date={21} isSelected={false} isToday={false}></DateCard>
-          </ScrollView>
-
-          <View style={styles.bottomDisplay}>
-            <View style={styles.todoHeader}>
-              <Text style={styles.taskHeader}>Tasks</Text>
-              <TouchableOpacity
-                    onPress={() => console.log("filter")}>
-                      <Ionicons name="filter" size={25} color="#5E4833"/>
-                  </TouchableOpacity>
-            </View>
-
-            <View style={styles.todoTasks}>
-              { 
-              taskItems.map((item) => {
-                return <Task 
-                          key={item.id}
-                          text={item.text}
-                          completed={item.completed}
-                          dread={item.dread}
-                          difficulty={item.difficulty}
-                          taskDesc={item.taskDesc}
-                          subtasks={item.subtasks}
-                          onPress={() => {setSelectedTask(item); openEditTaskSheet();}}
-                          onDelete={() => deleteTask(item.id)}
-                          onToggleCompletion={() => toggleCompletion(item.id, item.completed, item.subtasks)}
-                          onToggleDread={() => toggleDread(item.id, item.dread)}
-                          onToggleSubtaskCompletion={(subtaskId, completed) => toggleSubtaskCompletion(subtaskId, completed)}
-                          />
-                          
-              })
-            }
-            </View>
-
-          </View>
           
-        </ScrollView>
+          <FlatList
+            style={styles.container}
+            contentInsetAdjustmentBehavior='never'
+            data={taskItems}
+            keyExtractor={(item) => item.id.toString()}
+            ListHeaderComponent={
+              <>
 
+                <ImageBackground
+                  source={
+                    dayState() === 'today' 
+                    ? require("../../../assets/images/todo_header.png")
+                    : dayState() === 'past'
+                    ? require("../../../assets/images/todo_header_past.jpg")
+                    : require("../../../assets/images/todo_header_future.png")}
+                  style={styles.image}>
+                  
+                  <View style={styles.topDisplay}>
+                    <View style={styles.topDisplayLeft}>
+                      <Text style={styles.header}>{selectedDate === todayDate ? "Today" : selectedDayName } </Text>
+                      <Text style={styles.date}>{formattedSelectedDate} </Text>
+                    </View>
+
+                    <View style={styles.topDisplayRight}>
+                      <View style = {styles.topButtons}>
+                        <TouchableOpacity
+                          onPress={openCalendarSheet}>
+                            <Ionicons name="calendar-outline" size={25} color="#FFF"/>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => console.log("search")}>
+                            <Ionicons name="search" size={25} color="#FFF"/>
+                        </TouchableOpacity>
+                      </View>
+
+                      <TouchableOpacity
+                        style={styles.pendingTaskBtn}
+                        onPress={() => console.log("Pending Tasks")}>
+                        <Text style={styles.pendingTaskTxt}>Pending Tasks</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
+                  <View style={styles.progressBarWrapper}>
+                    <ImageBackground 
+                      source={require("../../../assets/images/progress_bar.png")}
+                      style={styles.progressBar}
+                      imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
+                        <View style={styles.progressBarInner}>
+                          <Progress.Bar 
+                            progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
+                          </Progress.Bar>
+                          <Text style={styles.progressPercentTxt}>{Math.round(calculateProgress()*100)}%</Text>
+                        </View>
+                    </ImageBackground>
+                  </View>
+
+                </ImageBackground>
+
+                <CalendarProvider date={selectedDate} onDateChanged={setSelectedDate}>
+                  <WeekCalendar
+                    firstDay={1}
+                    allowShadow={false}
+                    style={{ backgroundColor: '#F4E6B0' }}
+                    markedDates={{
+                      [selectedDate]: { selected: true },
+                    }}
+                    theme={{
+                      calendarBackground: '#F4E6B0',
+                      textSectionTitleDisabledColor: '',
+                      textSectionTitleColor: '#937254',   // "M T W T F S S" row
+                      dayTextColor: '#937254',
+                      todayTextColor: '#5E4833',
+                      selectedDayBackgroundColor: '#937254',
+                      selectedDayTextColor: '#FFF',
+                      textDisabledColor: '#D9D9D9',
+                      textDayFontFamily: 'InterBold',
+                      textDayHeaderFontFamily: 'InterBold',
+                      textDayFontSize: 18,
+                      textDayHeaderFontSize: 14,
+                    }}
+                  />
+                </CalendarProvider>
+
+                <View style={styles.todoHeader}>
+                  <Text style={styles.taskHeader}>Tasks</Text>
+                  <TouchableOpacity
+                        onPress={() => console.log("filter")}>
+                          <Ionicons name="filter" size={25} color="#5E4833"/>
+                  </TouchableOpacity>
+                </View>
+              </>
+            }
+            renderItem={({ item }) => (
+              <View style={styles.todoTasks}>
+                <Task 
+                  text={item.text}
+                  completed={item.completed}
+                  dread={item.dread}
+                  difficulty={item.difficulty}
+                  taskDesc={item.taskDesc}
+                  subtasks={item.subtasks}
+                  onPress={() => {setSelectedTask(item); openEditTaskSheet();}}
+                  onDelete={() => deleteTask(item.id)}
+                  onToggleCompletion={() => toggleCompletion(item.id, item.completed, item.subtasks)}
+                  onToggleDread={() => toggleDread(item.id, item.dread)}
+                  onToggleSubtaskCompletion={(subtaskId, completed) => toggleSubtaskCompletion(subtaskId, completed)}
+                  />
+              </View>
+            )}
+          />
+          
         <TouchableOpacity 
               style={styles.addBtn}
               onPress={openAddTaskSheet}>
