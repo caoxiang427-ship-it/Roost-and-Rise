@@ -13,12 +13,29 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import {  useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+
 
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setLoading] = useState(true);
+
+  SplashScreen.preventAutoHideAsync();
+
+    // load custom fonts
+  const [fontLoaded, error] = useFonts({
+      InterRegular: require("../../assets/fonts/Inter_18pt-Regular.ttf"),
+      InterSemiBold: require("../../assets/fonts/Inter_18pt-SemiBold.ttf"),
+      InterBold: require("../../assets/fonts/Inter_18pt-Bold.ttf")
+    });
+
+    // if fonts aren't loaded, keep splashscreen until it's loaded
+  useEffect(() => {
+      if (fontLoaded || error) SplashScreen.hideAsync();
+    }, [fontLoaded, error]);
 
   // Load any saved session and track login/logout changes
   useEffect(() => {
@@ -66,6 +83,9 @@ export default function RootLayout() {
         <ActivityIndicator size="large" color="#E8A33D" />
       </View>
     );
+
+    if (!fontLoaded && !error) return null;
+
   }
   
   return (

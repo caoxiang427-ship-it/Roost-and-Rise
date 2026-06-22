@@ -1,13 +1,12 @@
 import 'react-native-gesture-handler';
-import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard } from 'react-native';
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator } from 'react-native';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { styles } from '../../styles/todo_styles';
 import Task from '@/components/todo/Task';
 import DateCard from '@/components/todo/CalendarDate';
 import { TaskItem, NewSubtaskItem, SubtaskItem } from '../../types/todo';
-import {  useFonts } from 'expo-font';
 import { Ionicons } from "@expo/vector-icons";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
@@ -21,15 +20,11 @@ import { supabase } from '@/lib/supabase';
 // uhh layout looks weird on android for some reason, fix ltr
 
 export default function TodoScreen() {
-  const [loaded] = useFonts({
-    InterRegular: require("../../../assets/fonts/Inter_18pt-Regular.ttf"),
-    InterSemiBold: require("../../../assets/fonts/Inter_18pt-SemiBold.ttf"),
-    InterBold: require("../../../assets/fonts/Inter_18pt-Bold.ttf")
-  });
 
   const [userID, setUserID] = useState<string | null>(null);
   const [selectedTask, setSelectedTask] = useState<TaskItem | null>(null);
   const [taskItems, setTaskItems] = useState<TaskItem[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(true);
 
   useEffect(() => {
     loadUser();
@@ -84,6 +79,7 @@ export default function TodoScreen() {
   }));
 
   setTaskItems(formattedTasks);
+  setTasksLoading(false);
   };
 
   // function to add new task
@@ -352,6 +348,14 @@ export default function TodoScreen() {
       headerShown: !isOpen,
     });
   };
+
+  if (tasksLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#E8A33D" />
+      </View>
+    )
+  }
 
   return (
     //layout weird on phone, the header part fix it 
