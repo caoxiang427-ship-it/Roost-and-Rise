@@ -3,7 +3,7 @@ import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard } f
 import { useState, useEffect, useRef, useMemo } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
-import { styles } from '../../styles/test_styles';
+import { styles } from '../../styles/todo_styles';
 import Task from '@/components/todo/Task';
 import DateCard from '@/components/todo/CalendarDate';
 import { TaskItem, NewSubtaskItem, SubtaskItem } from '../../types/todo';
@@ -134,7 +134,6 @@ export default function TodoScreen() {
           console.log(subtaskError);
         }
       }
-      setTaskItems(prev => [...prev, data])
       fetchTasks();
     }
 
@@ -153,21 +152,6 @@ export default function TodoScreen() {
 
       fetchTasks();
   }
-
-  // function to delete subtask
-  const deleteSubtask = async (subtaskId: number) => {
-    const { error } = await supabase
-        .from('subtasks')
-        .delete()
-        .eq('id', subtaskId);
-
-    if (error) {
-        console.log(error);
-        return;
-    }
-
-    fetchTasks();
-};
   
 // function to edit task
  const handleEditTask = async (
@@ -177,7 +161,8 @@ export default function TodoScreen() {
     complete: boolean,
     difficulty: 'easy' | 'moderate' |'difficult' | '',
     taskDesc = '',
-    subtasks: SubtaskItem[] = []
+    subtasks: SubtaskItem[] = [],
+    deletedSubtaskIds: number[] = [],
 ): Promise<void> => {
     Keyboard.dismiss();
 
@@ -197,6 +182,15 @@ export default function TodoScreen() {
     if (error) {
         console.log(error);
         return;
+    }
+
+    if (deletedSubtaskIds.length > 0) {
+        const { error: deleteError } = await supabase
+            .from('subtasks')
+            .delete()
+            .in('id', deletedSubtaskIds);
+
+        if (deleteError) console.log(deleteError);
     }
 
     // seperate existing subtasks from new created subtasks
@@ -245,6 +239,11 @@ export default function TodoScreen() {
         completed: !completed,
       })
       .eq('id', id);
+
+    if (error) {
+      console.log(error);
+      return;
+    };
 
     if (subtasks.length > 0) {
         const { error: subtaskError } = await supabase
@@ -475,7 +474,7 @@ export default function TodoScreen() {
         </TouchableOpacity>
 
         <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask} openCalendar={openCalendarSheet}></AddTask>
-        <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} onDeleteSubtask={deleteSubtask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
+        <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
         <CalendarSheet ref={calendarRef} close={closeCalendarSheet} onChange={hideNavigationHeader}></CalendarSheet>
         
 

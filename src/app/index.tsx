@@ -41,7 +41,7 @@ export default function HomeScreen() {
       <Text style={styles.title}>Roost & Rise</Text>
       <Text style={styles.welcome}>Welcome, {name || 'friend'}!</Text>
 
-      <Link href="/(todo)/today" asChild>
+      <Link href="/(todo)/todo_list" asChild>
         <Pressable style={styles.button}>
           <Text style={styles.buttonText}>To-do List</Text>
         </Pressable>

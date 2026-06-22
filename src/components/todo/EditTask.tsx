@@ -3,7 +3,6 @@ import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView
 import { View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import { useState, forwardRef, useCallback, useEffect } from 'react';
 import { Ionicons } from "@expo/vector-icons";
-import SubtaskInput from './SubtaskInput (delete ltr)';
 import { SubtaskItem, TaskItem } from '@/types/todo';
 import Subtask from './Subtask';
 import Animated, { SlideInLeft, SlideOutLeft, Easing } from 'react-native-reanimated';
@@ -18,10 +17,10 @@ type EditTaskProps = {
         complete: boolean,
         difficulty: 'easy' | 'moderate' |'difficult' | '',
         taskDesc?: string,
-        subtasks?: SubtaskItem[]
+        subtasks?: SubtaskItem[],
+        deletedSubtaskIds?: number[],
     ) => Promise<void>;
     openCalendar: () => void;
-    onDeleteSubtask: (subtaskId: number) => void;
 }
 
 type Ref = BottomSheet;
@@ -40,6 +39,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
     const [isComplete, setIsComplete] = useState<boolean>(props.task?.completed ?? false);
     const [subtasks, setSubtasks] = useState<SubtaskItem[]>(props.task?.subtasks ?? [])
     const [subtaskInput, setSubtaskInput] = useState<string>('');
+    const [deletedSubtaskIds, setDeletedSubtaskIds] = useState<number[]>([]);
     const [difficulty, setDifficulty] = useState<'easy'|'moderate'|'difficult'|''>(props.task?.difficulty ?? '');
     // for expandable difficulty button
     const [expanded, setExpanded] = useState<boolean>(false);
@@ -56,19 +56,37 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
         difficult: 'Difficult 😥',
     };
 
-
-    useEffect(() => {
+    const resetFromTask = () => {
         if (props.task) {
             setTask(props.task.text);
             setTaskDesc(props.task.taskDesc ?? '');
             setDread(props.task.dread);
             setIsComplete(props.task.completed);
             setSubtasks(props.task.subtasks ?? []);
-            setDifficulty(props.task.difficulty ?? '')
+            setDifficulty(props.task.difficulty ?? '');
         }
+        setDeletedSubtaskIds([]);
+    };
+
+    useEffect(() => {
+        resetFromTask();
     }, [props.task]);
 
+    const handleClose = () => {
+        resetFromTask();
+        props.close();
+    };
+
     const handleSubmit = async () => {
+        if (task.trim() === '') {
+            Alert.alert(
+                "Task Required",          
+                "Please input your task before submitting.", 
+                [{ text: "OK" }]                
+            );
+            return;
+        };
+
         if (difficulty === '') {
                     Alert.alert(
                         "Difficulty Required",          
@@ -79,7 +97,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                 };
 
         if (!props.task) return;
-        await props.onEditTask(props.task.id, task, dread, isComplete, difficulty, taskDesc, subtasks);
+        await props.onEditTask(props.task.id, task, dread, isComplete, difficulty, taskDesc, subtasks, deletedSubtaskIds);
         props.close();
     };
 
@@ -90,19 +108,17 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
         setSubtaskInput('');
     };
 
-    // bug here: fix ltr!
-    // removeSubtask calls onDeleteSubtask immediately but handleEditTask hasn't been called yet
-    // so the subtask gets deleted from Supabase even if the user cancels. Collect deleted ids instead and only delete on submit:
+    // remove subtasks locally, then pass onto handleEdit function in todo_list.tsx to delete from supabase
     const removeSubtask = (index: number) => {
+
+        setSubtasks(prev => prev.filter((_, i) => i !== index));
+
         const subtask = subtasks[index];
     
         // only delete from database if it's an existing subtask (not a temp Date.now() id)
         if (subtask.id < 1e12) {
-            props.onDeleteSubtask(subtask.id);
+            setDeletedSubtaskIds(prev => [...prev, subtask.id]);
         }
-
-        // remove from local state
-        setSubtasks(prev => prev.filter((_, i) => i !== index));
     };
 
     const toggleNewSubtaskCompletion = (index: number) => {
@@ -124,7 +140,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
             <BottomSheetScrollView style={styles.innerContainer} keyboardShouldPersistTaps='handled'>
                 <View style={styles.header}>
                     <TouchableOpacity
-                        onPress={props.close}>
+                        onPress={handleClose}>
                             <Ionicons name='close' size={30} color="#937254"/>
                     </TouchableOpacity>
 
