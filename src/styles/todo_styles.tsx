@@ -17,11 +17,11 @@ export const styles = StyleSheet.create({
   topDisplay: {
     flexDirection: 'row',
     justifyContent: "space-between",
-    paddingHorizontal: 20
+    paddingHorizontal: 20,
+    paddingTop: 80,
   },
-
   topDisplayLeft: {
-    marginTop: 110,
+    
   },
   header: {
     fontFamily: "InterBold",
@@ -40,7 +40,6 @@ export const styles = StyleSheet.create({
     flexDirection: 'column',
     justifyContent: 'center',
     alignItems: "center",
-    marginTop: 107,
   },
   topButtons: {
     flexDirection: 'row',
@@ -119,7 +118,7 @@ export const styles = StyleSheet.create({
     width: 50,
     justifyContent: "center",
     alignItems: "center",
-    bottom: 25,
+    bottom: 85,
     right: 25,
 
 

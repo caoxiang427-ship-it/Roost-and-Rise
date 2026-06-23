@@ -83,17 +83,15 @@ export default function RootLayout() {
         <ActivityIndicator size="large" color="#E8A33D" />
       </View>
     );
-
-    if (!fontLoaded && !error) return null;
-
   }
   
+  if (!fontLoaded && !error) return null;
+  
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: 'Home' }} />
-      <Stack.Screen name="explore" options={{ title: 'Explore' }} />
+    <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
       <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
+      <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
     </Stack>
   );
 }

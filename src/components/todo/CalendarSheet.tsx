@@ -7,7 +7,6 @@ import { CalendarList } from 'react-native-calendars';
 
 type AddTaskProps = {
     close: () => void;
-    onChange: (index: number) => void;
 }
 
 type Ref = BottomSheet;
@@ -27,7 +26,6 @@ const CalendarSheet = forwardRef<Ref, AddTaskProps>((props, ref) => {
             ref={ref} 
             snapPoints={['75%']} 
             index={-1} 
-            onChange={props.onChange}
             enablePanDownToClose={true}
             backgroundStyle={styles.container}
             handleIndicatorStyle={{backgroundColor: 'transparent'}}

@@ -1,7 +1,6 @@
 import 'react-native-gesture-handler';
 import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, FlatList } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { styles } from '../../styles/todo_styles';
 import Task from '@/components/todo/Task';
@@ -350,16 +349,6 @@ export default function TodoScreen() {
   const closeEditTaskSheet = () => editTaskRef.current?.close();
   const closeCalendarSheet = () => calendarRef.current?.close();
 
-  // to hide header when calendar bottom sheet opens
-  const navigation = useNavigation();
-  const hideNavigationHeader = (index: number) => {
-    const isOpen = index >= 0;
-
-    navigation.setOptions({
-      headerShown: !isOpen,
-    });
-  };
-
   if (tasksLoading) {
     return (
       <View style={styles.loadingContainer}>
@@ -379,18 +368,6 @@ export default function TodoScreen() {
     //layout weird on phone, the header part fix it 
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
-
-          <Stack.Screen
-            options={{
-              // make header transparent 
-              headerTransparent: true,
-              headerStyle: { backgroundColor: 'transparent' },
-              headerShadowVisible: false,
-
-              // edit the back button and clear title from top
-              headerBackButtonDisplayMode: 'minimal',
-              title: "", 
-            }}/>
           
           <FlatList
             style={styles.container}
@@ -513,7 +490,7 @@ export default function TodoScreen() {
 
         <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask} openCalendar={openCalendarSheet}></AddTask>
         <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
-        <CalendarSheet ref={calendarRef} close={closeCalendarSheet} onChange={hideNavigationHeader}></CalendarSheet>
+        <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
         
 
       </View>
