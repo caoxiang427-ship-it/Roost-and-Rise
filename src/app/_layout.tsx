@@ -33,7 +33,7 @@ export default function RootLayout() {
       }
     }
     checkUser();
-  }, []); // this dependency array allows only the code to run once, to avoid phone crash
+  }, []); 
 
   // Track for auth state changes
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function RootLayout() {
     } else if (session && isViewingAuth) {
       router.replace('/'); 
     }
-  }, [session, isLoading, segments]);// update whenever login status, loading status, and current screen changes
+  }, [session, isLoading, segments]);
 
   // Loading UI
   if (isLoading) {
@@ -74,6 +74,20 @@ export default function RootLayout() {
       <Stack.Screen name="explore" options={{ title: 'Explore' }} />
       <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
       <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
+      <Stack.Screen name="(auth)/forgot_password" options={{ headerShown: false }} />
+      <Stack.Screen name="(auth)/reset_password" options={{ headerShown: false }} />
+      <Stack.Screen name="(tabs)/pomodoro_timer" options={{ title: 'Focus' }} />
+      <Stack.Screen name="(tabs)/care" options={{ title: 'Recharge Time' }} />
+      <Stack.Screen
+        name="(tabs)/edit_categories"
+        options={{
+          headerShown: true,
+          title: 'Edit Categories',
+          headerStyle: { backgroundColor: '#FFE8B8' },
+          headerTintColor: '#3D2914',
+          headerTitleStyle: { fontWeight: 'bold' },
+        }}
+      />
     </Stack>
   );
 }
