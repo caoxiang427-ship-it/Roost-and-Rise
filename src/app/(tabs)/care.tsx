@@ -11,18 +11,11 @@ import {
   getTodaySelfCareCounts,
   logMood,
   hasLoggedMoodToday,
+  getUserCategories,
+  SelfCareCategory,
 } from '@/lib/self-care';
 import BurnoutIndicator from '@/components/BurnoutIndicator';
-
-// replace all emojis later?
-const CATEGORIES = [
-  { id: 'water', emoji: '💧', label: 'Water' },
-  { id: 'meal', emoji: '🍱', label: 'Meal' },
-  { id: 'sleep', emoji: '😴', label: 'Sleep' },
-  { id: 'break', emoji: '☕', label: 'Break' },
-  { id: 'hobby', emoji: '🎨', label: 'Hobby' },
-  { id: 'other', emoji: '💭', label: 'Other'}
-];
+import { Link } from 'expo-router';
 
 const MOODS = [
   { id: 'exhausted', emoji: '😩', label: 'Exhausted' }, 
@@ -38,9 +31,11 @@ export default function SelfCareScreen() {
   const [selfCareCounts, setSelfCareCounts] = useState<Record<string, number>>({});
   const [isMoodLogged, setIsMoodLogged] = useState(false);
   const [recentActivities, setRecentActivities] = useState<Record<string, string>>({});
+  const [categories, setCategories] = useState<SelfCareCategory[]>([]);
 
   useEffect(() => {
     loadLogs();
+    loadCategories();
   }, []);
 
   async function handleSelfCareLog(categoryId: string) {
@@ -66,6 +61,11 @@ export default function SelfCareScreen() {
   
     const moodLogged = await hasLoggedMoodToday();
     setIsMoodLogged(moodLogged);
+  }
+
+  async function loadCategories() {
+    const categs = await getUserCategories();
+    setCategories(categs);
   }
 
   async function handleMoodLog(moodId: string) {
@@ -109,7 +109,8 @@ export default function SelfCareScreen() {
 
       {/* Self-care category list */}
       <Text style={styles.careTitle}>Recovery list</Text>
-      {CATEGORIES.map(cat => (
+
+      {categories.map(cat => (
         <View 
           key={cat.id} 
           style={styles.careCard}
@@ -154,6 +155,12 @@ export default function SelfCareScreen() {
           )}
         </View>
       ))}
+
+      <Link href="/(tabs)/edit_categories" asChild>
+        <Pressable style={styles.manageCard}>
+          <Text style={styles.manageText}>⚙️  Manage categories</Text>
+        </Pressable>
+      </Link>
     </ScrollView>
   );
 }
@@ -278,5 +285,21 @@ const styles = StyleSheet.create({
     color: '#8B6F3F',
     fontStyle: 'italic',
     marginTop: 2,
+  },
+  manageCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    borderWidth: 2,
+    borderColor: '#E0D4A8',
+    borderStyle: 'dashed',
+    marginTop: 8,
+  },
+  manageText: {
+    fontSize: 18,                
+    color: '#A67C2E',
+    fontWeight: 'bold',
   },
 });
