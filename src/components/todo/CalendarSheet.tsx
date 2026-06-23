@@ -1,17 +1,19 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
 import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { forwardRef, useCallback } from 'react';
+import { forwardRef, useCallback, useState } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { CalendarList } from 'react-native-calendars';
 
-type AddTaskProps = {
+type CalendarSheetProps = {
     close: () => void;
+    selectedDate: string;
+    syncSelectedDate: (selected: string) => void;
 }
 
 type Ref = BottomSheet;
 
-const CalendarSheet = forwardRef<Ref, AddTaskProps>((props, ref) => {
+const CalendarSheet = forwardRef<Ref, CalendarSheetProps>((props, ref) => {
     
     const renderBackdrop = useCallback(
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
@@ -46,6 +48,15 @@ const CalendarSheet = forwardRef<Ref, AddTaskProps>((props, ref) => {
                         showScrollIndicator={true}
                         nestedScrollEnabled={true}
                         style={{height: SCREEN_HEIGHT * 0.85}}
+                        onDayPress={(day) => {
+                            props.syncSelectedDate(day.dateString);
+                        }}
+                        markedDates={{
+                            [props.selectedDate]: {
+                            selected: true,
+                            selectedColor: '#3B99B9',
+                            }
+                        }}
                     />
 
                 </BottomSheetView>

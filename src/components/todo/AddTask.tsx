@@ -13,9 +13,11 @@ type AddTaskProps = {
         dread: boolean,
         complete: boolean,
         difficulty: 'easy' | 'moderate' | 'difficult' | '',
+        scheduledDate: string,
         taskDesc?: string,
         subtasks?: NewSubtaskItem[]) => Promise<void>;
     openCalendar: () => void;
+    scheduledDate: string;
 };
 
 type Ref = BottomSheet;
@@ -85,7 +87,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
             return;
         };
 
-        await props.onAddTask(task, dread, isComplete, difficulty, taskDesc, newSubtasks);
+        await props.onAddTask(task, dread, isComplete, difficulty, props.scheduledDate, taskDesc, newSubtasks);
         // Reset local state after submit
         setTask('');
         setTaskDesc('');

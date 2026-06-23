@@ -120,8 +120,35 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     bottom: 85,
     right: 25,
+  },
+  noTaskContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noTaskTitle: {
+    color: '#937254',
+    fontFamily: "InterBold",
+    fontSize: 24,
+  },
+  noTaskSubtitle: {
+    color: '#937254',
+    fontFamily: "InterSemiBold",
+    fontSize: 16,
+    marginTop: 5,
 
-
+  },
+  noTaskPendingBtn: {
+    backgroundColor: "#5E4833",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    marginTop: 15,
+  },
+  noTaskPendingTxt: {
+    color: '#FFF',
+    fontFamily: "InterBold",
+    fontSize: 15,
   },
 
 

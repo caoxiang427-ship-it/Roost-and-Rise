@@ -16,11 +16,13 @@ type EditTaskProps = {
         dread: boolean,
         complete: boolean,
         difficulty: 'easy' | 'moderate' |'difficult' | '',
+        scheduledDate: string,
         taskDesc?: string,
         subtasks?: SubtaskItem[],
         deletedSubtaskIds?: number[],
     ) => Promise<void>;
     openCalendar: () => void;
+    scheduledDate: string;
 }
 
 type Ref = BottomSheet;
@@ -97,7 +99,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                 };
 
         if (!props.task) return;
-        await props.onEditTask(props.task.id, task, dread, isComplete, difficulty, taskDesc, subtasks, deletedSubtaskIds);
+        await props.onEditTask(props.task.id, task, dread, isComplete, difficulty, props.scheduledDate, taskDesc, subtasks, deletedSubtaskIds);
         props.close();
     };
 

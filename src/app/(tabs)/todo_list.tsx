@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { ImageBackground, Text, View, TouchableOpacity, ScrollView, Keyboard, ActivityIndicator, FlatList } from 'react-native';
+import { Image, ImageBackground, Text, View, TouchableOpacity, Keyboard, ActivityIndicator, FlatList } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import { Stack } from 'expo-router';
 import { styles } from '../../styles/todo_styles';
@@ -35,6 +35,8 @@ export default function TodoScreen() {
   // get today's date, complicated implementation to avoid timezone bugs
   const now = new Date();
   const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  const renderedTaskItems = taskItems.filter(item => item.scheduledDate === selectedDate);
 
   useEffect(() => {
     loadUser();
@@ -85,7 +87,8 @@ export default function TodoScreen() {
     dread: task.dread,
     difficulty: task.difficulty,
     taskDesc: task.task_desc,
-    subtasks: task.subtasks ?? []
+    subtasks: task.subtasks ?? [],
+    scheduledDate: task.scheduled_date,
   }));
 
   setTaskItems(formattedTasks);
@@ -98,6 +101,7 @@ export default function TodoScreen() {
       dread: boolean,
       complete: boolean,
       difficulty: 'easy' | 'moderate' | 'difficult' | '',
+      scheduledDate: string,
       taskDesc = '',
       subtasks: NewSubtaskItem[] = [],
      ): Promise<void> => {
@@ -115,7 +119,8 @@ export default function TodoScreen() {
           completed: complete,
           dread: dread,
           difficulty: difficulty,
-          task_desc: taskDesc ?? ''
+          task_desc: taskDesc ?? '',
+          scheduled_date: scheduledDate,
         })
         .select()
         .single();
@@ -166,6 +171,7 @@ export default function TodoScreen() {
     dread: boolean,
     complete: boolean,
     difficulty: 'easy' | 'moderate' |'difficult' | '',
+    scheduledDate: string,
     taskDesc = '',
     subtasks: SubtaskItem[] = [],
     deletedSubtaskIds: number[] = [],
@@ -181,7 +187,8 @@ export default function TodoScreen() {
             completed: complete,
             dread: dread,
             difficulty: difficulty,
-            task_desc: taskDesc ?? ''
+            task_desc: taskDesc ?? '',
+            scheduled_date: scheduledDate,
         })
         .eq('id', id);
 
@@ -313,11 +320,11 @@ export default function TodoScreen() {
 
   // calculate progress percentage
   const calculateProgress = () => {
-    if (taskItems.length === 0) return 0;
+    if (renderedTaskItems.length === 0) return 0;
 
-    const percentPerTask = 1 / taskItems.length;
+    const percentPerTask = 1 / renderedTaskItems.length;
 
-    return taskItems.reduce((total, task) => {
+    return renderedTaskItems.reduce((total, task) => {
       let taskProgress = 0;
 
       // If no subtasks, use task completion
@@ -364,6 +371,11 @@ export default function TodoScreen() {
     return 'future';
   };
 
+  // function to sync selected dates across calendar in todo_list and calendar in calendarSheet
+  const syncSelectedDate = (selected: string) => {
+    setSelectedDate(selected);
+  };
+
   return (
     //layout weird on phone, the header part fix it 
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -372,7 +384,7 @@ export default function TodoScreen() {
           <FlatList
             style={styles.container}
             contentInsetAdjustmentBehavior='never'
-            data={taskItems}
+            data={renderedTaskItems}
             keyExtractor={(item) => item.id.toString()}
             ListHeaderComponent={
               <>
@@ -480,6 +492,20 @@ export default function TodoScreen() {
                   />
               </View>
             )}
+            ListEmptyComponent={
+              <View style={styles.noTaskContainer}>
+                <Image 
+                  source={require("../../../assets/images/egg_icon.png")} 
+                  style={{ width: 100, height: 100 }}
+                  resizeMode={'center'} />
+
+                <Text style={styles.noTaskTitle}>No tasks yet!</Text>
+                <Text style={styles.noTaskSubtitle}> Add new tasks/ choose from pending</Text>
+                <TouchableOpacity style={styles.noTaskPendingBtn} onPress={() => console.log('pending tasks')}>
+                  <Text style={styles.noTaskPendingTxt}>Pending Tasks</Text>
+                  </TouchableOpacity>
+              </View>
+            }
           />
           
         <TouchableOpacity 
@@ -488,9 +514,9 @@ export default function TodoScreen() {
               <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask} openCalendar={openCalendarSheet}></AddTask>
-        <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
-        <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
+        <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask} openCalendar={openCalendarSheet} scheduledDate={selectedDate}></AddTask>
+        <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet} scheduledDate={selectedDate}></EditTask>
+        <CalendarSheet ref={calendarRef} close={closeCalendarSheet} selectedDate={selectedDate} syncSelectedDate={syncSelectedDate}></CalendarSheet>
         
 
       </View>
