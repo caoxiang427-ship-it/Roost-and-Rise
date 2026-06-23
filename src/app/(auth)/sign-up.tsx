@@ -5,9 +5,9 @@
 */
 
 import { useState } from 'react';
-import { signUp } from '@/lib/auth';
 import { Link, router } from 'expo-router';
 import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
+import { signUp, signInWithGoogle } from '@/lib/auth';
 
 export default function SignUpScreen() {
   const [email, setEmail] = useState('');
@@ -50,88 +50,206 @@ export default function SignUpScreen() {
     }
   }
 
+  // Does not work!
+  async function handleGoogleSignIn() {
+    setLoading(true);
+    
+    const result = await signInWithGoogle();
+    
+    setLoading(false);
+  
+    if (result.error) {
+      Alert.alert('Google sign-up failed', result.error);
+      return;
+    }
+  
+    router.replace('/');
+  }
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Hatch your account 🥚</Text>
+      <View style={styles.formWrapper}>
+        <View style={styles.header}>
+          <Text style={styles.title}>Create an Account</Text>
+          <Text style={styles.subtitle}>We're glad you joined us 🐔</Text>
+        </View>
 
-      <TextInput
-        style={styles.input}
-        onChangeText={setName}
-        value={name}
-        placeholder="What should we call you?"
-        autoCapitalize="words"
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={setEmail}
-        value={email}
-        placeholder="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={setPassword}
-        placeholder="Password (min 6 characters)"
-        value={password}
-        secureTextEntry
-      />
+        <Text style={styles.label}>Username</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={setName}
+          value={name}
+          placeholder="What should we call you?"
+          autoCapitalize="words"
+        />
       
-      <Pressable 
-        style={[styles.button, isLoading && styles.buttonDisabled]} 
-        onPress={handleSignUp} 
-        disabled={isLoading}
-      >
-        <Text style={styles.buttonText}>{isLoading ? 'Hatching...' : 'Sign Up'}</Text>
-      </Pressable>
+        <Text style={styles.label}>Email</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={setEmail}
+          value={email}
+          placeholder="Email"
+          autoCapitalize="none"
+          keyboardType="email-address"
+        />
 
-      <Link href="/(auth)/sign-in" style={styles.link}>
-        Already have an account? Sign in now
-      </Link>
+        <Text style={styles.label}>Password</Text>
+        <TextInput
+          style={styles.input}
+          onChangeText={setPassword}
+          placeholder="Password (min 6 characters)"
+          value={password}
+          secureTextEntry
+        />
+      
+        <Pressable 
+          style={[styles.button, isLoading && styles.buttonDisabled]} 
+          onPress={handleSignUp} 
+          disabled={isLoading}
+        >
+          <Text style={styles.buttonText}>
+            {isLoading ? 'Hatching...' : 'Create an Account'}
+          </Text>
+        </Pressable>
+
+        <View style={styles.dividerRow}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        <Pressable
+          style={styles.googleButton}
+          onPress={handleGoogleSignIn}
+        >
+          <Text style={styles.googleIcon}>G</Text>
+          <Text style={styles.googleButtonText}>Sign up with Google</Text>
+        </Pressable>
+
+        <Text style={styles.footerText}>
+          Already have an account?{' '}
+          <Link href="/(auth)/sign-in" style={styles.footerLink}>
+            Log in now
+          </Link>
+        </Text>
+      </View>
     </View>
   );
-}
+}      
 
 const styles = StyleSheet.create({
-  container: { 
+  container: {
     flex: 1,
-    padding: 24,
-    gap: 12, 
+    backgroundColor: '#FFE8B8',
     justifyContent: 'center',
-    backgroundColor: '#FFF9E6' 
+    padding: 24,
   },
-  title: { 
-    fontSize: 28, 
+  formWrapper: {
+    gap: 8,
+  },
+  header: {
+    marginBottom: 8,
+  },
+  title: {
+    fontSize: 26,
     fontWeight: 'bold',
-    textAlign: 'center', 
-    marginBottom: 16,
-    color: '#5C4A1A' 
+    color: '#3D2914',
   },
-  input: { 
-    fontSize: 16,
+  subtitle: {
+    fontSize: 13,
+    color: '#8B6F3F',
+    marginTop: 2,
+  },
+  label: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#3D2914',
+    marginTop: 4,
+    marginBottom: 2,
+  },
+  input: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E0D4A8',
     borderWidth: 1,
     borderRadius: 8,
-    padding: 12,
-    borderColor: '#E0D4A8',
-    backgroundColor: '#FFFFFF', 
-    color: '#3D3220'
+    padding: 10,
+    fontSize: 15,
+    color: '#3D2914',
   },
-  button: { 
-    padding: 14,
-    marginTop: 8,
+  forgotLink: {
+    fontSize: 13,
+    color: '#A67C2E',
+    textAlign: 'right',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  button: {
+    backgroundColor: '#E8A33D',
+    padding: 12,
     borderRadius: 8,
-    backgroundColor: '#E8A33D'
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
   buttonText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
-    textAlign: 'center',
-    color: '#FFFFFF'
-  }, 
-  link: { 
-    textAlign: 'center', 
-    marginTop: 16, 
-    color: '#A67C2E' 
+    fontWeight: 'bold',
   },
-  buttonDisabled: { opacity: 0.6 },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 4,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E0D4A8',
+  },
+  dividerText: {
+    fontSize: 13,
+    color: '#8B6F3F',
+    fontWeight: '600',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E0D4A8',
+    borderWidth: 1,
+    padding: 10,
+    borderRadius: 8,
+    gap: 10,
+  },
+  googleIcon: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#3D2914',
+    width: 24,
+    height: 24,
+    textAlign: 'center',
+    lineHeight: 24,
+    backgroundColor: '#FFF9E6',
+    borderRadius: 12,
+  },
+  googleButtonText: {
+    color: '#3D2914',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#8B6F3F',
+    textAlign: 'center',
+    marginTop: 10,
+  },
+  footerLink: {
+    color: '#A67C2E',
+    fontWeight: 'bold',
+  },
 });
+
