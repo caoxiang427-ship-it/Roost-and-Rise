@@ -6,10 +6,17 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { signOut } from '@/lib/auth'; 
-import { StyleSheet, View, Text, Pressable } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
+import { styles } from '../../styles/index_styles';
+import { ImageBackground } from 'expo-image';
+import { Ionicons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Link } from 'expo-router';
+
 
 export default function HomeScreen() {
+
+  const insets = useSafeAreaInsets();
   const[name, setName] = useState('');
 
   useEffect(() => {
@@ -38,44 +45,31 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Roost & Rise</Text>
-      <Text style={styles.welcome}>Welcome, {name || 'friend'}!</Text>
+      <ImageBackground
+        source={require("../../../assets/images/home/home_background.png")}
+        style={styles.container}>
+          <View style={[styles.header, {paddingTop: insets.top + 20, paddingLeft: insets.left + 20, paddingRight: insets.right + 30}]}>
+            <Link href="../profile" asChild>
+            <TouchableOpacity style={styles.profile}>
+              <Ionicons name="person-outline" size={40} color="#5E90A1"/>
+            </TouchableOpacity>
+            </Link>
 
-    
-      <Pressable style={styles.button} onPress={() => signOut()}>
-        <Text style={styles.buttonText}>Log Out</Text>
-      </Pressable>
+            <View style={styles.headerBtns}>
+              <TouchableOpacity style={styles.volume}>
+                <Ionicons name="volume-high" size={30} color="#FFF"/>
+              </TouchableOpacity>
+
+              <TouchableOpacity>
+                <Ionicons name="settings-sharp" size={30} color="#FFF"/>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+          <View style={styles.topDisplay}>
+              <Text>Wednesday 24/06/26</Text>
+            </View>
+      </ImageBackground>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: { 
-    flex: 1,
-    padding: 24,
-    gap: 16, 
-    justifyContent: 'center', 
-    alignItems: 'center',
-    backgroundColor: '#FFF9E6'
-  },
-  title: { 
-    fontSize: 28, 
-    fontWeight: 'bold', 
-    color: '#5C4A1A' 
-  },
-  welcome: {
-    fontSize: 18,
-    color: '#A67C2E'
-  },
-  button: {
-    padding: 14,
-    borderRadius: 8,
-    marginTop: 16,
-    backgroundColor: '#E8A33D'
-  },
-  buttonText: { 
-    fontSize: 16,
-    fontWeight: '600', 
-    color: '#fff' 
-  },
-});

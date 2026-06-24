@@ -7,7 +7,6 @@ import Task from '@/components/todo/Task';
 import DateCard from '@/components/todo/CalendarDate';
 import { TaskItem, NewSubtaskItem, SubtaskItem } from '../../types/todo';
 import { Ionicons } from "@expo/vector-icons";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import * as Progress from 'react-native-progress';
 import AddTask from '@/components/todo/AddTask';
@@ -378,148 +377,146 @@ export default function TodoScreen() {
 
   return (
     //layout weird on phone, the header part fix it 
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <View style={{ flex: 1 }}>
-          
-          <FlatList
-            style={styles.container}
-            contentInsetAdjustmentBehavior='never'
-            data={renderedTaskItems}
-            keyExtractor={(item) => item.id.toString()}
-            ListHeaderComponent={
-              <>
+    <View style={{ flex: 1 }}>
+        
+        <FlatList
+          style={styles.container}
+          contentInsetAdjustmentBehavior='never'
+          data={renderedTaskItems}
+          keyExtractor={(item) => item.id.toString()}
+          ListHeaderComponent={
+            <>
 
-                <ImageBackground
-                  source={
-                    dayState() === 'today' 
-                    ? require("../../../assets/images/todo_header.png")
-                    : dayState() === 'past'
-                    ? require("../../../assets/images/todo_header_past.jpg")
-                    : require("../../../assets/images/todo_header_future.png")}
-                  style={styles.image}>
-                  
-                  <View style={styles.topDisplay}>
-                    <View style={styles.topDisplayLeft}>
-                      <Text style={styles.header}>{selectedDate === todayDate ? "Today" : selectedDayName } </Text>
-                      <Text style={styles.date}>{formattedSelectedDate} </Text>
-                    </View>
+              <ImageBackground
+                source={
+                  dayState() === 'today' 
+                  ? require("../../../assets/images/todo/todo_header.png")
+                  : dayState() === 'past'
+                  ? require("../../../assets/images/todo/todo_header_past.jpg")
+                  : require("../../../assets/images/todo/todo_header_future.png")}
+                style={styles.image}>
+                
+                <View style={styles.topDisplay}>
+                  <View style={styles.topDisplayLeft}>
+                    <Text style={styles.header}>{selectedDate === todayDate ? "Today" : selectedDayName } </Text>
+                    <Text style={styles.date}>{formattedSelectedDate} </Text>
+                  </View>
 
-                    <View style={styles.topDisplayRight}>
-                      <View style = {styles.topButtons}>
-                        <TouchableOpacity
-                          onPress={openCalendarSheet}>
-                            <Ionicons name="calendar-outline" size={25} color="#FFF"/>
-                        </TouchableOpacity>
-
-                        <TouchableOpacity
-                          onPress={() => console.log("search")}>
-                            <Ionicons name="search" size={25} color="#FFF"/>
-                        </TouchableOpacity>
-                      </View>
+                  <View style={styles.topDisplayRight}>
+                    <View style = {styles.topButtons}>
+                      <TouchableOpacity
+                        onPress={openCalendarSheet}>
+                          <Ionicons name="calendar-outline" size={25} color="#FFF"/>
+                      </TouchableOpacity>
 
                       <TouchableOpacity
-                        style={styles.pendingTaskBtn}
-                        onPress={() => console.log("Pending Tasks")}>
-                        <Text style={styles.pendingTaskTxt}>Pending Tasks</Text>
+                        onPress={() => console.log("search")}>
+                          <Ionicons name="search" size={25} color="#FFF"/>
                       </TouchableOpacity>
                     </View>
+
+                    <TouchableOpacity
+                      style={styles.pendingTaskBtn}
+                      onPress={() => console.log("Pending Tasks")}>
+                      <Text style={styles.pendingTaskTxt}>Pending Tasks</Text>
+                    </TouchableOpacity>
                   </View>
-
-                  <View style={styles.progressBarWrapper}>
-                    <ImageBackground 
-                      source={require("../../../assets/images/progress_bar.png")}
-                      style={styles.progressBar}
-                      imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
-                        <View style={styles.progressBarInner}>
-                          <Progress.Bar 
-                            progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
-                          </Progress.Bar>
-                          <Text style={styles.progressPercentTxt}>{Math.round(calculateProgress()*100)}%</Text>
-                        </View>
-                    </ImageBackground>
-                  </View>
-
-                </ImageBackground>
-
-                <CalendarProvider date={selectedDate} onDateChanged={setSelectedDate}>
-                  <WeekCalendar
-                    firstDay={1}
-                    allowShadow={false}
-                    style={{ backgroundColor: '#F4E6B0' }}
-                    markedDates={{
-                      [selectedDate]: { selected: true },
-                    }}
-                    theme={{
-                      calendarBackground: '#F4E6B0',
-                      textSectionTitleDisabledColor: '',
-                      textSectionTitleColor: '#937254',   // "M T W T F S S" row
-                      dayTextColor: '#937254',
-                      todayTextColor: '#5E4833',
-                      selectedDayBackgroundColor: '#937254',
-                      selectedDayTextColor: '#FFF',
-                      textDisabledColor: '#D9D9D9',
-                      textDayFontFamily: 'InterBold',
-                      textDayHeaderFontFamily: 'InterBold',
-                      textDayFontSize: 18,
-                      textDayHeaderFontSize: 14,
-                    }}
-                  />
-                </CalendarProvider>
-
-                <View style={styles.todoHeader}>
-                  <Text style={styles.taskHeader}>Tasks</Text>
-                  <TouchableOpacity
-                        onPress={() => console.log("filter")}>
-                          <Ionicons name="filter" size={25} color="#5E4833"/>
-                  </TouchableOpacity>
                 </View>
-              </>
-            }
-            renderItem={({ item }) => (
-              <View style={styles.todoTasks}>
-                <Task 
-                  text={item.text}
-                  completed={item.completed}
-                  dread={item.dread}
-                  difficulty={item.difficulty}
-                  taskDesc={item.taskDesc}
-                  subtasks={item.subtasks}
-                  onPress={() => {setSelectedTask(item); openEditTaskSheet();}}
-                  onDelete={() => deleteTask(item.id)}
-                  onToggleCompletion={() => toggleCompletion(item.id, item.completed, item.subtasks)}
-                  onToggleDread={() => toggleDread(item.id, item.dread)}
-                  onToggleSubtaskCompletion={(subtaskId, completed) => toggleSubtaskCompletion(subtaskId, completed)}
-                  />
-              </View>
-            )}
-            ListEmptyComponent={
-              <View style={styles.noTaskContainer}>
-                <Image 
-                  source={require("../../../assets/images/egg_icon.png")} 
-                  style={{ width: 100, height: 100 }}
-                  resizeMode={'center'} />
 
-                <Text style={styles.noTaskTitle}>No tasks yet!</Text>
-                <Text style={styles.noTaskSubtitle}> Add new tasks/ choose from pending</Text>
-                <TouchableOpacity style={styles.noTaskPendingBtn} onPress={() => console.log('pending tasks')}>
-                  <Text style={styles.noTaskPendingTxt}>Pending Tasks</Text>
-                  </TouchableOpacity>
-              </View>
-            }
-          />
-          
-        <TouchableOpacity 
-              style={styles.addBtn}
-              onPress={openAddTaskSheet}>
-              <Ionicons name="add" size={40} color="#FFF"/>
-        </TouchableOpacity>
+                <View style={styles.progressBarWrapper}>
+                  <ImageBackground 
+                    source={require("../../../assets/images/todo/progress_bar.png")}
+                    style={styles.progressBar}
+                    imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
+                      <View style={styles.progressBarInner}>
+                        <Progress.Bar 
+                          progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
+                        </Progress.Bar>
+                        <Text style={styles.progressPercentTxt}>{Math.round(calculateProgress()*100)}%</Text>
+                      </View>
+                  </ImageBackground>
+                </View>
 
-        <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask} openCalendar={openCalendarSheet} scheduledDate={selectedDate}></AddTask>
-        <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet} scheduledDate={selectedDate}></EditTask>
-        <CalendarSheet ref={calendarRef} close={closeCalendarSheet} selectedDate={selectedDate} syncSelectedDate={syncSelectedDate}></CalendarSheet>
+              </ImageBackground>
+
+              <CalendarProvider date={selectedDate} onDateChanged={setSelectedDate}>
+                <WeekCalendar
+                  firstDay={1}
+                  allowShadow={false}
+                  style={{ backgroundColor: '#F4E6B0' }}
+                  markedDates={{
+                    [selectedDate]: { selected: true },
+                  }}
+                  theme={{
+                    calendarBackground: '#F4E6B0',
+                    textSectionTitleDisabledColor: '',
+                    textSectionTitleColor: '#937254',   // "M T W T F S S" row
+                    dayTextColor: '#937254',
+                    todayTextColor: '#5E4833',
+                    selectedDayBackgroundColor: '#937254',
+                    selectedDayTextColor: '#FFF',
+                    textDisabledColor: '#D9D9D9',
+                    textDayFontFamily: 'InterBold',
+                    textDayHeaderFontFamily: 'InterBold',
+                    textDayFontSize: 18,
+                    textDayHeaderFontSize: 14,
+                  }}
+                />
+              </CalendarProvider>
+
+              <View style={styles.todoHeader}>
+                <Text style={styles.taskHeader}>Tasks</Text>
+                <TouchableOpacity
+                      onPress={() => console.log("filter")}>
+                        <Ionicons name="filter" size={25} color="#5E4833"/>
+                </TouchableOpacity>
+              </View>
+            </>
+          }
+          renderItem={({ item }) => (
+            <View style={styles.todoTasks}>
+              <Task 
+                text={item.text}
+                completed={item.completed}
+                dread={item.dread}
+                difficulty={item.difficulty}
+                taskDesc={item.taskDesc}
+                subtasks={item.subtasks}
+                onPress={() => {setSelectedTask(item); openEditTaskSheet();}}
+                onDelete={() => deleteTask(item.id)}
+                onToggleCompletion={() => toggleCompletion(item.id, item.completed, item.subtasks)}
+                onToggleDread={() => toggleDread(item.id, item.dread)}
+                onToggleSubtaskCompletion={(subtaskId, completed) => toggleSubtaskCompletion(subtaskId, completed)}
+                />
+            </View>
+          )}
+          ListEmptyComponent={
+            <View style={styles.noTaskContainer}>
+              <Image 
+                source={require("../../../assets/images/todo/egg_icon.png")} 
+                style={{ width: 100, height: 100 }}
+                resizeMode={'center'} />
+
+              <Text style={styles.noTaskTitle}>No tasks yet!</Text>
+              <Text style={styles.noTaskSubtitle}> Add new tasks/ choose from pending</Text>
+              <TouchableOpacity style={styles.noTaskPendingBtn} onPress={() => console.log('pending tasks')}>
+                <Text style={styles.noTaskPendingTxt}>Pending Tasks</Text>
+                </TouchableOpacity>
+            </View>
+          }
+        />
         
+      <TouchableOpacity 
+            style={styles.addBtn}
+            onPress={openAddTaskSheet}>
+            <Ionicons name="add" size={40} color="#FFF"/>
+      </TouchableOpacity>
 
-      </View>
-    </GestureHandlerRootView>
+      <AddTask ref={addTaskRef} close={closeAddTaskSheet} onAddTask={handleAddTask} openCalendar={openCalendarSheet} scheduledDate={selectedDate}></AddTask>
+      <EditTask ref={editTaskRef} task={selectedTask} onEditTask={handleEditTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet} scheduledDate={selectedDate}></EditTask>
+      <CalendarSheet ref={calendarRef} close={closeCalendarSheet} selectedDate={selectedDate} syncSelectedDate={syncSelectedDate}></CalendarSheet>
+      
+
+    </View>
   );
 }

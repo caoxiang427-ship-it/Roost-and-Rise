@@ -15,7 +15,8 @@ import { Session } from '@supabase/supabase-js';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
 import {  useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
-
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   const router = useRouter();
@@ -88,11 +89,16 @@ export default function RootLayout() {
   if (!fontLoaded && !error) return null;
   
   return (
-    <Stack screenOptions={{ headerShown: false }}>
-      <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
-      <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
-      <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
+          <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
+          <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
+          <Stack.Screen name='profile' options={{ animation: 'slide_from_right' }}/>
+        </Stack>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
    
