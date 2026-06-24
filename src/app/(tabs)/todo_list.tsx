@@ -429,6 +429,7 @@ export default function TodoScreen() {
                     style={styles.progressBar}
                     imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
                       <View style={styles.progressBarInner}>
+                        {/* maybe switch this for custom progress bar so it's more adaptable to diff phone dimensions, see index.tsx one*/}
                         <Progress.Bar 
                           progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
                         </Progress.Bar>
