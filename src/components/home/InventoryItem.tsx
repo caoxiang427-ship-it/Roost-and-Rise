@@ -1,13 +1,13 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 
-type StoreItemProps = {
+type InventoryItemProps = {
     imageUrl: any,
     itemName: string,
-    itemPrice: number,
+    isEquipped: boolean,
 };
 
 
-const StoreItem = (props: StoreItemProps) => {
+const InventoryItem = (props: InventoryItemProps) => {
     
     return (
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10,}}>
@@ -20,17 +20,21 @@ const StoreItem = (props: StoreItemProps) => {
                       ></Image>
                 </View>
                 <View style={styles.priceContainer}>
-                <Image
-                  source={require('../../../assets/images/home/coin.png')}
-                  style={{width: 18, height: 20, marginHorizontal: 1,}}
-                  ></Image>
-                  <Text style={styles.itemTxt}>{props.itemPrice}</Text>
+                  <Text style={styles.itemTxt}>{props.isEquipped && 'Equipped'}</Text>
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.buyBtn} onPress={() => console.log('buy')}>
-                <Text style={styles.buyTxt}>Buy</Text>
-            </TouchableOpacity>
+            <View style={styles.bottomBtns}>
+                {props.isEquipped ?
+                    <TouchableOpacity style={styles.Btn} onPress={() => console.log('equip')}>
+                        <Text style={styles.buyTxt}>Equip</Text>
+                    </TouchableOpacity>
+                :
+                    <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000'}]} onPress={() => console.log('remove')}>
+                        <Text style={styles.buyTxt}>Remove</Text>
+                    </TouchableOpacity>
+                }
+            </View>
         </View>
     );
 };
@@ -65,12 +69,16 @@ const styles = StyleSheet.create({
         fontSize: 15,
         paddingVertical: 3,
     },
-    buyBtn: {
+    bottomBtns: {
+        flexDirection: 'row',
+    },
+    Btn: {
         backgroundColor: '#008B1A',
         borderRadius: 10,
         paddingVertical: 5,
         paddingHorizontal: 15,
         marginTop: 5,
+        marginHorizontal: 2,
     },
     buyTxt: {
         color: "#FFF",
@@ -79,4 +87,4 @@ const styles = StyleSheet.create({
     }
 });
 
-export default StoreItem;
+export default InventoryItem;

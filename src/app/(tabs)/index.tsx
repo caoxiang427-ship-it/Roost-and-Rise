@@ -252,7 +252,7 @@ export default function HomeScreen() {
           </View>
 
           <Store ref={storeRef} close={closeStoreSheet} chickName={chickName}></Store>
-          <Inventory ref={inventoryRef} close={closeInventorySheet}></Inventory>
+          <Inventory ref={inventoryRef} close={closeInventorySheet} chickName={chickName}></Inventory>
           
       </ImageBackground>
     </View>

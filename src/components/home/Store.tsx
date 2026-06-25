@@ -4,10 +4,11 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useCallback, forwardRef } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import StoreItem from './StoreItem'; 
+import { STORE_ITEMS } from '@/constants/storeItems';
 
 type StoreProps = {
     close: () => void;
-    chickName: string
+    chickName: string;
 };
 
 type Ref = BottomSheet;
@@ -20,16 +21,6 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
 
     );
 
-    const storeItems = [
-        {id: 0, image: require('../../../assets/images/home/accessories/apple.png'), name: 'apple', price: 40},
-        {id: 1, image: require('../../../assets/images/home/accessories/bow.png'), name: 'bow', price: 50},
-        {id: 2, image: require('../../../assets/images/home/accessories/cowboy_hat.png'), name: 'cowboy', price: 70},
-        {id: 3, image: require('../../../assets/images/home/accessories/guitar.png'), name: 'guitar', price: 100},
-        {id: 4, image: require('../../../assets/images/home/accessories/scarf.png'), name: 'scarf', price: 50},
-        {id: 5, image: require('../../../assets/images/home/accessories/wizard_hat.png'), name: 'wizard hat', price: 100}
-
-    ];
-
     return (
         <BottomSheet 
             ref={ref} 
@@ -41,9 +32,9 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
             <BottomSheetFlatList
-              data={storeItems}
+              data={STORE_ITEMS}
               numColumns={3}
-              keyExtractor={item => item.id.toString()}
+              keyExtractor={(_, index) => index.toString()}
               renderItem={({ item }) => (
                 <StoreItem imageUrl={item.image} itemName={item.name} itemPrice={item.price} />
             )}
@@ -76,7 +67,7 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
                 </View>               
             )}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}
-            columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 5 }}
+            columnWrapperStyle={{ justifyContent: 'flex-start', gap: 20, marginBottom: 5 }}
             />
         </BottomSheet>
                 
