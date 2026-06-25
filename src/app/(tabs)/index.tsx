@@ -14,7 +14,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Store from '@/components/home/Store';
-import Inventory from '@/components/home/Store';
+import Inventory from '@/components/home/Inventory';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import SpeechBubble from '@/components/home/SpeechBubble';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
@@ -40,21 +40,17 @@ export default function HomeScreen() {
       if (user) {
         const metadataName = user.user_metadata?.display_name;
 
-        if (metadataName) {
-          setName(metadataName);
-        } else {
-          const { data } = await supabase
-            .from('profiles')
-            .select('display_name, chicken_name, xp, coins')
-            .eq('id', user.id)
-            .single();
+        const { data } = await supabase
+          .from('profiles')
+          .select('display_name, chicken_name, xp, coins')
+          .eq('id', user.id)
+          .single();
 
-          if (data) {
-            setName(data.display_name ?? '');
-            setChickName(data.chicken_name);
-            setXP(data.xp);
-            setCoins(data.coins);
-          };
+        if (data) {
+          setName(data.display_name ?? metadataName ?? '');
+          setChickName(data.chicken_name);
+          setXP(data.xp);
+          setCoins(data.coins);
         }
       }
     }
@@ -80,10 +76,10 @@ export default function HomeScreen() {
 
   // functions to open/ close store and inventory bottom sheets
   const openStoreSheet = () => storeRef.current?.expand();
-  const openInventorySheet = () => storeRef.current?.expand();
+  const openInventorySheet = () => inventoryRef.current?.expand();
 
   const closeStoreSheet = () => storeRef.current?.close();
-  const closeInventorySheet = () => storeRef.current?.close();
+  const closeInventorySheet = () => inventoryRef.current?.close();
 
   const petMsg = [
     "You're doing amazing!",
@@ -255,7 +251,7 @@ export default function HomeScreen() {
             <View style={styles.gameBtnsColumn} />
           </View>
 
-          <Store ref={storeRef} close={closeStoreSheet}></Store>
+          <Store ref={storeRef} close={closeStoreSheet} chickName={chickName}></Store>
           <Inventory ref={inventoryRef} close={closeInventorySheet}></Inventory>
           
       </ImageBackground>

@@ -1,10 +1,13 @@
 import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
+import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useCallback, forwardRef } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import StoreItem from './StoreItem'; 
 
 type StoreProps = {
     close: () => void;
+    chickName: string
 };
 
 type Ref = BottomSheet;
@@ -17,20 +20,64 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
 
     );
 
+    const storeItems = [
+        {id: 0, image: require('../../../assets/images/home/accessories/apple.png'), name: 'apple', price: 40},
+        {id: 1, image: require('../../../assets/images/home/accessories/bow.png'), name: 'bow', price: 50},
+        {id: 2, image: require('../../../assets/images/home/accessories/cowboy_hat.png'), name: 'cowboy', price: 70},
+        {id: 3, image: require('../../../assets/images/home/accessories/guitar.png'), name: 'guitar', price: 100},
+        {id: 4, image: require('../../../assets/images/home/accessories/scarf.png'), name: 'scarf', price: 50},
+        {id: 5, image: require('../../../assets/images/home/accessories/wizard_hat.png'), name: 'wizard hat', price: 100}
+
+    ];
+
     return (
         <BottomSheet 
             ref={ref} 
             index={-1} 
-            snapPoints={['50%']}
-            //enableDynamicSizing={true}
-           // maxDynamicContentSize={700}
+            enableDynamicSizing={true}
+            maxDynamicContentSize={700}
             enablePanDownToClose={true}
             backgroundStyle={styles.container}
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
-            <BottomSheetView>
-                <Text>This is the store</Text>
-            </BottomSheetView>
+            <BottomSheetFlatList
+              data={storeItems}
+              numColumns={3}
+              keyExtractor={item => item.id.toString()}
+              renderItem={({ item }) => (
+                <StoreItem imageUrl={item.image} itemName={item.name} itemPrice={item.price} />
+            )}
+            ListHeaderComponent={() => (
+                <View>
+                    <View style={styles.header}>
+                        <TouchableOpacity
+                        style={styles.closeBtn}
+                        onPress={props.close}>
+                            <Ionicons name='close' size={30} color="#FCF4D2"/>
+                        </TouchableOpacity>
+                        
+                        <View style={styles.coin}>
+                            <View style={styles.coinBar}>
+                            <Text style={{ fontFamily: "Interbold", color: '#937254', fontSize: 13}}>100</Text>
+                            </View>
+        
+                            <Image
+                            source={require('../../../assets/images/home/coin.png')}
+                            style={[styles.coinImage]}
+                            ></Image>
+                        </View>
+
+                    </View>
+
+                    <View style={styles.shop}>
+                        <Text style={styles.shopTitle}>🌿 Store </Text>
+                    </View>
+                    <Text style={styles.shopSubtitle}>Spend your coins on {props.chickName} here!</Text>
+                </View>               
+            )}
+            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}
+            columnWrapperStyle={{ justifyContent: 'space-between', marginBottom: 5 }}
+            />
         </BottomSheet>
                 
 
@@ -41,7 +88,63 @@ const styles = StyleSheet.create({
     container: {
         backgroundColor: '#f7f4e1',
     },
-    
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingBottom: 10,
+    },
+    closeBtn: {
+        backgroundColor: '#937254',
+        borderRadius: 50,
+        paddingVertical: 2,
+        paddingHorizontal: 2,
+    },
+     coin: {
+        marginTop: 2,
+        paddingVertical: 5,
+    },
+    coinImage: {
+        height: 30,
+        width: 28,
+        position: 'absolute',
+    },
+    coinBar: {
+        backgroundColor: "#FCF4D2",
+        borderColor: "#5E4833",
+        borderWidth: 2,
+        borderRadius: 20,
+        paddingVertical: 1,
+        paddingLeft: 20,
+        paddingRight: 15,
+        marginLeft: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'flex-start'
+    },
+    shop: {
+        backgroundColor: '#F4E6B0',
+        paddingVertical: 5,
+        paddingHorizontal: 20,
+        marginHorizontal: -20,
+    },
+    shopTitle: {
+        color: "#5E4833",
+        fontFamily: "InterBold",
+        fontSize: 33,
+    },
+    shopSubtitle: {
+        fontFamily: "InterSemiBold",
+        fontSize: 15,
+        color: '#937254',
+        paddingVertical: 10,
+    },
+    storeItemContainer: {
+        flexDirection: 'row',
+        paddingHorizontal: 20,
+        flexWrap: 'wrap',
+        paddingBottom: 90,
+        justifyContent: 'space-between'
+    },
 });
 
 export default Store;
