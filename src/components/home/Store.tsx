@@ -9,6 +9,9 @@ import { STORE_ITEMS } from '@/constants/storeItems';
 type StoreProps = {
     close: () => void;
     chickName: string;
+    coins: number;
+    onBuy: (price: number, itemId: number) => void;
+    ownedItems: number[];
 };
 
 type Ref = BottomSheet;
@@ -32,11 +35,11 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
             <BottomSheetFlatList
-              data={STORE_ITEMS}
+              data={STORE_ITEMS.filter(item => !props.ownedItems.includes(item.id))}
               numColumns={3}
               keyExtractor={(_, index) => index.toString()}
               renderItem={({ item }) => (
-                <StoreItem imageUrl={item.image} itemName={item.name} itemPrice={item.price} />
+                <StoreItem imageUrl={item.image} itemName={item.name} itemPrice={item.price} coins={props.coins} onBuy={() => props.onBuy(item.price, item.id)} />
             )}
             ListHeaderComponent={() => (
                 <View>
@@ -49,7 +52,7 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
                         
                         <View style={styles.coin}>
                             <View style={styles.coinBar}>
-                            <Text style={{ fontFamily: "Interbold", color: '#937254', fontSize: 13}}>100</Text>
+                            <Text style={{ fontFamily: "Interbold", color: '#937254', fontSize: 13}}>{props.coins}</Text>
                             </View>
         
                             <Image

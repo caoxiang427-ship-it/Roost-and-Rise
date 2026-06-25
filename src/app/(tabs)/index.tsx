@@ -23,11 +23,13 @@ import { runOnJS } from 'react-native-reanimated';
 export default function HomeScreen() {
 
   const insets = useSafeAreaInsets();
-  const [name, setName] = useState('');
-  const [chickName, setChickName] = useState('');
-  const [xp, setXP] = useState(0);
-  const [coins, setCoins] = useState(0);
-  const [showSpeech, setShowSpeech] = useState(false);
+  const [name, setName] = useState<string>('');
+  const [chickName, setChickName] = useState<string>('');
+  const [xp, setXP] = useState<number>(0);
+  const [coins, setCoins] = useState<number>(0);
+  const [equippedItemID, setEquippedItemID] = useState<number | null>(null);
+  const [showSpeech, setShowSpeech] = useState<boolean>(false);
+  const [ownedItemsIds, setOwnedItemsIds] = useState<number[]>([]);
 
   // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
@@ -42,16 +44,24 @@ export default function HomeScreen() {
 
         const { data } = await supabase
           .from('profiles')
-          .select('display_name, chicken_name, xp, coins')
+          .select('display_name, chicken_name, xp, coins, equipped_item_id')
           .eq('id', user.id)
           .single();
 
         if (data) {
           setName(data.display_name ?? metadataName ?? '');
-          setChickName(data.chicken_name);
-          setXP(data.xp);
-          setCoins(data.coins);
+          setChickName(data.chicken_name ?? '');
+          setXP(data.xp ?? 0);
+          setCoins(data.coins ?? 0);
+          setEquippedItemID(data.equipped_item_id);
         }
+
+        const { data: inventoryData } = await supabase
+        .from('inventory')
+        .select('item_id')
+        .eq('user_id', user.id);
+
+        if (inventoryData) setOwnedItemsIds(inventoryData.map(row => row.item_id));
       }
     }
     getUserProfile();
@@ -123,6 +133,37 @@ export default function HomeScreen() {
       console.log('petted!');
       runOnJS(showMessage)();
   });
+
+  // function to update supabase after buying items
+  const buyItem = async (price: number, itemId: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    // update coin value
+    const { error: coinsError } = await supabase
+      .from('profiles')
+      .update({ coins: coins - price })
+      .eq('id', user.id);
+
+    if (coinsError) {
+      console.error(coinsError);
+      return;
+    }
+    
+    // update inventory
+    const { error: inventoryError } = await supabase
+      .from('inventory')
+      .insert({ user_id: user.id, item_id: itemId });
+
+    if (inventoryError) {
+      console.error(inventoryError);
+      return;
+    }
+
+    // set local state
+    setCoins(coins - price);
+    setOwnedItemsIds(prev => [...prev, itemId]);
+  };
 
   return (
     <View style={styles.container}>
@@ -251,8 +292,8 @@ export default function HomeScreen() {
             <View style={styles.gameBtnsColumn} />
           </View>
 
-          <Store ref={storeRef} close={closeStoreSheet} chickName={chickName}></Store>
-          <Inventory ref={inventoryRef} close={closeInventorySheet} chickName={chickName}></Inventory>
+          <Store ref={storeRef} close={closeStoreSheet} chickName={chickName} coins={coins} onBuy={buyItem} ownedItems={ownedItemsIds}></Store>
+          <Inventory ref={inventoryRef} close={closeInventorySheet} chickName={chickName} ownedItems={ownedItemsIds} equippedItemId={equippedItemID}></Inventory>
           
       </ImageBackground>
     </View>

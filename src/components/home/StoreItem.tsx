@@ -1,13 +1,36 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { Alert } from 'react-native';
 
 type StoreItemProps = {
     imageUrl: any,
     itemName: string,
     itemPrice: number,
+    coins: number,
+    onBuy: () => void,
 };
 
 
 const StoreItem = (props: StoreItemProps) => {
+
+    const handleBuying = () => {
+        if (props.coins < props.itemPrice) {
+            Alert.alert(
+                "Not enough coins :(",
+                "Keep earning more!",
+                [{ text: "OK" }]                
+            );
+            return;
+        }
+
+        Alert.alert(
+        'Buy item?',
+        'Are you sure?',
+        [
+            { text: 'Cancel', style: 'cancel' },
+            { text: 'Buy', onPress: () => props.onBuy() },
+        ]
+        );
+    }
     
     return (
         <View style={{ justifyContent: 'center', alignItems: 'center', marginBottom: 10,}}>
@@ -28,7 +51,7 @@ const StoreItem = (props: StoreItemProps) => {
                 </View>
             </View>
 
-            <TouchableOpacity style={styles.buyBtn} onPress={() => console.log('buy')}>
+            <TouchableOpacity style={styles.buyBtn} onPress={handleBuying}>
                 <Text style={styles.buyTxt}>Buy</Text>
             </TouchableOpacity>
         </View>

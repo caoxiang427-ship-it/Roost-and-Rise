@@ -26,12 +26,12 @@ const InventoryItem = (props: InventoryItemProps) => {
 
             <View style={styles.bottomBtns}>
                 {props.isEquipped ?
-                    <TouchableOpacity style={styles.Btn} onPress={() => console.log('equip')}>
-                        <Text style={styles.buyTxt}>Equip</Text>
-                    </TouchableOpacity>
-                :
                     <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000'}]} onPress={() => console.log('remove')}>
                         <Text style={styles.buyTxt}>Remove</Text>
+                    </TouchableOpacity>
+                :
+                    <TouchableOpacity style={styles.Btn} onPress={() => console.log('equip')}>
+                        <Text style={styles.buyTxt}>Equip</Text>
                     </TouchableOpacity>
                 }
             </View>

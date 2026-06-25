@@ -4,10 +4,13 @@ import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { useCallback, forwardRef } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import InventoryItem from './InventoryItem';
+import { STORE_ITEMS } from '@/constants/storeItems';
 
 type InventoryProps = {
     close: () => void;
     chickName: string;
+    ownedItems: number[];
+    equippedItemId: number | null;
 };
 
 type Ref = BottomSheet;
@@ -20,10 +23,7 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
 
     );
 
-    const INVENTORY_ITEMS = [
-            {image: require('../../../assets/images/home/accessories/apple.png'), name: 'Apple', isEquipped: true},
-            {image: require('../../../assets/images/home/accessories/bow.png'), name: 'Bow', isEquipped: false},
-        ]; 
+    const INVENTORY_ITEMS = STORE_ITEMS.filter(item => props.ownedItems.includes(item.id));
 
     return (
         <BottomSheet 
@@ -40,7 +40,7 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
               numColumns={3}
               keyExtractor={(_, index) => index.toString()}
               renderItem={({ item }) => (
-                <InventoryItem imageUrl={item.image} itemName={item.name} isEquipped={item.isEquipped} />
+                <InventoryItem imageUrl={item.image} itemName={item.name} isEquipped={props.equippedItemId === item.id} />
             )}
             ListHeaderComponent={() => (
                 <View>
@@ -52,14 +52,20 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
                         </TouchableOpacity>
                     </View>
 
-                    <View style={styles.shop}>
-                        <Text style={styles.shopTitle}>👜 Inventory </Text>
+                    <View style={styles.inventory}>
+                        <Text style={styles.inventoryTitle}>👜 Inventory </Text>
                     </View>
-                    <Text style={styles.shopSubtitle}>Dress up {props.chickName} here!</Text>
+                    <Text style={styles.inventorySubtitle}>Dress up {props.chickName} here!</Text>
                 </View>               
             )}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}
             columnWrapperStyle={{ justifyContent: 'flex-start', gap: 20, marginBottom: 5 }}
+            ListEmptyComponent={() => (
+                <View style={{ alignItems: 'center', padding: 20, paddingBottom: 70, }}>
+                    <Text style={{fontFamily: 'InterBold', fontSize: 20, color: '#5E4833'}}>You don't own anything yet</Text>
+                    <Text style={{fontFamily: "InterSemiBold", fontSize: 15, color: '#937254'}}>Buy some things from the store</Text>
+                </View>
+            )}
             />
         </BottomSheet>
                 
@@ -82,51 +88,22 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         paddingHorizontal: 2,
     },
-     coin: {
-        marginTop: 2,
-        paddingVertical: 5,
-    },
-    coinImage: {
-        height: 30,
-        width: 28,
-        position: 'absolute',
-    },
-    coinBar: {
-        backgroundColor: "#FCF4D2",
-        borderColor: "#5E4833",
-        borderWidth: 2,
-        borderRadius: 20,
-        paddingVertical: 1,
-        paddingLeft: 20,
-        paddingRight: 15,
-        marginLeft: 10,
-        justifyContent: 'center',
-        alignItems: 'center',
-        alignSelf: 'flex-start'
-    },
-    shop: {
+    inventory: {
         backgroundColor: '#F4E6B0',
         paddingVertical: 5,
         paddingHorizontal: 20,
         marginHorizontal: -20,
     },
-    shopTitle: {
+    inventoryTitle: {
         color: "#5E4833",
         fontFamily: "InterBold",
         fontSize: 33,
     },
-    shopSubtitle: {
+    inventorySubtitle: {
         fontFamily: "InterSemiBold",
         fontSize: 15,
         color: '#937254',
         paddingVertical: 10,
-    },
-    storeItemContainer: {
-        flexDirection: 'row',
-        paddingHorizontal: 20,
-        flexWrap: 'wrap',
-        paddingBottom: 90,
-        justifyContent: 'space-between'
     },
 });
 
