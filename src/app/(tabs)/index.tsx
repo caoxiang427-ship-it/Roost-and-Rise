@@ -6,7 +6,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, Text, TouchableOpacity, Image} from 'react-native';
+import { View, Text, TouchableOpacity, Image, TextInput} from 'react-native';
 import { styles } from '../../styles/index_styles';
 import { ImageBackground } from 'expo-image';
 import { Ionicons } from "@expo/vector-icons";
@@ -16,11 +16,15 @@ import { LinearGradient } from 'expo-linear-gradient';
 import Store from '@/components/home/Store';
 import Inventory from '@/components/home/Store';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import SpeechBubble from '@/components/home/SpeechBubble';
 
 export default function HomeScreen() {
 
   const insets = useSafeAreaInsets();
-  const[name, setName] = useState('');
+  const [name, setName] = useState('');
+  const [chickName, setChickName] = useState('');
+
+  // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
   const inventoryRef = useRef<BottomSheet>(null);
 
@@ -48,8 +52,7 @@ export default function HomeScreen() {
   }, []);
 
   const getDailyGreeting = () => {
-    //const hour = new Date().getHours();
-    const hour = 23;
+    const hour = new Date().getHours();
 
     if (hour >= 6 && hour < 12) return 'Good\nMorning!';
     else if (hour >= 6 && hour < 18) return 'Good\nAfternoon!';
@@ -70,15 +73,19 @@ export default function HomeScreen() {
   const closeStoreSheet = () => storeRef.current?.close();
   const closeInventorySheet = () => storeRef.current?.close();
 
+  const encouragingMsg = [
+    ""
+  ]
+  
   return (
     <View style={styles.container}>
       <ImageBackground
         source={require("../../../assets/images/home/home_background.png")}
         style={styles.container}>
-          <View style={[styles.header, {paddingTop: insets.top + 10, paddingLeft: insets.left + 25, paddingRight: insets.right + 30}]}>
+          <View style={[styles.header, {paddingTop: insets.top + 12, paddingLeft: insets.left + 25, paddingRight: insets.right + 30}]}>
             <Link href="../profile" asChild>
             <TouchableOpacity style={styles.profile}>
-              <Ionicons name="person-outline" size={40} color="#5E90A1"/>
+              <Ionicons name="person-outline" size={30} color="#5E90A1"/>
             </TouchableOpacity>
             </Link>
 
@@ -94,67 +101,82 @@ export default function HomeScreen() {
 
           </View>
 
-          <View style={[styles.topDisplay, {paddingHorizontal: insets.left}]}>
-
-            <View style={styles.topDisplayLeft}>
-              <Text 
-                style={[styles.InterBold, {color: 'rgba(255, 255, 255, 0.6)', fontSize: 16}]}>{getDate()}</Text>
-
-              <Text 
-                style={[styles.InterBold, {color: '#FFF', fontSize: 40}]}>{getDailyGreeting()}</Text>
-
-              <Text 
-                style={[styles.InterBold, {color: '#FFF0B2', fontSize: 38}]}>{name}</Text>
-
-              <View style={styles.coin}>
-                <View style={styles.coinBar}>
-                  <Text style={[styles.InterBold, {color: '#937254', fontSize: 13}]}>100</Text>
-                </View>
-
-                <Image
-                  source={require('../../../assets/images/home/coin.png')}
-                  style={[styles.coinImage, {}]}
-                ></Image>
-              </View>
-              {/*
-              <View style={styles.pet}>
-                <View style={styles.petName}>
-                  <Text style={[styles.InterBold, {fontSize: 24, color: '#025673'}]}>Sunny</Text>
-                </View>
-              </View>
-              */}
-            </View>
-
-            <View style={styles.topDisplayRight}>
-              <Text
-                style={[styles.InterBold, {color: '#FFF', fontSize: 15}]}>I'm feeling:</Text>
-              <TouchableOpacity style={styles.moodTrackerBtn} onPress={() => console.log('Mood tracker')}>
+          <View>
+            <View style={[styles.topDisplay, {paddingHorizontal: insets.left}]}>
+              <View style={styles.topDisplayLeft}>
                 <Text 
-                  style={[styles.InterBold, {color: "#FFF", fontSize: 20}]}>Happy 😊</Text>
-              </TouchableOpacity>
+                  style={[styles.InterBold, {color: 'rgba(255, 255, 255, 0.6)', fontSize: 16}]}>{getDate()}</Text>
 
-              <View style={styles.xp}>
-                <View style={styles.xpBarOuter}>
-                  <View style={styles.xpBarInner}>
-                    <LinearGradient
-                      colors={['#3F6D38', '#00BC22']}
-                      style={{
-                      width: '100%',
-                      height: '80%',       // ← your progress value
-                      position: 'absolute',
-                      top: 0,
-                      borderRadius: 10,
-                    }}
-                    />
+                <Text 
+                  style={[styles.InterBold, {color: '#FFF', fontSize: 34}]}>{getDailyGreeting()}</Text>
+
+                <Text 
+                  style={[styles.InterBold, {color: '#FFF0B2', fontSize: 30}]}>{name}</Text>
+
+                <View style={styles.coin}>
+                  <View style={styles.coinBar}>
+                    <Text style={[styles.InterBold, {color: '#937254', fontSize: 13}]}>100</Text>
+                  </View>
+
+                  <Image
+                    source={require('../../../assets/images/home/coin.png')}
+                    style={[styles.coinImage]}
+                  ></Image>
+                </View>
+              </View>
+
+              <View style={styles.topDisplayRight}>
+                <Text
+                  style={[styles.InterBold, {color: '#FFF', fontSize: 12}]}>I'm feeling:</Text>
+                <TouchableOpacity style={styles.moodTrackerBtn} onPress={() => console.log('Mood tracker')}>
+                  <Text 
+                    style={[styles.InterBold, {color: "#FFF", fontSize: 15}]}>Happy 😊</Text>
+                </TouchableOpacity>
+
+                <View style={styles.xp}>
+                  <View style={styles.xpBarOuter}>
+                    <View style={styles.xpBarInner}>
+                      <LinearGradient
+                        colors={['#3F6D38', '#00BC22']}
+                        style={{
+                        width: '100%',
+                        height: '80%',       // progress value
+                        position: 'absolute',
+                        top: 0,
+                        borderRadius: 10,
+                      }}
+                      />
+                    </View>
+                  </View>
+                  <View style={styles.xpTop}>
+                    <Text style={[styles.InterBold, {fontSize: 10, color: '#5E4833'}]}>LVL</Text>
+                    <Text style={[styles.InterBold, {fontSize: 26, color: '#5E4833'}]}>10</Text>
                   </View>
                 </View>
-                <View style={styles.xpTop}>
-                  <Text style={[styles.InterBold, {fontSize: 10, color: '#5E4833'}]}>LVL</Text>
-                  <Text style={[styles.InterBold, {fontSize: 26, color: '#5E4833'}]}>10</Text>
-                </View>
               </View>
             </View>
+
+            <View style={styles.pet}>
+              <View style={styles.petName}>
+                <TextInput 
+                  placeholder={'enter name'} 
+                  style={[styles.InterBold, {fontSize: 20, color: "#025673"}]}
+                  value={chickName}
+                  onChangeText={name => setChickName(name)}></TextInput>
+              </View>
+              <Image
+                source={require('../../../assets/images/home/chicken.png')}
+                style={{width: 206, height: 225 }}
+              ></Image>
+            </View>
+            
+            {chickName === '' &&
+            <SpeechBubble text='Please give me a name!'></SpeechBubble>
+            }
+
           </View>
+
+
           <View style={styles.bottomDisplay}>
             <View style={styles.gameBtnsColumn}>
               <TouchableOpacity style={styles.gameBtns} onPress={openStoreSheet}>

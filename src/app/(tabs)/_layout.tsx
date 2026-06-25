@@ -99,7 +99,7 @@ export default function TabLayout() {
               >
               <Ionicons name="home" color='#FFF' size={28} />
               </View>
-              <Text style={{fontFamily: 'InterBold', color: focused ? '#4ec1e8' : '#5E90A1', fontSize: 10}}>Home</Text>
+              <Text style={{fontFamily: 'InterBold', color: focused ? '#4ec1e8' : '#5E90A1', fontSize: 9}}>Home</Text>
             </View>
           ),
         }}

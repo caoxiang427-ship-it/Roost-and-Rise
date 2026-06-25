@@ -10,13 +10,13 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-     //   backgroundColor: 'red',
+      //  backgroundColor: 'red',
         paddingBottom: 10,
     },
     profile: {
         backgroundColor: '#FFF',
-        height: 60,
-        width: 60,
+        height: 45,
+        width: 45,
         borderRadius: 50,
         justifyContent: 'center',
         alignItems: "center",
@@ -39,9 +39,8 @@ export const styles = StyleSheet.create({
         paddingTop: 10
     },
     topDisplayLeft: {
-    //    backgroundColor: "grey",
+      //  backgroundColor: "grey",
         paddingLeft: 25,
-        alignSelf: 'flex-start',
     },
     topDisplayRight: {
       //  backgroundColor: 'blue',
@@ -60,8 +59,8 @@ export const styles = StyleSheet.create({
         fontFamily: "InterBold",
     },
     coin: {
-    //    backgroundColor: "white",
-        marginTop: 10,
+     //   backgroundColor: "white",
+        marginTop: 2,
         paddingVertical: 5,
     },
     coinImage: {
@@ -83,7 +82,7 @@ export const styles = StyleSheet.create({
         alignSelf: 'flex-start'
     },
     xp: {
-     //   backgroundColor: 'white',
+      //  backgroundColor: 'white',
         alignItems: 'center',
         justifyContent: 'center',
         alignSelf: 'flex-end',
@@ -98,18 +97,17 @@ export const styles = StyleSheet.create({
         borderColor: "#5E4833",
         justifyContent: 'center',
         alignItems: 'center',
-        paddingVertical: 5,
-        paddingHorizontal: 14,
+        paddingVertical: 7,
         position: 'absolute',
         top: 0,
-        alignSelf: 'center',
+        minWidth:65,
     },
     xpBarOuter: {
         borderWidth: 4,
         borderRadius: 20,
         borderColor: '#5E4833',
         backgroundColor: '#FCF4D2',
-       // alignSelf: 'flex-start',
+        alignSelf: 'center',
         marginTop: 30,
         paddingHorizontal: 4,
         paddingBottom: 5,
@@ -123,8 +121,12 @@ export const styles = StyleSheet.create({
         overflow: 'hidden' 
     },
     pet: {
-     //  backgroundColor: 'purple',
-
+    //   backgroundColor: 'purple',
+       justifyContent: 'center',
+       alignItems: 'center',
+       position: 'absolute',
+       alignSelf: 'center',
+       top: '60%'
     },
     petName: {
         backgroundColor: "#FFF", 
@@ -132,13 +134,16 @@ export const styles = StyleSheet.create({
         borderRadius: 20, 
         borderColor: '#025673',
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+        alignSelf: 'center',
+        paddingVertical: 2,
+        paddingHorizontal: 20,
     },
     bottomDisplay: {
-    //    backgroundColor: 'red',
+      //  backgroundColor: 'red',
         flexDirection: 'row',
         marginTop: 'auto',
-        marginBottom: 130,
+        marginBottom: 110,
     },
     gameBtns: {
         backgroundColor: '#FCF4D2',
@@ -152,7 +157,7 @@ export const styles = StyleSheet.create({
         marginVertical: 2 
     },
     focusContainer: {
-      //  backgroundColor: 'black',
+     //   backgroundColor: 'black',
         paddingHorizontal: 10,
     },
     focusSession: {
