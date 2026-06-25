@@ -23,6 +23,8 @@ export default function HomeScreen() {
   const insets = useSafeAreaInsets();
   const [name, setName] = useState('');
   const [chickName, setChickName] = useState('');
+  const [xp, setXP] = useState(0);
+  const [coins, setCoins] = useState(0);
 
   // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
@@ -40,11 +42,16 @@ export default function HomeScreen() {
         } else {
           const { data } = await supabase
             .from('profiles')
-            .select('display_name')
+            .select('display_name, chicken_name, xp, coins')
             .eq('id', user.id)
             .single();
 
-          if (data) setName(data.display_name ?? '');
+          if (data) {
+            setName(data.display_name ?? '');
+            setChickName(data.chicken_name);
+            setXP(data.xp);
+            setCoins(data.coins);
+          };
         }
       }
     }
@@ -67,6 +74,7 @@ export default function HomeScreen() {
     return `${day} ${date}`;
   };
 
+  // functions to open/ close store and inventory bottom sheets
   const openStoreSheet = () => storeRef.current?.expand();
   const openInventorySheet = () => storeRef.current?.expand();
 
@@ -76,7 +84,22 @@ export default function HomeScreen() {
   const encouragingMsg = [
     ""
   ]
-  
+
+  const updateChickName = async (newName: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) return;
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ chicken_name: newName })
+      .eq('id', user.id);
+
+      if (error) console.error(error);
+      else setChickName(newName);
+      
+  };
+
   return (
     <View style={styles.container}>
       <ImageBackground
@@ -115,7 +138,7 @@ export default function HomeScreen() {
 
                 <View style={styles.coin}>
                   <View style={styles.coinBar}>
-                    <Text style={[styles.InterBold, {color: '#937254', fontSize: 13}]}>100</Text>
+                    <Text style={[styles.InterBold, {color: '#937254', fontSize: 13}]}>{coins}</Text>
                   </View>
 
                   <Image
@@ -162,7 +185,8 @@ export default function HomeScreen() {
                   placeholder={'enter name'} 
                   style={[styles.InterBold, {fontSize: 20, color: "#025673"}]}
                   value={chickName}
-                  onChangeText={name => setChickName(name)}></TextInput>
+                  onChangeText={name => setChickName(name)} // update local state after every keystroke
+                  onSubmitEditing={name => updateChickName(chickName)}></TextInput> // save to DB only when done
               </View>
               <Image
                 source={require('../../../assets/images/home/chicken.png')}
