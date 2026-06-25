@@ -17,6 +17,8 @@ import Store from '@/components/home/Store';
 import Inventory from '@/components/home/Store';
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import SpeechBubble from '@/components/home/SpeechBubble';
+import { GestureDetector, Gesture } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 
 export default function HomeScreen() {
 
@@ -25,6 +27,7 @@ export default function HomeScreen() {
   const [chickName, setChickName] = useState('');
   const [xp, setXP] = useState(0);
   const [coins, setCoins] = useState(0);
+  const [showSpeech, setShowSpeech] = useState(false);
 
   // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
@@ -73,6 +76,7 @@ export default function HomeScreen() {
     const date = today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: '2-digit' });
     return `${day} ${date}`;
   };
+  
 
   // functions to open/ close store and inventory bottom sheets
   const openStoreSheet = () => storeRef.current?.expand();
@@ -81,8 +85,19 @@ export default function HomeScreen() {
   const closeStoreSheet = () => storeRef.current?.close();
   const closeInventorySheet = () => storeRef.current?.close();
 
-  const encouragingMsg = [
-    ""
+  const petMsg = [
+    "You're doing amazing!",
+    "Keep it up, you've got this!",
+    "Time to lock in? or rest! both are great",
+    "Another day, another win!",
+    "Take it one day at a time",
+    "YAY keep going!",
+    "Please don't eat chicken for dinner",
+    "Keep pecking!",
+    "I hate going for lectures",
+    "I'm so sleepy, what about you?",
+    "Take care of yourself <3",
+    "How are you feeling today?"
   ]
 
   const updateChickName = async (newName: string) => {
@@ -99,6 +114,19 @@ export default function HomeScreen() {
       else setChickName(newName);
       
   };
+
+  // function to show speech bubble temporarily when being pet
+  const showMessage = () => {
+    setShowSpeech(true);
+    setTimeout(() => setShowSpeech(false), 3000); // hides after 3 seconds
+  };
+
+  // function to detect "petting motion" -> just swiping
+  const pet = Gesture.Pan()
+    .onStart((e) => {
+      console.log('petted!');
+      runOnJS(showMessage)();
+  });
 
   return (
     <View style={styles.container}>
@@ -186,17 +214,21 @@ export default function HomeScreen() {
                   style={[styles.InterBold, {fontSize: 20, color: "#025673"}]}
                   value={chickName}
                   onChangeText={name => setChickName(name)} // update local state after every keystroke
-                  onSubmitEditing={name => updateChickName(chickName)}></TextInput> // save to DB only when done
+                  onSubmitEditing={name => updateChickName(chickName)} // save to DB only when done
+                  ></TextInput>
               </View>
-              <Image
-                source={require('../../../assets/images/home/chicken.png')}
-                style={{width: 206, height: 225 }}
-              ></Image>
+              <GestureDetector gesture={pet}>
+                <Image
+                  source={require('../../../assets/images/home/chicken.png')}
+                  style={{width: 206, height: 225 }}
+                ></Image>
+              </GestureDetector>
             </View>
             
             {chickName === '' &&
             <SpeechBubble text='Please give me a name!'></SpeechBubble>
             }
+            {showSpeech && <SpeechBubble text={petMsg[Math.floor(Math.random() * (petMsg.length))]}></SpeechBubble>}
 
           </View>
 
