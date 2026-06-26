@@ -4,14 +4,14 @@ import EmojiPickerModal from 'rn-emoji-keyboard';
 
 interface EmojiPickerProps {
   selectedEmoji: string;
-  onEmojiSelect: (emoji: string) => void;
+  onSelect: (emoji: string) => void;
 }
 
-export default function EmojiPicker({ selectedEmoji, onEmojiSelect }: EmojiPickerProps) {
+export default function EmojiPicker({ selectedEmoji, onSelect }: EmojiPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   function handleEmojiPick(emojiObject: { emoji: string }) {
-    onEmojiSelect(emojiObject.emoji);
+    onSelect(emojiObject.emoji);
     setIsOpen(false);
   }
 
