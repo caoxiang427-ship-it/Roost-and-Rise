@@ -13,6 +13,8 @@ import CalendarSheet from '@/components/todo/CalendarSheet';
 import { supabase } from '@/lib/supabase';
 import { CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import ShowReward from '@/components/ShowReward';
+import CalendarDay from '@/components/todo/CalendarDay';
 
 
 // uhh layout looks weird on android for some reason, fix ltr
@@ -423,6 +425,9 @@ export default function TodoScreen() {
                       </TouchableOpacity>
                     </View>
                   </View>
+                  <View style={ { alignSelf: 'flex-end', paddingRight: 20, paddingTop: 10}}>
+                    <ShowReward xp={50} coins={50}></ShowReward>
+                  </View>
 
                   <View style={styles.progressBarWrapper}>
                     <ImageBackground 
@@ -446,22 +451,15 @@ export default function TodoScreen() {
                 <WeekCalendar
                   firstDay={1}
                   allowShadow={false}
-                  style={{ backgroundColor: '#F4E6B0' }}
+                  dayComponent={CalendarDay}
+                  style={{ backgroundColor: '#F4E6B0'}}
                   markedDates={{
                     [selectedDate]: { selected: true },
                   }}
                   theme={{
                     calendarBackground: '#F4E6B0',
-                    textSectionTitleDisabledColor: '',
                     textSectionTitleColor: '#937254',   // "M T W T F S S" row
-                    dayTextColor: '#937254',
-                    todayTextColor: '#5E4833',
-                    selectedDayBackgroundColor: '#937254',
-                    selectedDayTextColor: '#FFF',
-                    textDisabledColor: '#D9D9D9',
-                    textDayFontFamily: 'InterBold',
                     textDayHeaderFontFamily: 'InterBold',
-                    textDayFontSize: 18,
                     textDayHeaderFontSize: 14,
                   }}
                 />

@@ -87,11 +87,6 @@ export const styles = StyleSheet.create({
     color: "#9D7957",
     paddingHorizontal: 5
   },
-  calendarContainer: {
-    width: 400,
-    height: 105,
-    backgroundColor: '#F4E6B0',
-  },
   content: {
     alignItems: "center",
   },

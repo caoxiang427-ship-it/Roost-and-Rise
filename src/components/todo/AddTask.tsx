@@ -308,7 +308,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 22,
-        paddingBottom: 90,
+        paddingBottom: 100,
         marginTop: 'auto',
     },
     difficultyBtn: {

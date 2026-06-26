@@ -237,7 +237,7 @@ export default function HomeScreen() {
     return (
      <ImageBackground
       source={require("../../../assets/images/home/home_background.png")}
-      style={styles.container}>
+      style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
       <ActivityIndicator size="large" color="#FFF" />
     </ImageBackground>
     )
