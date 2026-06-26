@@ -19,6 +19,7 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
 import SpeechBubble from '@/components/home/SpeechBubble';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
+import { imageMap } from '@/constants/storeItems';
 
 export default function HomeScreen() {
 
@@ -164,6 +165,44 @@ export default function HomeScreen() {
     setCoins(coins - price);
     setOwnedItemsIds(prev => [...prev, itemId]);
   };
+  
+  // function to update supabase after equipping item
+  const equipItem = async (itemId: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ equipped_item_id: itemId })
+      .eq('id', user.id);
+
+    if (profileError) {
+      console.error(profileError);
+      return;
+    }
+
+    // update local state
+    setEquippedItemID(itemId);
+  };
+
+  // function to update supabase after unequipping an item
+  const unequipItem = async (itemId: number) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ equipped_item_id: null })
+      .eq('id', user.id);
+
+    if (profileError) {
+      console.error(profileError);
+      return;
+    }
+
+    // update local state
+    setEquippedItemID(null);
+  };
 
   return (
     <View style={styles.container}>
@@ -256,7 +295,9 @@ export default function HomeScreen() {
               </View>
               <GestureDetector gesture={pet}>
                 <Image
-                  source={require('../../../assets/images/home/chicken.png')}
+                  source={ equippedItemID === null ? require('../../../assets/images/home/chicken.png')
+                    : imageMap[equippedItemID]
+                  }
                   style={{width: 206, height: 225 }}
                 ></Image>
               </GestureDetector>
@@ -292,8 +333,22 @@ export default function HomeScreen() {
             <View style={styles.gameBtnsColumn} />
           </View>
 
-          <Store ref={storeRef} close={closeStoreSheet} chickName={chickName} coins={coins} onBuy={buyItem} ownedItems={ownedItemsIds}></Store>
-          <Inventory ref={inventoryRef} close={closeInventorySheet} chickName={chickName} ownedItems={ownedItemsIds} equippedItemId={equippedItemID}></Inventory>
+          <Store 
+            ref={storeRef} 
+            close={closeStoreSheet}
+            chickName={chickName} 
+            coins={coins} 
+            onBuy={buyItem} 
+            ownedItems={ownedItemsIds}></Store>
+
+          <Inventory 
+            ref={inventoryRef} 
+            close={closeInventorySheet} 
+            chickName={chickName} 
+            ownedItems={ownedItemsIds} 
+            equippedItemId={equippedItemID} 
+            onEquip={equipItem}
+            onUnequip={unequipItem}></Inventory>
           
       </ImageBackground>
     </View>

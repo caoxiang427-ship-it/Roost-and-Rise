@@ -71,6 +71,12 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
             )}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}
             columnWrapperStyle={{ justifyContent: 'flex-start', gap: 20, marginBottom: 5 }}
+            ListEmptyComponent={() => (
+                <View style={{ alignItems: 'center', padding: 20, paddingBottom: 70, }}>
+                    <Text style={{fontFamily: 'InterBold', fontSize: 20, color: '#5E4833'}}>You've bought everything!</Text>
+                    <Text style={{fontFamily: "InterSemiBold", fontSize: 15, color: '#937254'}}>more to come soon</Text>
+                </View>
+            )}
             />
         </BottomSheet>
                 

@@ -4,6 +4,8 @@ type InventoryItemProps = {
     imageUrl: any,
     itemName: string,
     isEquipped: boolean,
+    onEquip: () => void;
+    onUnequip: () => void;
 };
 
 
@@ -26,11 +28,11 @@ const InventoryItem = (props: InventoryItemProps) => {
 
             <View style={styles.bottomBtns}>
                 {props.isEquipped ?
-                    <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000'}]} onPress={() => console.log('remove')}>
+                    <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000'}]} onPress={props.onUnequip}>
                         <Text style={styles.buyTxt}>Remove</Text>
                     </TouchableOpacity>
                 :
-                    <TouchableOpacity style={styles.Btn} onPress={() => console.log('equip')}>
+                    <TouchableOpacity style={styles.Btn} onPress={props.onEquip}>
                         <Text style={styles.buyTxt}>Equip</Text>
                     </TouchableOpacity>
                 }

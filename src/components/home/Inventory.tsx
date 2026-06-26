@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useCallback, forwardRef } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import InventoryItem from './InventoryItem';
@@ -11,6 +11,8 @@ type InventoryProps = {
     chickName: string;
     ownedItems: number[];
     equippedItemId: number | null;
+    onEquip: (itemId: number) => void;
+    onUnequip: (itemId: number) => void;
 };
 
 type Ref = BottomSheet;
@@ -24,6 +26,30 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
     );
 
     const INVENTORY_ITEMS = STORE_ITEMS.filter(item => props.ownedItems.includes(item.id));
+
+    const onEquip = (itemId: number) => {
+        if (props.equippedItemId !== null) {
+            Alert.alert(
+                "You alredy have an item equipped",
+                "only one item can be equipped at a time",
+                [{ text: "OK" }]                
+            );
+            return;
+        }
+        props.onEquip(itemId);
+    };
+
+    const onUnequip = (itemId: number) => {
+        if (props.equippedItemId === null) {
+            Alert.alert(
+                "There's nothing to unequip",
+                "equip or buy more items :)",
+                [{ text: "OK" }]                
+            );
+            return; 
+        }
+        props.onUnequip(itemId);
+    }
 
     return (
         <BottomSheet 
@@ -40,7 +66,12 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
               numColumns={3}
               keyExtractor={(_, index) => index.toString()}
               renderItem={({ item }) => (
-                <InventoryItem imageUrl={item.image} itemName={item.name} isEquipped={props.equippedItemId === item.id} />
+                <InventoryItem 
+                  imageUrl={item.image} 
+                  itemName={item.name} 
+                  isEquipped={props.equippedItemId === item.id} 
+                  onEquip={() => onEquip(item.id)}
+                  onUnequip={() => onUnequip(item.id)} />
             )}
             ListHeaderComponent={() => (
                 <View>

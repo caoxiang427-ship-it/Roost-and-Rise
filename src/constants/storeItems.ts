@@ -13,3 +13,12 @@ export type StoreItem = {
   name: string,
   price: number,
 };
+
+export const imageMap: Record<number, any> = {
+  0: require('../../assets/images/home/chicken_accessorised/chicken_apple.png'),
+  1: require('../../assets/images/home/chicken_accessorised/chicken_bow.png'),
+  2: require('../../assets/images/home/chicken_accessorised/chicken_cowboy.png'),
+  3: require('../../assets/images/home/chicken_accessorised/chicken_guitar.png'),
+  4: require('../../assets/images/home/chicken_accessorised/chicken_scarf.png'),
+  5: require('../../assets/images/home/chicken_accessorised/chicken_wizard.png'),
+};
