@@ -156,6 +156,14 @@ export default function TabLayout() {
         title: 'Edit Categories',
         }}
       />
+      <Tabs.Screen
+        name="pomodoro_timer"
+        options={{
+        href: null,
+        headerShown: true,
+        title: 'Focus',
+        }}
+      />
     </Tabs>
   );
 }

@@ -20,10 +20,12 @@ import SpeechBubble from '@/components/home/SpeechBubble';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { imageMap } from '@/constants/storeItems';
+import { useRouter } from 'expo-router';
 
 export default function HomeScreen() {
 
   const insets = useSafeAreaInsets();
+  const router = useRouter();
   const [name, setName] = useState<string>('');
   const [chickName, setChickName] = useState<string>('');
   const [xp, setXP] = useState<number>(0);
@@ -321,14 +323,19 @@ export default function HomeScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.focusContainer}>
-              <View style={styles.focusSession}>
-                <Text style={[styles.InterBold, {color: '#FFF', fontSize: 15}]}>Start focus session!</Text>
-              </View>
-              <TouchableOpacity style={styles.timer}>
-                <Text style={[styles.InterBold, {color: '#127FA7', fontSize: 60}]}>25:00</Text>
-              </TouchableOpacity>
+          <TouchableOpacity 
+            style={styles.focusContainer}
+            onPress={() => router.push('/(tabs)/pomodoro_timer')}
+          >
+            <View style={styles.focusSession}>
+              <Text style={[styles.InterBold, {color: '#FFF', fontSize: 15}]}>
+                Start focus session!
+              </Text>
             </View>
+            <View style={styles.timer}>
+              <Text style={[styles.InterBold, {color: '#127FA7', fontSize: 60}]}>25:00</Text>
+            </View>
+          </TouchableOpacity>
 
             <View style={styles.gameBtnsColumn} />
           </View>
