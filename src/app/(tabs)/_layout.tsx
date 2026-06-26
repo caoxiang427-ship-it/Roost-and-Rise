@@ -148,6 +148,14 @@ export default function TabLayout() {
           ),
         }}
       />
+      <Tabs.Screen
+        name="edit_categories"
+        options={{
+        href: null,    
+        headerShown: true,
+        title: 'Edit Categories',
+        }}
+      />
     </Tabs>
   );
 }
