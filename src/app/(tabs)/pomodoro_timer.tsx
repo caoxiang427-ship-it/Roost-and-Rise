@@ -14,6 +14,7 @@ export default function TimerScreen() {
   const [mode, setMode] = useState<'focus' | 'break'>('focus');
   const [todayFocusCount, setTodayFocusCount] = useState(0);
   const [todayStudyMinutes, setTodayStudyMinutes] = useState(0);
+  const [sessionStarted, setSessionStarted] = useState(false);
 
   const SESSIONS_BEFORE_LONG_BREAK = 4;
   const LONG_BREAK_MINUTES = 15;
@@ -69,6 +70,14 @@ export default function TimerScreen() {
     }
   }, []);
 
+  function getSessionSubtitle() {
+    const nextSession = todayFocusCount + 1;
+    const cyclePosition = ((nextSession - 1) % 4) + 1;
+    const isNextLongBreak = nextSession % 4 === 0;
+    const breakMins = isNextLongBreak ? LONG_BREAK_MINUTES : breakDuration;
+    return `Session ${cyclePosition} of 4 · then a ${breakMins}-min break`;
+  }
+
   async function loadSummary() {
     const count = await getTodaysFocusSessionCount();
     const minutes = await getTodayStudyMinutes();
@@ -78,12 +87,15 @@ export default function TimerScreen() {
   }
   
   function handleStart() {
+    if (!isRunning) setSessionStarted(true);
     setIsRunning(!isRunning);
   }
 
  // handle partial session
  // elapsed = (focusDuration * 60) - remainingSeconds
   async function handleCancel() {
+    if (!sessionStarted) return;
+
     const totalSeconds = (mode === 'focus' ? focusDuration : breakDuration) * 60;
     const elapsedSec = totalSeconds - remainingSeconds;
     const elapsedMin = Math.round(elapsedSec / 60);
@@ -95,6 +107,8 @@ export default function TimerScreen() {
     }
 
     setIsRunning(false);
+
+    setSessionStarted(false);
 
     setMode('focus');
 
@@ -197,6 +211,7 @@ export default function TimerScreen() {
       <View style={styles.pomodoroTimer}>
         <Text style={styles.timerText}>{displayTime(remainingSeconds)}</Text>
         <Text style={styles.modeText}>{mode.toUpperCase()}</Text>
+        <Text style={styles.subtitleText}>{getSessionSubtitle()}</Text>
       </View>
 
       <View style={styles.timeControl}>
@@ -299,7 +314,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   modeText: {
-    fontSize: 13,
+    fontSize: 17,
     fontWeight: 'bold',
     letterSpacing: 2,
     color: '#A67C2E',
@@ -389,5 +404,11 @@ const styles = StyleSheet.create({
     color: '#8B6F3F',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  subtitleText: {
+    fontSize: 13,
+    color: '#A67C2E',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
 });

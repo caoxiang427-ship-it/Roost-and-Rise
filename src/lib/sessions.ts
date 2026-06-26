@@ -69,6 +69,7 @@ export async function getTodaysFocusSessionCount() {
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id)
     .eq('type_of_session', 'focus')
+    .eq('was_cancelled', false)   
     .gte('stopped_at', today.toISOString());
 
   return count || 0;

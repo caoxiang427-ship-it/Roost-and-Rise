@@ -21,6 +21,9 @@ import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { imageMap } from '@/constants/storeItems';
 import { useRouter } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
+import { getTodaysMood } from '@/lib/self-care';
 
 export default function HomeScreen() {
 
@@ -33,6 +36,7 @@ export default function HomeScreen() {
   const [equippedItemID, setEquippedItemID] = useState<number | null>(null);
   const [showSpeech, setShowSpeech] = useState<boolean>(false);
   const [ownedItemsIds, setOwnedItemsIds] = useState<number[]>([]);
+  const [currentMood, setCurrentMood] = useState<string | null>(null);
 
   // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
@@ -69,6 +73,28 @@ export default function HomeScreen() {
     }
     getUserProfile();
   }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      loadCurrentMood();
+    }, [])
+  );
+
+  async function loadCurrentMood() {
+    const mood = await getTodaysMood();
+    setCurrentMood(mood);
+  }
+
+  function getMoodEmoji(mood: string | null) {
+    switch (mood) {
+      case 'exhausted': return '😩 Exhausted';
+      case 'stressed':  return '😣 Stressed';
+      case 'okay':      return '😐 Okay';
+      case 'good':      return '🙂 Good';
+      case 'great':     return '😄 Great';
+      default:          return 'Log mood 🤔';
+    }
+  }
 
   const getDailyGreeting = () => {
     const hour = new Date().getHours();
@@ -257,9 +283,9 @@ export default function HomeScreen() {
               <View style={styles.topDisplayRight}>
                 <Text
                   style={[styles.InterBold, {color: '#FFF', fontSize: 12}]}>I'm feeling:</Text>
-                <TouchableOpacity style={styles.moodTrackerBtn} onPress={() => console.log('Mood tracker')}>
+                <TouchableOpacity style={styles.moodTrackerBtn} onPress={() => router.push('/(tabs)/care')}>
                   <Text 
-                    style={[styles.InterBold, {color: "#FFF", fontSize: 15}]}>Happy 😊</Text>
+                    style={[styles.InterBold, {color: "#FFF", fontSize: 15}]}>{getMoodEmoji(currentMood)}</Text>
                 </TouchableOpacity>
 
                 <View style={styles.xp}>

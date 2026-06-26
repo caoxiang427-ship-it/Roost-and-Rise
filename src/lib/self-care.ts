@@ -189,6 +189,26 @@ export async function getRecentMood(days: number = 7) {
   return data || [];
 }  
 
+export async function getTodaysMood() {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return null;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('mood_logs')
+    .select('mood')
+    .eq('user_id', user.id)
+    .gte('logged_at', today.toISOString())
+    .order('logged_at', { ascending: false })  
+    .limit(1);
+
+  if (!data || error || data.length === 0) return null;
+  return data[0].mood;
+}
+
 export async function hasLoggedMoodToday() {
   const { data: { user } } = await supabase.auth.getUser();
 

@@ -13,6 +13,7 @@ import {
   hasLoggedMoodToday,
   getUserCategories,
   SelfCareCategory,
+  getTodaysMood,
 } from '@/lib/self-care';
 import BurnoutIndicator from '@/components/BurnoutIndicator';
 import { Link } from 'expo-router';
@@ -33,11 +34,13 @@ export default function SelfCareScreen() {
   const [isMoodLogged, setIsMoodLogged] = useState(false);
   const [recentActivities, setRecentActivities] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<SelfCareCategory[]>([]);
+  const [currentMood, setCurrentMood] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadLogs();
     loadCategories();
+    loadCurrentMood();
   }, []);
 
   async function handleSelfCareLog(categoryId: string) {
@@ -78,7 +81,17 @@ export default function SelfCareScreen() {
       return;
     }
  
-    setIsMoodLogged(true);
+    setCurrentMood(moodId);  
+  }
+
+  async function loadCurrentMood() {
+    const mood = await getTodaysMood();
+    setCurrentMood(mood);
+  }
+
+  function getMoodEmoji(mood: string | null): string {
+    const found = MOODS.find(m => m.id === mood);
+    return found ? `${found.emoji} ${found.label}` : '';
   }
 
   return (
@@ -96,24 +109,34 @@ export default function SelfCareScreen() {
 
       <BurnoutIndicator />
 
-      {/* Mood log -- only shown if not logged yet */}
-      {!isMoodLogged && (
-        <View style={styles.moodCard}>
-          <Text style={styles.moodQuestion}>How are you feeling today?</Text>
-          <View style={styles.moodOptions}>
-            {MOODS.map(mood => (
-              <Pressable
-                key={mood.id}
-                onPress={() => handleMoodLog(mood.id)}
-                style={styles.moodButton}
-              >
-                <Text style={styles.moodEmoji}>{mood.emoji}</Text>
-                <Text style={styles.moodLabel}>{mood.label}</Text>
-              </Pressable>
-            ))}
+      <View style={styles.moodCard}>
+        {currentMood ? (
+          <View style={styles.moodQuestionWrap}>
+            <Text style={styles.moodQuestion}>
+              Today's mood: {getMoodEmoji(currentMood)}
+            </Text>
+            <Text style={styles.moodSubtext}>
+              Update if it changed?
+            </Text>
           </View>
+        ) : (
+          <Text style={styles.moodQuestion}>
+            How are you feeling today?
+          </Text>
+        )}
+        <View style={styles.moodOptions}>
+          {MOODS.map(mood => (
+            <Pressable
+              key={mood.id}
+              onPress={() => handleMoodLog(mood.id)}
+              style={styles.moodButton}
+            >
+              <Text style={styles.moodEmoji}>{mood.emoji}</Text>
+              <Text style={styles.moodLabel}>{mood.label}</Text>
+            </Pressable>
+          ))}
         </View>
-      )}
+      </View>
 
       {/* Self-care category list */}
       <Text style={styles.careTitle}>Recovery list</Text>
@@ -309,6 +332,16 @@ const styles = StyleSheet.create({
     fontSize: 18,                
     color: '#A67C2E',
     fontWeight: 'bold',
+  },
+  moodQuestionWrap: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  moodSubtext: {
+    fontSize: 12,
+    color: '#8B6F3F',
+    fontStyle: 'italic',
+    textAlign: 'center',
   },
 });
 
