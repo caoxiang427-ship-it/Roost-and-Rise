@@ -1,9 +1,9 @@
 import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
-import { NewSubtaskItem, SubtaskItem } from '@/types/todo';
+import { NewSubtaskItem } from '@/types/todo';
 import Subtask from './Subtask';
 import Animated, { SlideInLeft, SlideOutLeft, Easing } from 'react-native-reanimated';
 

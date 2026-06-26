@@ -1,12 +1,11 @@
 /* 
  * Home screen. 
  * Only logged in users reach this page.
- * Handle log out.
 */
 
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
-import { View, Text, TouchableOpacity, Image, TextInput} from 'react-native';
+import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator} from 'react-native';
 import { styles } from '../../styles/index_styles';
 import { ImageBackground } from 'expo-image';
 import { Ionicons } from "@expo/vector-icons";
@@ -37,6 +36,7 @@ export default function HomeScreen() {
   const [showSpeech, setShowSpeech] = useState<boolean>(false);
   const [ownedItemsIds, setOwnedItemsIds] = useState<number[]>([]);
   const [currentMood, setCurrentMood] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(true); 
 
   // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
@@ -69,6 +69,7 @@ export default function HomeScreen() {
         .eq('user_id', user.id);
 
         if (inventoryData) setOwnedItemsIds(inventoryData.map(row => row.item_id));
+        setIsLoading(false);
       }
     }
     getUserProfile();
@@ -231,6 +232,16 @@ export default function HomeScreen() {
     // update local state
     setEquippedItemID(null);
   };
+
+  if (isLoading) {
+    return (
+     <ImageBackground
+      source={require("../../../assets/images/home/home_background.png")}
+      style={styles.container}>
+      <ActivityIndicator size="large" color="#FFF" />
+    </ImageBackground>
+    )
+  }
 
   return (
     <View style={styles.container}>

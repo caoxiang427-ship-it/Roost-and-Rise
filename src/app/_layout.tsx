@@ -81,7 +81,7 @@ export default function RootLayout() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E8A33D" />
+        <ActivityIndicator size="large" color="#5E90A1" />
       </View>
     );
   }

@@ -1,19 +1,18 @@
 import 'react-native-gesture-handler';
-import { Image, ImageBackground, Text, View, TouchableOpacity, Keyboard, ActivityIndicator, FlatList } from 'react-native';
+import { Image, ImageBackground, Text, View, TouchableOpacity, Keyboard, ActivityIndicator, FlatList, StyleSheet } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
-import { Stack } from 'expo-router';
 import { styles } from '../../styles/todo_styles';
 import Task from '@/components/todo/Task';
-import DateCard from '@/components/todo/CalendarDate';
 import { TaskItem, NewSubtaskItem, SubtaskItem } from '../../types/todo';
 import { Ionicons } from "@expo/vector-icons";
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet from '@gorhom/bottom-sheet';
 import * as Progress from 'react-native-progress';
 import AddTask from '@/components/todo/AddTask';
 import EditTask from '@/components/todo/EditTask';
 import CalendarSheet from '@/components/todo/CalendarSheet';
 import { supabase } from '@/lib/supabase';
 import { CalendarProvider, WeekCalendar } from 'react-native-calendars';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 
 // uhh layout looks weird on android for some reason, fix ltr
@@ -358,7 +357,7 @@ export default function TodoScreen() {
   if (tasksLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E8A33D" />
+        <ActivityIndicator size="large" color="#5E90A1" />
       </View>
     )
   }
@@ -386,7 +385,7 @@ export default function TodoScreen() {
           keyExtractor={(item) => item.id.toString()}
           ListHeaderComponent={
             <>
-
+              <Animated.View key={dayState()} entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
               <ImageBackground
                 source={
                   dayState() === 'today' 
@@ -397,48 +396,51 @@ export default function TodoScreen() {
                 style={styles.image}>
                 
                 <View style={styles.topDisplay}>
-                  <View style={styles.topDisplayLeft}>
-                    <Text style={styles.header}>{selectedDate === todayDate ? "Today" : selectedDayName } </Text>
-                    <Text style={styles.date}>{formattedSelectedDate} </Text>
-                  </View>
+                  <Animated.View key={selectedDayName} entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
+                      <View style={styles.topDisplayLeft}>
+                        <Text style={styles.header}>{selectedDate === todayDate ? "Today" : selectedDayName } </Text>
+                        <Text style={styles.date}>{formattedSelectedDate} </Text>
+                      </View>
+                    </Animated.View>
 
-                  <View style={styles.topDisplayRight}>
-                    <View style = {styles.topButtons}>
-                      <TouchableOpacity
-                        onPress={openCalendarSheet}>
-                          <Ionicons name="calendar-outline" size={25} color="#FFF"/>
-                      </TouchableOpacity>
+                    <View style={styles.topDisplayRight}>
+                      <View style = {styles.topButtons}>
+                        <TouchableOpacity
+                          onPress={openCalendarSheet}>
+                            <Ionicons name="calendar-outline" size={25} color="#FFF"/>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                          onPress={() => console.log("search")}>
+                            <Ionicons name="search" size={25} color="#FFF"/>
+                        </TouchableOpacity>
+                      </View>
 
                       <TouchableOpacity
-                        onPress={() => console.log("search")}>
-                          <Ionicons name="search" size={25} color="#FFF"/>
+                        style={styles.pendingTaskBtn}
+                        onPress={() => console.log("Pending Tasks")}>
+                        <Text style={styles.pendingTaskTxt}>Pending Tasks</Text>
                       </TouchableOpacity>
                     </View>
-
-                    <TouchableOpacity
-                      style={styles.pendingTaskBtn}
-                      onPress={() => console.log("Pending Tasks")}>
-                      <Text style={styles.pendingTaskTxt}>Pending Tasks</Text>
-                    </TouchableOpacity>
                   </View>
-                </View>
 
-                <View style={styles.progressBarWrapper}>
-                  <ImageBackground 
-                    source={require("../../../assets/images/todo/progress_bar.png")}
-                    style={styles.progressBar}
-                    imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
-                      <View style={styles.progressBarInner}>
-                        {/* maybe switch this for custom progress bar so it's more adaptable to diff phone dimensions, see index.tsx one*/}
-                        <Progress.Bar 
-                          progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
-                        </Progress.Bar>
-                        <Text style={styles.progressPercentTxt}>{Math.round(calculateProgress()*100)}%</Text>
-                      </View>
-                  </ImageBackground>
-                </View>
+                  <View style={styles.progressBarWrapper}>
+                    <ImageBackground 
+                      source={require("../../../assets/images/todo/progress_bar.png")}
+                      style={styles.progressBar}
+                      imageStyle={{resizeMode: 'cover', justifyContent: 'flex-end'}}>
+                        <View style={styles.progressBarInner}>
+                          {/* maybe switch this for custom progress bar so it's more adaptable to diff phone dimensions, see index.tsx one*/}
+                          <Progress.Bar 
+                            progress={calculateProgress()} width={300} height={15} color='#FFF' unfilledColor='#9D7957' borderColor='#9D7957' borderRadius={10} borderWidth={2}>
+                          </Progress.Bar>
+                          <Text style={styles.progressPercentTxt}>{Math.round(calculateProgress()*100)}%</Text>
+                        </View>
+                    </ImageBackground>
+                  </View>
 
-              </ImageBackground>
+                </ImageBackground>
+              </Animated.View>
 
               <CalendarProvider date={selectedDate} onDateChanged={setSelectedDate}>
                 <WeekCalendar
