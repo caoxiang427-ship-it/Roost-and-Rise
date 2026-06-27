@@ -24,7 +24,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { getTodaysMood } from '@/lib/self-care';
 import LevelUp from '@/components/home/LevelUp';
-import { useProfileStore } from '@/store/useProfileStore';
+import { useProfileStore, calculateXPLevel, totalXpRequiredForLevel } from '@/store/useProfileStore';
 
 export default function HomeScreen() {
 
@@ -40,15 +40,11 @@ export default function HomeScreen() {
     name,
     chickName,
     equippedItemId,
-    ownedItemIds,
     xp,
     coins,
     isLoading,
     init,
     setChickName,
-    buyItem,
-    equipItem,
-    unequipItem
   } = useProfileStore();
 
   // ref for store and inventory. bottom sheet
@@ -137,6 +133,21 @@ export default function HomeScreen() {
       runOnJS(showMessage)();
   });
 
+  const calculateXpProgress = (xp: number) => {
+    const level = calculateXPLevel(xp);
+    const currentLevelXP = totalXpRequiredForLevel(level);
+    const nextLevelXP = totalXpRequiredForLevel(level + 1);
+    return (xp - currentLevelXP) / (nextLevelXP - currentLevelXP);
+  };
+
+  const triggerLevelUp = (xp: number) => {
+    const level = calculateXPLevel(xp);
+    const nextLevelXp = totalXpRequiredForLevel(level + 1);
+    if (xp === nextLevelXp) {
+      setLevelUpVisible(true);
+    }
+  };
+
   if (isLoading) {
     return (
      <ImageBackground
@@ -210,7 +221,7 @@ export default function HomeScreen() {
                         colors={['#3F6D38', '#00BC22']}
                         style={{
                         width: '100%',
-                        height: '80%',       // progress value
+                        height: `${calculateXpProgress(xp) * 100}%`,       // progress value
                         position: 'absolute',
                         top: 0,
                         borderRadius: 10,
@@ -220,7 +231,7 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.xpTop}>
                     <Text style={[styles.InterBold, {fontSize: 10, color: '#5E4833'}]}>LVL</Text>
-                    <Text style={[styles.InterBold, {fontSize: 26, color: '#5E4833'}]}>10</Text>
+                    <Text style={[styles.InterBold, {fontSize: 26, color: '#5E4833'}]}>{calculateXPLevel(xp)}</Text>
                   </View>
                 </View>
               </View>

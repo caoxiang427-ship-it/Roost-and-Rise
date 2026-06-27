@@ -18,6 +18,8 @@ import {
 import BurnoutIndicator from '@/components/BurnoutIndicator';
 import { Link } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useProfileStore } from '@/store/useProfileStore';
+import ShowReward from '@/components/ShowReward';
 
 const MOODS = [
   { id: 'exhausted', emoji: '😩', label: 'Exhausted' }, 
@@ -26,6 +28,11 @@ const MOODS = [
   { id: 'good', emoji: '🙂', label: 'Good' },
   { id: 'great', emoji: '😄', label: 'Great' },
 ];
+
+const LOG_MOOD_XP = 15;
+const LOG_RECOVERY_XP = 5;
+const LOG_MOOD_COIN_BONUS = 5;
+const LOG_RECOVERY_COIN_BONUS = 2;
 
 export default function SelfCareScreen() {
   const [activityCateg, setActivityCateg] = useState<string | null>(null);
@@ -36,12 +43,25 @@ export default function SelfCareScreen() {
   const [categories, setCategories] = useState<SelfCareCategory[]>([]);
   const [currentMood, setCurrentMood] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
+  // for the temporary ShowReward display everytime user logs mood/ recovery item
+  const [showReward, setShowReward] = useState(false);
+  const [rewardXP, setRewardXP] = useState(0);
+  const [rewardCoins, setRewardCoins] = useState(0);
+
+  const {addWellbeingXp} = useProfileStore();
 
   useEffect(() => {
     loadLogs();
     loadCategories();
     loadCurrentMood();
   }, []);
+
+  const triggerReward = (xp: number, coins: number) => {
+    setRewardXP(xp);
+    setRewardCoins(coins);
+    setShowReward(true);
+    setTimeout(() => setShowReward(false), 2000);
+  };
 
   async function handleSelfCareLog(categoryId: string) {
     const result = await logSelfCare(categoryId, activityInput || null);
@@ -56,6 +76,10 @@ export default function SelfCareScreen() {
     setActivityCateg(null);
     
     loadLogs();
+
+    // for each log XP is awarded
+    await addWellbeingXp(LOG_RECOVERY_XP, LOG_RECOVERY_COIN_BONUS);
+    triggerReward(LOG_RECOVERY_XP, LOG_RECOVERY_COIN_BONUS)
   }
 
   async function loadLogs() {
@@ -74,14 +98,22 @@ export default function SelfCareScreen() {
   }
 
   async function handleMoodLog(moodId: string) {
+    // check if it's the first time user logs mood today
+    const isFirstToday = !isMoodLogged;
+
     const result = await logMood(moodId);
     
     if (result.error) {
       Alert.alert('Error:', 'Could not log mood.');
       return;
     }
- 
-    setCurrentMood(moodId);  
+    setCurrentMood(moodId);
+
+    if (isFirstToday) {
+      await addWellbeingXp(LOG_MOOD_XP, LOG_MOOD_COIN_BONUS);
+      triggerReward(LOG_MOOD_XP, LOG_MOOD_COIN_BONUS)
+    }
+
   }
 
   async function loadCurrentMood() {
@@ -104,8 +136,11 @@ export default function SelfCareScreen() {
           paddingBottom: insets.bottom + 100,
         } 
       ]}
-    >
-      <Text style={styles.title}>Recharge Time 🌿</Text>
+    > 
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between'}}>
+        <Text style={styles.title}>Recharge Time 🌿</Text>
+        {showReward && <ShowReward xp={rewardXP} coins={rewardCoins}></ShowReward>}
+      </View>
 
       <BurnoutIndicator />
 

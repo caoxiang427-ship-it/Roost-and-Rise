@@ -1,6 +1,47 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 
+// used in formula to calculate XP level, it controls how fast or slow leveling up feels.
+const LEVEL_COEFFICIENT = 85;
+// daily  XP caps for the 2 pillars: progress (todo) and focus (pomodoro)
+const FOCUS_DAILY_CAP = 580;
+const PROGRESS_DAILY_CAP = 180; 
+
+// total amount of XP required to hit a certain level
+export function totalXpRequiredForLevel(level: number): number {
+  return LEVEL_COEFFICIENT * level * (level - 1);
+};
+
+// function to calculate level given XP
+export function calculateXPLevel(xp: number): number {
+  if (xp <= 0) return 1;
+  const L = (LEVEL_COEFFICIENT + Math.sqrt(LEVEL_COEFFICIENT ** 2 + 4 * LEVEL_COEFFICIENT * xp)) / (2 * LEVEL_COEFFICIENT);
+  let level = Math.floor(L);
+
+  // safety checks in case of floating point error
+  while (totalXpRequiredForLevel(level + 1) <= xp) level++;
+  while (totalXpRequiredForLevel(level) > xp) level--;
+  return Math.max(1, level);
+}
+
+// calculates amount of coins gained for each level increase
+export function calculateCoinsEarned(level: number): number {
+  return Math.round(10 * Math.pow(1.15, level));
+}
+
+// sums coin rewards for every level crossed in one XP gain (handles multi-level jumps)
+// should not be possible with the XP design but this is just in case
+function getLevelUpInfo(oldXP: number, newXP: number) {
+  const oldLevel = calculateXPLevel(oldXP);
+  const newLevel = calculateXPLevel(newXP);
+  let coinsEarned = 0;
+  for (let L = oldLevel + 1; L <= newLevel; L++) coinsEarned += calculateCoinsEarned(L);
+  return { newLevel, coinsEarned };
+}
+
+// if pendingLevelUp = null -> no trigger levelUp modal, if pendingLevelUp = {level, consEarned} -> trigger levelUp modal
+type PendingLevelUp = { level: number; coinsEarned: number } | null;
+
 type ProfileState = {
     userID: string | null;
     name: string;
@@ -10,12 +51,15 @@ type ProfileState = {
     xp: number,
     coins: number,
     isLoading: boolean,
+    pendingLevelUp: PendingLevelUp,
 
     init: () => Promise<void>;
     setChickName: (newName: string) => Promise<void>;
     buyItem: (price: number, itemId: number) => Promise<void>;
     equipItem: (itemId: number) => Promise<void>;
     unequipItem: () => Promise<void>;
+    addWellbeingXp: (xpAmount: number, coinsBonus?: number) => Promise<void>;
+    clearLevelUp: () => void;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -27,6 +71,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     xp: 0,
     coins: 0,
     isLoading: true,
+    pendingLevelUp: null,
 
     init: async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -46,6 +91,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
         if (data) {
         set({
+            userID: user.id,
             name: data.display_name ?? metadataName ?? '',
             chickName: data.chicken_name ?? '',
             equippedItemId: data.equipped_item_id,
@@ -143,7 +189,26 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         }
         set({ equippedItemId: null });
     },
-
+    addWellbeingXp: async (xpAmount, coinsBonus = 0) => {
+        const { userID, xp, coins } = get();
+        if (!userID || xpAmount <= 0) return;
+    
+        const newXP = xp + xpAmount;
+        const { newLevel, coinsEarned } = getLevelUpInfo(xp, newXP);
+        const newCoins = coins + coinsEarned + coinsBonus;
+    
+        set({
+          xp: newXP,
+          coins: newCoins,
+          // if coinsEarned > 0 -> means new level reached, update pendingLevelUp, if not pendingLevelUp remains null
+          pendingLevelUp: coinsEarned > 0 ? { level: newLevel, coinsEarned } : get().pendingLevelUp,
+        });
+    
+        await supabase.from('profiles').update({ xp: newXP, coins: newCoins }).eq('id', userID);
+      },
+    clearLevelUp: () => {
+        set({ pendingLevelUp: null });
+    }
 
             
 }))
