@@ -1,17 +1,30 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { Ionicons } from "@expo/vector-icons";
+import { useTodoStore } from '@/store/useTodoStore';
 
 type SubtaskProps = {
+    id: number,
     text: string;
     completed: boolean;
+    onToggle?: () => void;
     onDelete?: () => void;
-    onToggle: () => void;
 }
 const Subtask = (props: SubtaskProps) => {
+
+    const {toggleSubtaskCompletion} = useTodoStore();
+
+    const handleToggle = () => {
+        if (props.onToggle) {
+            props.onToggle();
+        } else {
+            toggleSubtaskCompletion(props.id, props.completed);
+        }
+    };
+
     return (
         <View style={styles.container}>
             <TouchableOpacity
-              onPress={props.onToggle}>
+              onPress={handleToggle}>
                 <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={20} color="#5E4833"/>
             </TouchableOpacity>
 

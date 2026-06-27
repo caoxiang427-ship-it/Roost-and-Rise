@@ -4,11 +4,10 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-nati
 import { forwardRef, useCallback, useState } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { CalendarList } from 'react-native-calendars';
+import { useTodoStore } from '@/store/useTodoStore';
 
 type CalendarSheetProps = {
     close: () => void;
-    selectedDate: string;
-    syncSelectedDate: (selected: string) => void;
 }
 
 type Ref = BottomSheet;
@@ -20,6 +19,8 @@ const CalendarSheet = forwardRef<Ref, CalendarSheetProps>((props, ref) => {
         []
 
     );
+
+    const { selectedDate, syncSelectedDate } = useTodoStore();
 
     const { height: SCREEN_HEIGHT } = Dimensions.get('window'); 
 
@@ -35,7 +36,6 @@ const CalendarSheet = forwardRef<Ref, CalendarSheetProps>((props, ref) => {
                 <BottomSheetView style={styles.wrapper}>
                     <View style={styles.header}>
                         <TouchableOpacity
-                        style={styles.closeBtn}
                         onPress={props.close}>
                             <Ionicons name='close' size={30} color="#937254"/>
                         </TouchableOpacity>
@@ -49,10 +49,10 @@ const CalendarSheet = forwardRef<Ref, CalendarSheetProps>((props, ref) => {
                         nestedScrollEnabled={true}
                         style={{height: SCREEN_HEIGHT * 0.85}}
                         onDayPress={(day) => {
-                            props.syncSelectedDate(day.dateString);
+                            syncSelectedDate(day.dateString);
                         }}
                         markedDates={{
-                            [props.selectedDate]: {
+                            [selectedDate]: {
                             selected: true,
                             selectedColor: '#3B99B9',
                             }
@@ -77,8 +77,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
         paddingBottom: 5,
     },
-    closeBtn: {
-    }
 });
 
 export default CalendarSheet;

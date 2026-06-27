@@ -3,8 +3,10 @@ import { SubtaskItem } from '@/types/todo';
 import Subtask from '@/components/todo/Subtask';
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
+import { useTodoStore } from '@/store/useTodoStore';
 
 type TaskProps = {
+    id: number;
     text: string;
     completed: boolean;
     dread: boolean;
@@ -12,13 +14,11 @@ type TaskProps = {
     taskDesc?: string;
     subtasks?: SubtaskItem[];
     onPress?: () => void;
-    onDelete: () => void;
-    onToggleCompletion: () => void;
-    onToggleDread: () => void;
-    onToggleSubtaskCompletion: (subtaskId: number, completed: boolean) => void;
 }
 
 const Task = (props: TaskProps) => {
+
+    const { deleteTask, toggleCompletion, toggleDread } = useTodoStore(); 
 
     const taskDescSection = props.taskDesc ? (
         <Text style={styles.taskDesc}>{props.taskDesc}</Text>
@@ -26,8 +26,8 @@ const Task = (props: TaskProps) => {
 
     const subtaskSection = props.subtasks ? (
         <View style={styles.subtaskWrapper}>
-            {props.subtasks.map((subtask, index) => (
-                <Subtask key={subtask.id} text={subtask.text} completed={subtask.completed} onToggle={() => props.onToggleSubtaskCompletion(subtask.id, subtask.completed)}/>
+            {props.subtasks.map((subtask) => (
+                <Subtask key={subtask.id} id={subtask.id} text={subtask.text} completed={subtask.completed}/>
             ))}
         </View>
     ) : null;
@@ -47,13 +47,13 @@ const Task = (props: TaskProps) => {
             renderRightActions={() => (
                 <TouchableOpacity
                     style={styles.deleteBtn}
-                    onPress={props.onDelete}>
+                    onPress={() => deleteTask(props.id)}>
                     <Ionicons name="trash" size={24} color="#FFF"/>
                 </TouchableOpacity>
             )}>
             <TouchableOpacity onPress={props.onPress} style={[styles.task, props.difficulty && difficultyStyles[props.difficulty]]}>
                 <TouchableOpacity
-                    onPress={props.onToggleCompletion}>
+                    onPress={() => toggleCompletion(props.id, props.completed, props.subtasks ?? [])}>
                     <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
                 </TouchableOpacity>
 
@@ -68,7 +68,7 @@ const Task = (props: TaskProps) => {
                 </View>
 
                 <TouchableOpacity
-                onPress={props.onToggleDread}>
+                onPress={() => toggleDread(props.id, props.dread)}>
                     <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
                         <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
                     </View>
@@ -77,8 +77,6 @@ const Task = (props: TaskProps) => {
         </Swipeable>
     )
 }
-
-// uhh fix task text overflow bug later
 
 const styles = StyleSheet.create({
     container: {

@@ -1,33 +1,25 @@
 import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetView, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { View, Text, TouchableOpacity, StyleSheet, Alert} from 'react-native';
 import { useState, forwardRef, useCallback, useEffect } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { SubtaskItem, TaskItem } from '@/types/todo';
 import Subtask from './Subtask';
 import Animated, { SlideInLeft, SlideOutLeft, Easing } from 'react-native-reanimated';
+import { useTodoStore } from '@/store/useTodoStore';
 
 
 type EditTaskProps = {
     close: () => void;
     task: TaskItem | null;
-    onEditTask: (id: number,
-        text: string,
-        dread: boolean,
-        complete: boolean,
-        difficulty: 'easy' | 'moderate' |'difficult' | '',
-        scheduledDate: string,
-        taskDesc?: string,
-        subtasks?: SubtaskItem[],
-        deletedSubtaskIds?: number[],
-    ) => Promise<void>;
     openCalendar: () => void;
-    scheduledDate: string;
 }
 
 type Ref = BottomSheet;
 
 const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
+
+    const { handleEditTask, selectedDate } = useTodoStore();
     
     const renderBackdrop = useCallback(
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
@@ -99,7 +91,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                 };
 
         if (!props.task) return;
-        await props.onEditTask(props.task.id, task, dread, isComplete, difficulty, props.scheduledDate, taskDesc, subtasks, deletedSubtaskIds);
+        await handleEditTask(props.task.id, task, dread, isComplete, difficulty, selectedDate, taskDesc, subtasks, deletedSubtaskIds);
         props.close();
     };
 
@@ -187,8 +179,9 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
 
                 <View style={styles.subtaskContainer}>
                 {subtasks.map((subtask, index) => (
-                    <Subtask
+                    <Subtask                        
                         key={index}
+                        id={subtask.id}
                         text={subtask.text}
                         completed={subtask.completed}
                         onToggle={() => toggleNewSubtaskCompletion(index)}

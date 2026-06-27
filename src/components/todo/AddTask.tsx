@@ -6,18 +6,11 @@ import { Ionicons } from "@expo/vector-icons";
 import { NewSubtaskItem } from '@/types/todo';
 import Subtask from './Subtask';
 import Animated, { SlideInLeft, SlideOutLeft, Easing } from 'react-native-reanimated';
+import { useTodoStore } from '@/store/useTodoStore';
 
 type AddTaskProps = {
     close: () => void;
-    onAddTask: (text: string,
-        dread: boolean,
-        complete: boolean,
-        difficulty: 'easy' | 'moderate' | 'difficult' | '',
-        scheduledDate: string,
-        taskDesc?: string,
-        subtasks?: NewSubtaskItem[]) => Promise<void>;
     openCalendar: () => void;
-    scheduledDate: string;
 };
 
 type Ref = BottomSheet;
@@ -29,6 +22,8 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
         []
 
     );
+
+    const { handleAddTask, selectedDate } = useTodoStore();
 
     const [task, setTask] = useState<string>('');
     const [taskDesc, setTaskDesc] = useState<string>('');
@@ -87,7 +82,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
             return;
         };
 
-        await props.onAddTask(task, dread, isComplete, difficulty, props.scheduledDate, taskDesc, newSubtasks);
+        await handleAddTask(task, dread, isComplete, difficulty, selectedDate, taskDesc, newSubtasks);
         // Reset local state after submit
         setTask('');
         setTaskDesc('');
@@ -161,6 +156,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                 {newSubtasks.map((subtask, index) => (
                     <Subtask
                         key={index}
+                        id={index}
                         text={subtask.text}
                         completed={subtask.completed}
                         onToggle={() => toggleNewSubtaskCompletion(index)}
