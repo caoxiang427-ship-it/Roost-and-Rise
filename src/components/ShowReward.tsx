@@ -2,22 +2,23 @@ import { View, Text, StyleSheet, Image } from 'react-native';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 type ShowRewardProp = {
-    xp: number;
-    coins: number;    
+    xp?: number;
+    coins?: number;
 };
 
 
 const ShowReward = (props: ShowRewardProp) => {
     return (
         <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={styles.container}>
-            <Text style={styles.xp}>+{props.xp} XP</Text>
+            {props.xp && <Text style={styles.xp}>+{props.xp} XP</Text>}
+            {props.coins &&
             <View style={styles.coinContainer}>
                 <Text style={styles.coin}>+{props.coins} </Text>
                 <Image
                 source={require('../../assets/images/home/coin.png')}
                 style={[styles.coinImage]}
                 ></Image>
-            </View>
+            </View>}
         </Animated.View>
     );
 };

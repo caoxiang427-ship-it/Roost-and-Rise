@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { Image, ImageBackground, Text, View, TouchableOpacity, Keyboard, ActivityIndicator, FlatList, StyleSheet } from 'react-native';
+import { Image, ImageBackground, Text, View, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { styles } from '../../styles/todo_styles';
 import Task from '@/components/todo/Task';

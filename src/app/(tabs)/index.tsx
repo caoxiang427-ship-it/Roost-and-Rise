@@ -24,58 +24,44 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { getTodaysMood } from '@/lib/self-care';
 import LevelUp from '@/components/home/LevelUp';
+import { useProfileStore } from '@/store/useProfileStore';
 
 export default function HomeScreen() {
 
   const insets = useSafeAreaInsets();
   const router = useRouter();
-  const [name, setName] = useState<string>('');
-  const [chickName, setChickName] = useState<string>('');
-  const [xp, setXP] = useState<number>(0);
-  const [coins, setCoins] = useState<number>(0);
-  const [equippedItemID, setEquippedItemID] = useState<number | null>(null);
   const [showSpeech, setShowSpeech] = useState<boolean>(false);
-  const [ownedItemsIds, setOwnedItemsIds] = useState<number[]>([]);
   const [currentMood, setCurrentMood] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [levelUpVisible, setLevelUpVisible] = useState<boolean>(true);
+  // temp local copy of chickname while user is typing so it syncs with saved value
+  const [chickNameDraft, setChickNameDraft] = useState<string>('');
+
+  const {
+    name,
+    chickName,
+    equippedItemId,
+    ownedItemIds,
+    xp,
+    coins,
+    isLoading,
+    init,
+    setChickName,
+    buyItem,
+    equipItem,
+    unequipItem
+  } = useProfileStore();
 
   // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
   const inventoryRef = useRef<BottomSheet>(null);
 
   useEffect(() => {
-    async function getUserProfile() {
-      const { data: {user} } = await supabase.auth.getUser();
-
-      if (user) {
-        const metadataName = user.user_metadata?.display_name;
-
-        const { data } = await supabase
-          .from('profiles')
-          .select('display_name, chicken_name, xp, coins, equipped_item_id')
-          .eq('id', user.id)
-          .single();
-
-        if (data) {
-          setName(data.display_name ?? metadataName ?? '');
-          setChickName(data.chicken_name ?? '');
-          setXP(data.xp ?? 0);
-          setCoins(data.coins ?? 0);
-          setEquippedItemID(data.equipped_item_id);
-        }
-
-        const { data: inventoryData } = await supabase
-        .from('inventory')
-        .select('item_id')
-        .eq('user_id', user.id);
-
-        if (inventoryData) setOwnedItemsIds(inventoryData.map(row => row.item_id));
-        setIsLoading(false);
-      }
-    }
-    getUserProfile();
+    init();
   }, []);
+  
+  useEffect(() => {
+    setChickNameDraft(chickName);
+  }, [chickName]);
 
   useFocusEffect(
     useCallback(() => {
@@ -138,21 +124,6 @@ export default function HomeScreen() {
     "How are you feeling today?"
   ]
 
-  const updateChickName = async (newName: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) return;
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ chicken_name: newName })
-      .eq('id', user.id);
-
-      if (error) console.error(error);
-      else setChickName(newName);
-      
-  };
-
   // function to show speech bubble temporarily when being pet
   const showMessage = () => {
     setShowSpeech(true);
@@ -165,75 +136,6 @@ export default function HomeScreen() {
       console.log('petted!');
       runOnJS(showMessage)();
   });
-
-  // function to update supabase after buying items
-  const buyItem = async (price: number, itemId: number) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    // update coin value
-    const { error: coinsError } = await supabase
-      .from('profiles')
-      .update({ coins: coins - price })
-      .eq('id', user.id);
-
-    if (coinsError) {
-      console.error(coinsError);
-      return;
-    }
-    
-    // update inventory
-    const { error: inventoryError } = await supabase
-      .from('inventory')
-      .insert({ user_id: user.id, item_id: itemId });
-
-    if (inventoryError) {
-      console.error(inventoryError);
-      return;
-    }
-
-    // set local state
-    setCoins(coins - price);
-    setOwnedItemsIds(prev => [...prev, itemId]);
-  };
-  
-  // function to update supabase after equipping item
-  const equipItem = async (itemId: number) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ equipped_item_id: itemId })
-      .eq('id', user.id);
-
-    if (profileError) {
-      console.error(profileError);
-      return;
-    }
-
-    // update local state
-    setEquippedItemID(itemId);
-  };
-
-  // function to update supabase after unequipping an item
-  const unequipItem = async (itemId: number) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ equipped_item_id: null })
-      .eq('id', user.id);
-
-    if (profileError) {
-      console.error(profileError);
-      return;
-    }
-
-    // update local state
-    setEquippedItemID(null);
-  };
 
   if (isLoading) {
     return (
@@ -329,15 +231,15 @@ export default function HomeScreen() {
                 <TextInput 
                   placeholder={'enter name'} 
                   style={[styles.InterBold, {fontSize: 20, color: "#025673"}]}
-                  value={chickName}
-                  onChangeText={name => setChickName(name)} // update local state after every keystroke
-                  onSubmitEditing={name => updateChickName(chickName)} // save to DB only when done
+                  value={chickNameDraft}
+                  onChangeText={name => setChickNameDraft(name)} // update local state after every keystroke
+                  onSubmitEditing={() => setChickName(chickNameDraft)} // save to DB only when done
                   ></TextInput>
               </View>
               <GestureDetector gesture={pet}>
                 <Image
-                  source={ equippedItemID === null ? require('../../../assets/images/home/chicken.png')
-                    : imageMap[equippedItemID]
+                  source={ equippedItemId === null ? require('../../../assets/images/home/chicken.png')
+                    : imageMap[equippedItemId]
                   }
                   style={{width: 206, height: 225 }}
                 ></Image>
@@ -382,19 +284,11 @@ export default function HomeScreen() {
           <Store 
             ref={storeRef} 
             close={closeStoreSheet}
-            chickName={chickName} 
-            coins={coins} 
-            onBuy={buyItem} 
-            ownedItems={ownedItemsIds}></Store>
+            ></Store>
 
           <Inventory 
             ref={inventoryRef} 
-            close={closeInventorySheet} 
-            chickName={chickName} 
-            ownedItems={ownedItemsIds} 
-            equippedItemId={equippedItemID} 
-            onEquip={equipItem}
-            onUnequip={unequipItem}></Inventory>
+            close={closeInventorySheet}></Inventory>
 
           <LevelUp visible={levelUpVisible} onClose={() => setLevelUpVisible(false)} level={20} coinsEarned={300}></LevelUp>
           

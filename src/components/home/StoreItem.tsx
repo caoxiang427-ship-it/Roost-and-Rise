@@ -1,19 +1,24 @@
 import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
 import { Alert } from 'react-native';
+import { useProfileStore } from '@/store/useProfileStore';
 
 type StoreItemProps = {
     imageUrl: any,
+    itemId: number,
     itemName: string,
     itemPrice: number,
-    coins: number,
-    onBuy: () => void,
 };
 
 
 const StoreItem = (props: StoreItemProps) => {
 
+    const {
+        coins,
+        buyItem
+    } = useProfileStore();
+
     const handleBuying = () => {
-        if (props.coins < props.itemPrice) {
+        if (coins < props.itemPrice) {
             Alert.alert(
                 "Not enough coins :(",
                 "Keep earning more!",
@@ -27,7 +32,7 @@ const StoreItem = (props: StoreItemProps) => {
         'Are you sure?',
         [
             { text: 'Cancel', style: 'cancel' },
-            { text: 'Buy', onPress: () => props.onBuy() },
+            { text: 'Buy', onPress: () => buyItem(props.itemPrice, props.itemId)},
         ]
         );
     }

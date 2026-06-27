@@ -5,14 +5,10 @@ import { useCallback, forwardRef } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import InventoryItem from './InventoryItem';
 import { STORE_ITEMS } from '@/constants/storeItems';
+import { useProfileStore } from '@/store/useProfileStore';
 
 type InventoryProps = {
     close: () => void;
-    chickName: string;
-    ownedItems: number[];
-    equippedItemId: number | null;
-    onEquip: (itemId: number) => void;
-    onUnequip: (itemId: number) => void;
 };
 
 type Ref = BottomSheet;
@@ -25,10 +21,18 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
 
     );
 
-    const INVENTORY_ITEMS = STORE_ITEMS.filter(item => props.ownedItems.includes(item.id));
+    const {
+        chickName,
+        ownedItemIds,
+        equippedItemId,
+        equipItem,
+        unequipItem,
+    } = useProfileStore();
+
+    const INVENTORY_ITEMS = STORE_ITEMS.filter(item => ownedItemIds.includes(item.id));
 
     const onEquip = (itemId: number) => {
-        if (props.equippedItemId !== null) {
+        if (equippedItemId !== null) {
             Alert.alert(
                 "You alredy have an item equipped",
                 "only one item can be equipped at a time",
@@ -36,11 +40,11 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
             );
             return;
         }
-        props.onEquip(itemId);
+        equipItem(itemId);
     };
 
     const onUnequip = (itemId: number) => {
-        if (props.equippedItemId === null) {
+        if (equippedItemId === null) {
             Alert.alert(
                 "There's nothing to unequip",
                 "equip or buy more items :)",
@@ -48,7 +52,7 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
             );
             return; 
         }
-        props.onUnequip(itemId);
+        unequipItem();
     }
 
     return (
@@ -69,7 +73,7 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
                 <InventoryItem 
                   imageUrl={item.image} 
                   itemName={item.name} 
-                  isEquipped={props.equippedItemId === item.id} 
+                  isEquipped={equippedItemId === item.id} 
                   onEquip={() => onEquip(item.id)}
                   onUnequip={() => onUnequip(item.id)} />
             )}
@@ -86,7 +90,7 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
                     <View style={styles.inventory}>
                         <Text style={styles.inventoryTitle}>👜 Inventory </Text>
                     </View>
-                    <Text style={styles.inventorySubtitle}>Dress up {props.chickName} here!</Text>
+                    <Text style={styles.inventorySubtitle}>Dress up {chickName} here!</Text>
                 </View>               
             )}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}

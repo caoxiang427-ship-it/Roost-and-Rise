@@ -5,13 +5,10 @@ import { useCallback, forwardRef } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import StoreItem from './StoreItem'; 
 import { STORE_ITEMS } from '@/constants/storeItems';
+import { useProfileStore } from '@/store/useProfileStore';
 
 type StoreProps = {
     close: () => void;
-    chickName: string;
-    coins: number;
-    onBuy: (price: number, itemId: number) => void;
-    ownedItems: number[];
 };
 
 type Ref = BottomSheet;
@@ -24,6 +21,12 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
 
     );
 
+    const {
+        chickName,
+        coins,
+        ownedItemIds
+    } = useProfileStore();
+
     return (
         <BottomSheet 
             ref={ref} 
@@ -35,11 +38,11 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
             <BottomSheetFlatList
-              data={STORE_ITEMS.filter(item => !props.ownedItems.includes(item.id))}
+              data={STORE_ITEMS.filter(item => !ownedItemIds.includes(item.id))}
               numColumns={3}
               keyExtractor={(_, index) => index.toString()}
               renderItem={({ item }) => (
-                <StoreItem imageUrl={item.image} itemName={item.name} itemPrice={item.price} coins={props.coins} onBuy={() => props.onBuy(item.price, item.id)} />
+                <StoreItem imageUrl={item.image} itemId={item.id} itemName={item.name} itemPrice={item.price} />
             )}
             ListHeaderComponent={() => (
                 <View>
@@ -52,7 +55,7 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
                         
                         <View style={styles.coin}>
                             <View style={styles.coinBar}>
-                            <Text style={{ fontFamily: "Interbold", color: '#937254', fontSize: 13}}>{props.coins}</Text>
+                            <Text style={{ fontFamily: "Interbold", color: '#937254', fontSize: 13}}>{coins}</Text>
                             </View>
         
                             <Image
@@ -66,7 +69,7 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
                     <View style={styles.shop}>
                         <Text style={styles.shopTitle}>🌿 Store </Text>
                     </View>
-                    <Text style={styles.shopSubtitle}>Spend your coins on {props.chickName} here!</Text>
+                    <Text style={styles.shopSubtitle}>Spend your coins on {chickName} here!</Text>
                 </View>               
             )}
             contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}
