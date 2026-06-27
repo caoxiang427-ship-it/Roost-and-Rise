@@ -5,19 +5,32 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { sessionRecorder, getTodayStudyMinutes, getTodaysFocusSessionCount } from '@/lib/sessions';
+import { useProfileStore } from '@/store/useProfileStore';
+import ShowReward from '@/components/ShowReward';
 
 export default function TimerScreen() {
   const [focusDuration, setFocusDuration] = useState(25);
   const [breakDuration, setBreakDuration] = useState(5);
+  const [currentBreakMinutes, setCurrentBreakMinutes] = useState(breakDuration);
   const [remainingSeconds, setRemainingSeconds] = useState(focusDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<'focus' | 'break'>('focus');
   const [todayFocusCount, setTodayFocusCount] = useState(0);
   const [todayStudyMinutes, setTodayStudyMinutes] = useState(0);
   const [sessionStarted, setSessionStarted] = useState(false);
+  const [showReward, setShowReward] = useState(false);
+  const [rewardXP, setRewardXP] = useState(0);
+
+  const { addFocusXp } = useProfileStore();
 
   const SESSIONS_BEFORE_LONG_BREAK = 4;
   const LONG_BREAK_MINUTES = 15;
+
+   const triggerReward = (xp: number) => {
+    setRewardXP(xp);
+    setShowReward(true);
+    setTimeout(() => setShowReward(false), 2000);
+  };
 
   // countDown
   useEffect(() => {
@@ -40,14 +53,22 @@ export default function TimerScreen() {
         await loadSummary();
 
         const newCount = todayFocusCount + 1;
+        await addFocusXp(focusDuration, 'focus', newCount);
+        triggerReward(focusDuration);
+
         const isLongBreak = newCount % SESSIONS_BEFORE_LONG_BREAK == 0;
         const nextBreakMinutes = isLongBreak ? LONG_BREAK_MINUTES : breakDuration;
 
+        setCurrentBreakMinutes(nextBreakMinutes);
         setMode('break');
         setRemainingSeconds(nextBreakMinutes * 60);
       } else {
+
         await sessionRecorder(breakDuration, 'break');
         await loadSummary();
+        await addFocusXp(currentBreakMinutes, 'break');
+        triggerReward(Math.round(currentBreakMinutes * 0.5));
+
         setMode('focus');
         setRemainingSeconds(focusDuration * 60);
       }
@@ -103,7 +124,14 @@ export default function TimerScreen() {
     // time elapsed below 1 min is not meaningful to save
     if (elapsedMin >= 1) {
       await sessionRecorder(elapsedMin, mode, true);
+      await addFocusXp(elapsedMin, mode);
       await loadSummary();
+      
+      if (mode === 'focus') {
+        triggerReward(elapsedMin)
+      } else {
+        triggerReward(Math.round(elapsedMin * 0.5))
+      }
     }
 
     setIsRunning(false);
@@ -161,7 +189,8 @@ export default function TimerScreen() {
 
   function isLateNight(): boolean {
     const hour = new Date().getHours();
-    return hour >= 23 || hour < 5;
+    return false;
+    //return hour >= 23 || hour < 5;
   }
 
   // Replace 'sunny' with chicken name later.
@@ -191,8 +220,10 @@ export default function TimerScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Focus Time</Text>
-
+      <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+        <Text style={[styles.title, { position: 'absolute', left: 0, right: 0, textAlign: 'center' }]}>Focus Time</Text>
+        {showReward && <ShowReward xp={rewardXP} />}
+      </View>
       {/* Chicken placeholder for now */}
       <View style={styles.chickenCompanion}>
         <Text style={styles.chickenEmoji}>🐔</Text>

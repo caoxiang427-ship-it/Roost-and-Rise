@@ -4,6 +4,7 @@ import Subtask from '@/components/todo/Subtask';
 import { Ionicons } from "@expo/vector-icons";
 import { Swipeable } from "react-native-gesture-handler";
 import { useTodoStore } from '@/store/useTodoStore';
+import { useProfileStore } from '@/store/useProfileStore';
 
 type TaskProps = {
     id: number;
@@ -11,6 +12,7 @@ type TaskProps = {
     completed: boolean;
     dread: boolean;
     difficulty: "easy" | "moderate" | "difficult" | "";
+    onTriggerReward: (difficulty: "easy" | "moderate" | "difficult" | "") => void;
     taskDesc?: string;
     subtasks?: SubtaskItem[];
     onPress?: () => void;
@@ -19,6 +21,7 @@ type TaskProps = {
 const Task = (props: TaskProps) => {
 
     const { deleteTask, toggleCompletion, toggleDread } = useTodoStore(); 
+    const { addProgressXp } = useProfileStore();
 
     const taskDescSection = props.taskDesc ? (
         <Text style={styles.taskDesc}>{props.taskDesc}</Text>
@@ -53,7 +56,9 @@ const Task = (props: TaskProps) => {
             )}>
             <TouchableOpacity onPress={props.onPress} style={[styles.task, props.difficulty && difficultyStyles[props.difficulty]]}>
                 <TouchableOpacity
-                    onPress={() => toggleCompletion(props.id, props.completed, props.subtasks ?? [])}>
+                    onPress={() => {
+                        toggleCompletion(props.id, props.completed, props.subtasks ?? []);
+                        if (!props.completed) {addProgressXp(props.difficulty); props.onTriggerReward?.(props.difficulty)} }}>
                     <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
                 </TouchableOpacity>
 

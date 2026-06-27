@@ -15,7 +15,7 @@ import ShowReward from '@/components/ShowReward';
 import CalendarDay from '@/components/todo/CalendarDay';
 import { useTodoStore, useRenderedTaskItems, calculateProgress } from '@/store/useTodoStore';
 import PendingTasks from '@/components/todo/PendingTasks';
-
+import { useState } from 'react';
 
 // uhh layout looks weird on android for some reason, fix ltr
 
@@ -29,6 +29,16 @@ export default function TodoScreen() {
     setSelectedDate,
     setSelectedTask,
   } = useTodoStore();
+
+  const [showReward, setShowReward] = useState(false);
+  const [rewardXP, setRewardXP] = useState(0);
+
+  const triggerReward = (difficulty: 'easy' | 'moderate' | 'difficult' | '') => {
+    const xp = difficulty === 'easy' ? 5 : difficulty === 'moderate' ? 10 : 15;
+    setRewardXP(xp);
+    setShowReward(true);
+    setTimeout(() => setShowReward(false), 2000);
+  };
 
   const renderedTaskItems = useRenderedTaskItems();
   const selectedDayName = new Date(selectedDate).toLocaleDateString('en-US', {
@@ -125,7 +135,7 @@ export default function TodoScreen() {
                     </View>
                   </View>
                   <View style={ { alignSelf: 'flex-end', paddingRight: 20, paddingTop: 10}}>
-                    <ShowReward xp={50} coins={50}></ShowReward>
+                    {showReward && <ShowReward xp={rewardXP}></ShowReward>}
                   </View>
 
                   <View style={styles.progressBarWrapper}>
@@ -182,6 +192,7 @@ export default function TodoScreen() {
                 completed={item.completed}
                 dread={item.dread}
                 difficulty={item.difficulty}
+                onTriggerReward={triggerReward}
                 taskDesc={item.taskDesc}
                 subtasks={item.subtasks}
                 onPress={() => {setSelectedTask(item); openEditTaskSheet();}}
