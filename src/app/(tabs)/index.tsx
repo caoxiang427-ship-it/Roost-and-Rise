@@ -23,6 +23,7 @@ import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
 import { getTodaysMood } from '@/lib/self-care';
+import LevelUp from '@/components/home/LevelUp';
 
 export default function HomeScreen() {
 
@@ -36,7 +37,8 @@ export default function HomeScreen() {
   const [showSpeech, setShowSpeech] = useState<boolean>(false);
   const [ownedItemsIds, setOwnedItemsIds] = useState<number[]>([]);
   const [currentMood, setCurrentMood] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true); 
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [levelUpVisible, setLevelUpVisible] = useState<boolean>(true);
 
   // ref for store and inventory. bottom sheet
   const storeRef = useRef<BottomSheet>(null);
@@ -393,6 +395,8 @@ export default function HomeScreen() {
             equippedItemId={equippedItemID} 
             onEquip={equipItem}
             onUnequip={unequipItem}></Inventory>
+
+          <LevelUp visible={levelUpVisible} onClose={() => setLevelUpVisible(false)} level={20} coinsEarned={300}></LevelUp>
           
       </ImageBackground>
     </View>
