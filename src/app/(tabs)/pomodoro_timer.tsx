@@ -27,6 +27,7 @@ export default function TimerScreen() {
   const LONG_BREAK_MINUTES = 15;
 
    const triggerReward = (xp: number) => {
+    if (xp <= 0) {return;}
     setRewardXP(xp);
     setShowReward(true);
     setTimeout(() => setShowReward(false), 2000);
@@ -53,8 +54,8 @@ export default function TimerScreen() {
         await loadSummary();
 
         const newCount = todayFocusCount + 1;
-        await addFocusXp(focusDuration, 'focus', newCount);
-        triggerReward(focusDuration);
+        const awardedXp = await addFocusXp(focusDuration, 'focus', newCount);
+        triggerReward(awardedXp);
 
         const isLongBreak = newCount % SESSIONS_BEFORE_LONG_BREAK == 0;
         const nextBreakMinutes = isLongBreak ? LONG_BREAK_MINUTES : breakDuration;
@@ -66,8 +67,8 @@ export default function TimerScreen() {
 
         await sessionRecorder(breakDuration, 'break');
         await loadSummary();
-        await addFocusXp(currentBreakMinutes, 'break');
-        triggerReward(Math.round(currentBreakMinutes * 0.5));
+        const awardedXp = await addFocusXp(currentBreakMinutes, 'break');
+        triggerReward(awardedXp);
 
         setMode('focus');
         setRemainingSeconds(focusDuration * 60);
@@ -124,14 +125,10 @@ export default function TimerScreen() {
     // time elapsed below 1 min is not meaningful to save
     if (elapsedMin >= 1) {
       await sessionRecorder(elapsedMin, mode, true);
-      await addFocusXp(elapsedMin, mode);
+      const awardedXp = await addFocusXp(elapsedMin, mode);
       await loadSummary();
       
-      if (mode === 'focus') {
-        triggerReward(elapsedMin)
-      } else {
-        triggerReward(Math.round(elapsedMin * 0.5))
-      }
+      triggerReward(awardedXp);
     }
 
     setIsRunning(false);
@@ -189,8 +186,7 @@ export default function TimerScreen() {
 
   function isLateNight(): boolean {
     const hour = new Date().getHours();
-    return false;
-    //return hour >= 23 || hour < 5;
+    return hour >= 23 || hour < 5;
   }
 
   // Replace 'sunny' with chicken name later.

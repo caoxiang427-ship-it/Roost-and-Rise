@@ -41,6 +41,7 @@ type TodoState = {
     toggleCompletion: (id: number, completed: boolean, subtasks: SubtaskItem[]) => Promise<void>;
     toggleDread: (id: number, dread: boolean) => Promise<void>;
     toggleSubtaskCompletion: (id: number, completed: boolean) => Promise<void>;
+    updateTaskXp: (id: number, awarded: number) => Promise<void>;
 };
 
 export const useTodoStore = create<TodoState>((set, get) => ({
@@ -93,6 +94,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             taskDesc: task.task_desc,
             subtasks: task.subtasks ?? [],
             scheduledDate: task.scheduled_date,
+            xpAwarded: task.xp_awarded,
         }));
 
         set({ taskItems: formattedTasks, tasksLoading: false });
@@ -234,6 +236,14 @@ export const useTodoStore = create<TodoState>((set, get) => ({
         }
         get().fetchTasks();
     },
+    updateTaskXp: async (id: number, awarded: number) => {
+        const { error } = await supabase.from('tasks').update({ xp_awarded: awarded }).eq('id', id);
+        if (error) {
+            console.log(error);
+            return;
+        }
+        get().fetchTasks();
+    }
 }));
 
 // kept out of state so they can't go stale; useShallow stops a re-render

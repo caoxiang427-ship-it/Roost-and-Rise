@@ -75,14 +75,14 @@ type ProfileState = {
     focusCapAlertShown: boolean,
     progressCapAlertShown: boolean,
 
-
     init: () => Promise<void>;
     setChickName: (newName: string) => Promise<void>;
     buyItem: (price: number, itemId: number) => Promise<void>;
     equipItem: (itemId: number) => Promise<void>;
     unequipItem: () => Promise<void>;
-    addFocusXp: (minutes: number, mode: 'focus' | 'break', sessionStreak?: number) => Promise<void>;
-    addProgressXp: (difficulty: "easy" | "moderate" | "difficult" | '') => Promise<void>;
+    addFocusXp: (minutes: number, mode: 'focus' | 'break', sessionStreak?: number) => Promise<number>;
+    addProgressXp: (difficulty: "easy" | "moderate" | "difficult" | '') => Promise<number>;
+    removeProgressXp:(xpAwarded: number) => Promise<number>;
     addWellbeingXp: (xpAmount: number, coinsBonus?: number) => Promise<void>;
     ensureDailyXpCapReset: () => void;
     clearLevelUp: () => void;
@@ -228,7 +228,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     },
     addFocusXp: async (minutes, mode, sessionStreak) => {
         const { userID } = get();
-        if (!userID || minutes <= 0) return;
+        if (!userID || minutes <= 0) return 0;
         get().ensureDailyXpCapReset();
 
         const rate = mode === 'focus' ? 1 : 0.5; // 1 XP/min focused, 0.5 XP/min on break
@@ -252,7 +252,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
                 );
                 set({focusCapAlertShown: true});
             }
-            return;
+            return 0;
         };
 
         const newFocusToday = focusXpToday + awarded;
@@ -271,10 +271,12 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         await supabase.from('profiles').update({
             xp: newXP, coins: newCoins, focus_xp_today: newFocusToday, daily_xp_reset_date: todayDate(),
         }).eq('id', userID);
+
+        return awarded;
     },
     addProgressXp: async (difficulty) => {
         const { userID } = get();
-        if (!userID || !difficulty) return;
+        if (!userID || !difficulty) return 0;
         get().ensureDailyXpCapReset();
     
         const rawXP = DIFFICULTY_XP[difficulty];
@@ -287,10 +289,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
                 'Progress pillar: Daily XP cap reached',
                 "You've done so much already! Consider taking a break for the day ❤️",
                 [{ text: 'OK' }]
-                );
+                )
                 set({progressCapAlertShown: true});
             }
-            return;
+            return 0;
         };
     
         const newProgressToday = progressXpToday + awarded;
@@ -307,9 +309,46 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         });
     
         await supabase.from('profiles').update({
-          xp: newXP, coins: newCoins, progress_xp_today: newProgressToday, daily_xp_reset_date: todayDate(),
+          xp: newXP, coins: newCoins, progress_xp_today: newProgressToday, daily_xp_reset_date: todayDate()
         }).eq('id', userID);
+
+        return awarded;
       },
+
+      // remove progress XP after toggle incomplete
+      removeProgressXp: async (xpAwarded: number) => {
+        const { userID } = get();
+        if (!userID || xpAwarded <= 0) return 0;
+        get().ensureDailyXpCapReset();
+        const { progressXpToday, xp, coins } = get();
+
+
+        const newProgressToday = Math.max(0, progressXpToday - xpAwarded);
+        const newXP = Math.max(0, xp - xpAwarded);
+
+        const newLevel = calculateXPLevel(newXP);
+        let coinsToRemove = 0;
+        for (let L = newLevel + 1; L <= calculateXPLevel(xp); L++) {
+            coinsToRemove += calculateCoinsEarned(L);
+        }
+        const newCoins = Math.max(0, coins - coinsToRemove);
+
+        set({
+            progressXpToday: newProgressToday,
+            xp: newXP,
+            coins: newCoins,
+            lastXpCapResetDate: todayDate(),
+            // if new XP after removing xp falls below the progress cap, reset the progress cap alert to false so it shows again when it goes over the cap in the future
+            progressCapAlertShown: newProgressToday < PROGRESS_DAILY_CAP ? false : get().progressCapAlertShown,
+        });
+
+        await supabase.from('profiles').update({
+            xp: newXP, coins: newCoins, progress_xp_today: newProgressToday, daily_xp_reset_date: todayDate(),
+        }).eq('id', userID);
+
+        return xpAwarded;
+    },
+
     addWellbeingXp: async (xpAmount, coinsBonus = 0) => {
         const { userID, xp, coins } = get();
         if (!userID || xpAmount <= 0) return;
@@ -340,7 +379,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     },
     clearLevelUp: () => {
         set({ pendingLevelUp: null });
-    }
+    },
 
             
 }))

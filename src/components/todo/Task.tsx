@@ -12,7 +12,8 @@ type TaskProps = {
     completed: boolean;
     dread: boolean;
     difficulty: "easy" | "moderate" | "difficult" | "";
-    onTriggerReward: (difficulty: "easy" | "moderate" | "difficult" | "") => void;
+    xpAwarded: number;
+    onTriggerReward?: (amount: number, decrease?: boolean) => void;
     taskDesc?: string;
     subtasks?: SubtaskItem[];
     onPress?: () => void;
@@ -20,8 +21,8 @@ type TaskProps = {
 
 const Task = (props: TaskProps) => {
 
-    const { deleteTask, toggleCompletion, toggleDread } = useTodoStore(); 
-    const { addProgressXp } = useProfileStore();
+    const { deleteTask, toggleCompletion, toggleDread, updateTaskXp } = useTodoStore(); 
+    const { addProgressXp, removeProgressXp } = useProfileStore();
 
     const taskDescSection = props.taskDesc ? (
         <Text style={styles.taskDesc}>{props.taskDesc}</Text>
@@ -56,9 +57,17 @@ const Task = (props: TaskProps) => {
             )}>
             <TouchableOpacity onPress={props.onPress} style={[styles.task, props.difficulty && difficultyStyles[props.difficulty]]}>
                 <TouchableOpacity
-                    onPress={() => {
+                    onPress={async () => {
                         toggleCompletion(props.id, props.completed, props.subtasks ?? []);
-                        if (!props.completed) {addProgressXp(props.difficulty); props.onTriggerReward?.(props.difficulty)} }}>
+                        if (!props.completed) {
+                            const awarded = await addProgressXp(props.difficulty);
+                            props.onTriggerReward?.(awarded);
+                            updateTaskXp(props.id, awarded)}
+                        else {
+                            const removed = await removeProgressXp(props.xpAwarded);
+                            props.onTriggerReward?.(removed, true);
+                            updateTaskXp(props.id, 0);
+                            }}}>
                     <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
                 </TouchableOpacity>
 
