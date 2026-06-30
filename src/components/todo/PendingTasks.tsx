@@ -33,8 +33,9 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
         <BottomSheet 
             ref={ref} 
             index={-1} 
+            snapPoints={['75%']}
             enableDynamicSizing={true}
-            maxDynamicContentSize={800} 
+            maxDynamicContentSize={750} 
             enablePanDownToClose={true}
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
@@ -78,12 +79,13 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
                         difficulty={item.difficulty}
                         taskDesc={item.taskDesc}
                         subtasks={item.subtasks}
+                        xpAwarded={item.xpAwarded}
                         onPress={() => {setSelectedTask(item); props.openEditTaskSheet();}}
                         />
                     </View>
                 )}
                 ListEmptyComponent={
-                    <View>
+                    <View  style={{paddingBottom: 200}}>
                         <Text>No pending tasks yet!</Text>
                     </View>
                 }>
@@ -98,6 +100,7 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
 const styles = StyleSheet.create({
     container: {
         paddingHorizontal: 20,
+        paddingBottom: 90,
     },
     header: {
         flexDirection: 'row',
