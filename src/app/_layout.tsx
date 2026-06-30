@@ -13,12 +13,30 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
 import { ActivityIndicator, View, StyleSheet } from 'react-native';
+import {  useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setLoading] = useState(true);
+
+  SplashScreen.preventAutoHideAsync();
+
+    // load custom fonts
+  const [fontLoaded, error] = useFonts({
+      InterRegular: require("../../assets/fonts/Inter_18pt-Regular.ttf"),
+      InterSemiBold: require("../../assets/fonts/Inter_18pt-SemiBold.ttf"),
+      InterBold: require("../../assets/fonts/Inter_18pt-Bold.ttf")
+    });
+
+    // if fonts aren't loaded, keep splashscreen until it's loaded
+  useEffect(() => {
+      if (fontLoaded || error) SplashScreen.hideAsync();
+    }, [fontLoaded, error]);
 
   // Load any saved session and track login/logout changes
   useEffect(() => {
@@ -63,18 +81,24 @@ export default function RootLayout() {
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#E8A33D" />
+        <ActivityIndicator size="large" color="#5E90A1" />
       </View>
     );
   }
   
+  if (!fontLoaded && !error) return null;
+  
   return (
-    <Stack>
-      <Stack.Screen name="index" options={{ title: 'Home' }} />
-      <Stack.Screen name="explore" options={{ title: 'Explore' }} />
-      <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
-      <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
-    </Stack>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaProvider>
+        <Stack screenOptions={{ headerShown: false }}>
+          <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
+          <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
+          <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
+          <Stack.Screen name='profile' options={{ animation: 'slide_from_right' }}/>
+        </Stack>
+      </SafeAreaProvider>
+    </GestureHandlerRootView>
   );
 }
    

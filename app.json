@@ -8,6 +8,7 @@
     "scheme": "roostandrise",
     "userInterfaceStyle": "automatic",
     "ios": {
+      "bundleIdentifier": "com.caoxiang.roostandrise",
       "icon": "./assets/expo.icon"
     },
     "android": {
@@ -41,6 +42,18 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "9f62c817-b76d-4492-81bb-a9cc03054ccf"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9f62c817-b76d-4492-81bb-a9cc03054ccf"
     }
   }
 }
