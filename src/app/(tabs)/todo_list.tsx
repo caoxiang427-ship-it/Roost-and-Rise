@@ -196,26 +196,30 @@ export default function TodoScreen() {
                 dread={item.dread}
                 difficulty={item.difficulty}
                 xpAwarded={item.xpAwarded}
+                scheduledDate={item.scheduledDate}
                 onTriggerReward={triggerReward}
                 taskDesc={item.taskDesc}
                 subtasks={item.subtasks}
-                onPress={() => {setSelectedTask(item); openEditTaskSheet();}}
+                onPress={() => {setSelectedTask(item); openEditTaskSheet();
+                }}
                 />
             </View>
           )}
           ListEmptyComponent={
-            <View style={styles.noTaskContainer}>
-              <Image 
-                source={require("../../../assets/images/todo/egg_icon.png")} 
-                style={{ width: 100, height: 100 }}
-                resizeMode={'center'} />
+            <Animated.View entering={FadeIn.duration(300).delay(200)} exiting={FadeOut.duration(300)}>
+              <View style={styles.noTaskContainer}>
+                <Image 
+                  source={require("../../../assets/images/todo/egg_icon.png")} 
+                  style={{ width: 100, height: 100 }}
+                  resizeMode={'center'} />
 
-              <Text style={styles.noTaskTitle}>No tasks yet!</Text>
-              <Text style={styles.noTaskSubtitle}> Add new tasks/ choose from pending</Text>
-              <TouchableOpacity style={styles.noTaskPendingBtn} onPress={openPendingTasksSheet}>
-                <Text style={styles.noTaskPendingTxt}>Pending Tasks</Text>
-                </TouchableOpacity>
-            </View>
+                <Text style={styles.noTaskTitle}>No tasks yet!</Text>
+                <Text style={styles.noTaskSubtitle}> Add new tasks/ choose from pending</Text>
+                <TouchableOpacity style={styles.noTaskPendingBtn} onPress={openPendingTasksSheet}>
+                  <Text style={styles.noTaskPendingTxt}>Pending Tasks</Text>
+                  </TouchableOpacity>
+              </View>
+            </Animated.View>
           }
         />
         
@@ -227,8 +231,8 @@ export default function TodoScreen() {
 
       <PendingTasks ref={pendingTasksRef} close={closePendingTasksSheet} openEditTaskSheet={openEditTaskSheet}></PendingTasks>
       <AddTask ref={addTaskRef} close={closeAddTaskSheet} openCalendar={openCalendarSheet}></AddTask>
-      <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
       <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
+      <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
       
 
     </View>

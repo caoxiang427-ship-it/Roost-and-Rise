@@ -1,11 +1,12 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import Task from './Task';
 import { useTodoStore, usePendingTaskItems, groupTaskByDate, formatDate } from '@/store/useTodoStore';
 import { TaskItem } from '@/types/todo';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 
 
 type PendingTasksProps = {
@@ -23,7 +24,7 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
 
     );
 
-    const { setSelectedTask } = useTodoStore();
+    const { setSelectedTask, deleteTask, rescheduleTask } = useTodoStore();
     const now = new Date();
     const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
@@ -31,6 +32,40 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
     const pastPendingTaskItems = usePendingTaskItems().filter((item) => item.scheduledDate < todayDate);
     
     const renderedItems = groupTaskByDate(pastPendingTaskItems);
+
+    const deleteAll = () => {
+        for (const task of pastPendingTaskItems) {
+            deleteTask(task.id);
+        }
+    };
+
+    const moveAll = () => {
+        for (const task of pastPendingTaskItems) {
+            rescheduleTask(task.id, todayDate);
+        }
+    }
+
+    const handleDeleteAll = () => {
+        Alert.alert(
+            "Are you sure you want to delete all pending tasks?",
+            "This action is permanent and can't be undone",
+          [
+            { text: 'No' },
+            { text: 'Yes', onPress: () => deleteAll()},
+          ]
+        )
+    }
+
+    const handleMoveAll = () => {
+        Alert.alert(
+            "Are you sure you want to reschedule all pending tasks to today?",
+            "This action is permanent and can't be undone",
+          [
+            { text: 'No' },
+            { text: 'Yes', onPress: () => moveAll()},
+          ]
+        )
+    }
 
     return (
         <BottomSheet 
@@ -57,11 +92,11 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
                             </TouchableOpacity>
 
                             <View style={{flexDirection: 'row'}}>
-                                <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000', marginRight: 2.5}]}>
+                                <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000', marginRight: 2.5}]} onPress={handleDeleteAll}>
                                     <Text style={styles.btnTxt}>Delete all</Text>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity style={[styles.Btn, { backgroundColor: 'rgb(127, 127, 127)000', marginLeft: 2.5}]}>
+                                <TouchableOpacity style={[styles.Btn, { backgroundColor: 'rgb(127, 127, 127)000', marginLeft: 2.5}]} onPress={handleMoveAll}>
                                     <Text style={styles.btnTxt}>Move all</Text>
                                 </TouchableOpacity>
                             </View>
@@ -87,6 +122,7 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
                               completed={task.completed}
                               dread={task.dread}
                               difficulty={task.difficulty}
+                              scheduledDate={task.scheduledDate}
                               taskDesc={task.taskDesc}
                               subtasks={task.subtasks}
                               xpAwarded={task.xpAwarded}
@@ -97,9 +133,14 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
                     </View>
                 )}
                 ListEmptyComponent={
-                    <View  style={styles.emptyTaskContainer}>
-                        <Text style={{ fontFamily: 'InterSemiBold', fontSize: 20, color: '#937254'}}>No pending tasks yet!</Text>
-                    </View>
+                    <Animated.View entering={FadeIn.duration(300).delay(200)} exiting={FadeOut.duration(300)}>
+                        <View  style={styles.emptyTaskContainer}>
+                            <View style={styles.clipboardContainer}>
+                                <Ionicons name="clipboard-outline" size={50} color='#937254'/>
+                            </View>
+                            <Text style={{ fontFamily: 'InterSemiBold', fontSize: 20, color: '#937254'}}>No pending tasks yet!</Text>
+                        </View>
+                    </Animated.View>
                 }>
 
                 </BottomSheetFlatList>
@@ -123,6 +164,7 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: 5,
+        paddingTop: 10,
     },
     Btn: {
         paddingVertical: 5,
@@ -154,13 +196,19 @@ const styles = StyleSheet.create({
     emptyTaskContainer: {
         justifyContent: 'center',
         alignItems: 'center', 
-        borderWidth: 1, 
-        borderColor: '#937254',
         alignSelf: 'center',
         paddingVertical: 10,
         paddingHorizontal: 10,
         marginTop: 40,
         borderRadius: 20
+    },
+    clipboardContainer: {
+        borderWidth: 3,
+        borderColor: '#937254',
+        borderRadius: 50,
+        paddingVertical: 20,
+        paddingHorizontal: 22,
+        marginBottom: 20,
     },
     date: {
         fontFamily: 'InterBold',

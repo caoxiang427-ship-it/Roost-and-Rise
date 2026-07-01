@@ -2,9 +2,10 @@ import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SubtaskItem } from '@/types/todo';
 import Subtask from '@/components/todo/Subtask';
 import { Ionicons } from "@expo/vector-icons";
-import { Swipeable } from "react-native-gesture-handler";
+import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useTodoStore } from '@/store/useTodoStore';
 import { useProfileStore } from '@/store/useProfileStore';
+import Animated, { FadeInRight, FadeOutLeft, Easing } from 'react-native-reanimated';
 
 type TaskProps = {
     id: number;
@@ -13,6 +14,7 @@ type TaskProps = {
     dread: boolean;
     difficulty: "easy" | "moderate" | "difficult" | "";
     xpAwarded: number;
+    scheduledDate: string;
     onTriggerReward?: (amount: number, decrease?: boolean) => void;
     taskDesc?: string;
     subtasks?: SubtaskItem[];
@@ -21,8 +23,16 @@ type TaskProps = {
 
 const Task = (props: TaskProps) => {
 
-    const { deleteTask, toggleCompletion, toggleDread, updateTaskXp } = useTodoStore(); 
+    const { deleteTask, toggleCompletion, toggleDread, updateTaskXp, rescheduleTask } = useTodoStore(); 
     const { addProgressXp, removeProgressXp } = useProfileStore();
+
+    const now = new Date();
+    const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const tomorrowDate = () => {
+    const tomorrow = new Date();
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    };
 
     const taskDescSection = props.taskDesc ? (
         <Text style={styles.taskDesc}>{props.taskDesc}</Text>
@@ -43,17 +53,34 @@ const Task = (props: TaskProps) => {
     }
 
     return (
-
-        <Swipeable
+        // if there are multiple tasks, the animations won't play for some reason. they only play if there's one task rendered
+        <Animated.View 
+          entering={FadeInRight.duration(300).easing(Easing.inOut(Easing.quad))} 
+          exiting={FadeOutLeft.duration(300).easing(Easing.inOut(Easing.quad))}>
+        <ReanimatedSwipeable
             containerStyle={styles.container}
             overshootRight={true}
             // look into editing this so big swipe -> delete btn fills up space and triggers the delete function
             renderRightActions={() => (
-                <TouchableOpacity
-                    style={styles.deleteBtn}
-                    onPress={() => deleteTask(props.id)}>
-                    <Ionicons name="trash" size={24} color="#FFF"/>
-                </TouchableOpacity>
+                <View style={{flexDirection: 'row'}}>
+                    <TouchableOpacity
+                      style={styles.moveBtn}
+                      onPress={() => {
+                        props.scheduledDate === todayDate
+                            ? rescheduleTask(props.id, tomorrowDate())
+                            : rescheduleTask(props.id, todayDate);
+                        }}>
+                        <Ionicons name="arrow-forward-circle-outline" size={24} color="#FFF"/>
+                        <Text style={styles.btnTxt}>{props.scheduledDate === todayDate ? 'Do tmr' : 'Do today'}</Text>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.deleteBtn}
+                        onPress={() => deleteTask(props.id)}>
+                        <Ionicons name="trash" size={24} color="#FFF"/>
+                        <Text style={styles.btnTxt}>Delete</Text>
+                    </TouchableOpacity>
+                </View>
             )}>
             <TouchableOpacity onPress={props.onPress} style={[styles.task, props.difficulty && difficultyStyles[props.difficulty]]}>
                 <TouchableOpacity
@@ -88,7 +115,8 @@ const Task = (props: TaskProps) => {
                     </View>
                 </TouchableOpacity>
             </TouchableOpacity>
-        </Swipeable>
+        </ReanimatedSwipeable>
+        </Animated.View>
     )
 }
 
@@ -139,9 +167,23 @@ const styles = StyleSheet.create({
         backgroundColor: "#BC0000",
         borderRadius: 10,
         marginBottom: 20,
-        paddingHorizontal: 25,
+        paddingHorizontal: 15,
         justifyContent: "center",
         alignItems: "center",
+        marginLeft: 2,
+    },
+    moveBtn: {
+       backgroundColor: "rgb(127, 127, 127)000",
+        borderRadius: 10,
+        marginBottom: 20,
+        paddingHorizontal: 15,
+        justifyContent: "center",
+        alignItems: "center", 
+    },
+    btnTxt: {
+        fontFamily: 'InterBold',
+        color: '#FFF',
+        fontSize: 10,
     },
     taskDesc: {
         fontFamily: "InterRegular",

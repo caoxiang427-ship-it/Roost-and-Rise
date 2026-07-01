@@ -38,6 +38,7 @@ type TodoState = {
         subtasks?: SubtaskItem[],
         deletedSubtaskIds?: number[],
     ) => Promise<void>;
+    rescheduleTask: (id: number, scheduledDate: string) => Promise<void>;
     toggleCompletion: (id: number, completed: boolean, subtasks: SubtaskItem[]) => Promise<void>;
     toggleDread: (id: number, dread: boolean) => Promise<void>;
     toggleSubtaskCompletion: (id: number, completed: boolean) => Promise<void>;
@@ -196,6 +197,22 @@ export const useTodoStore = create<TodoState>((set, get) => ({
                     completed: subtask.completed,
                 })));
             if (insertError) console.log(insertError);
+        }
+
+        get().fetchTasks();
+    },
+
+    rescheduleTask: async (id, scheduledDate) => {
+        const { error } = await supabase
+            .from('tasks')
+            .update({
+                scheduled_date: scheduledDate,
+            })
+            .eq('id', id);
+
+        if (error) {
+            console.log(error);
+            return;
         }
 
         get().fetchTasks();
