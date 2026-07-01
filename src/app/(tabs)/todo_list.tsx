@@ -225,10 +225,10 @@ export default function TodoScreen() {
             <Ionicons name="add" size={40} color="#FFF"/>
       </TouchableOpacity>
 
+      <PendingTasks ref={pendingTasksRef} close={closePendingTasksSheet} openEditTaskSheet={openEditTaskSheet}></PendingTasks>
       <AddTask ref={addTaskRef} close={closeAddTaskSheet} openCalendar={openCalendarSheet}></AddTask>
       <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
       <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
-      <PendingTasks ref={pendingTasksRef} close={closePendingTasksSheet} openEditTaskSheet={openEditTaskSheet}></PendingTasks>
       
 
     </View>

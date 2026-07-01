@@ -273,3 +273,23 @@ export function calculateProgress(tasks: TaskItem[]): number {
         return total + taskProgress * percentPerTask;
     }, 0);
 }
+
+// function to group tasks by date scheduled
+export function groupTaskByDate(tasks: TaskItem[]): Record<string, TaskItem[]> {
+    const groupedTasks: Record<string, TaskItem[]> = {};
+    for (const task of tasks) {
+        if (!groupedTasks[task.scheduledDate]) {
+            groupedTasks[task.scheduledDate] = [];
+        }
+        groupedTasks[task.scheduledDate].push(task);
+    }
+    return groupedTasks;
+}
+
+export function formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}

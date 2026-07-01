@@ -9,7 +9,10 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.caoxiang.roostandrise",
-      "icon": "./assets/expo.icon"
+      "icon": "./assets/expo.icon",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -54,6 +57,7 @@
     },
     "updates": {
       "url": "https://u.expo.dev/9f62c817-b76d-4492-81bb-a9cc03054ccf"
-    }
+    },
+    "owner": "roost-and-rise"
   }
 }
