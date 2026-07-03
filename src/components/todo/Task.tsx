@@ -1,11 +1,12 @@
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
 import { SubtaskItem } from '@/types/todo';
 import Subtask from '@/components/todo/Subtask';
 import { Ionicons } from "@expo/vector-icons";
 import ReanimatedSwipeable from 'react-native-gesture-handler/ReanimatedSwipeable';
 import { useTodoStore } from '@/store/useTodoStore';
 import { useProfileStore } from '@/store/useProfileStore';
-import Animated, { FadeInRight, FadeOutLeft, Easing } from 'react-native-reanimated';
+import Animated, { FadeInRight, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 
 type TaskProps = {
     id: number;
@@ -25,6 +26,8 @@ const Task = (props: TaskProps) => {
 
     const { deleteTask, toggleCompletion, toggleDread, updateTaskXp, rescheduleTask } = useTodoStore(); 
     const { addProgressXp, removeProgressXp } = useProfileStore();
+
+    
 
     const now = new Date();
     const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -52,70 +55,83 @@ const Task = (props: TaskProps) => {
         difficult: styles.difficult,
     }
 
+    // exit animation for task doesn't work with flatlist sometimes, so i'm manually animating it and calling function deleteTask after the animation plays
+    const [isDeleting, setIsDeleting] = useState(false);
+
+    const animatedStyle = useAnimatedStyle(() => ({
+        opacity: withTiming(isDeleting ? 0 : 1, { duration: 300 }),
+        transform: [{ translateX: withTiming(isDeleting ? -400 : 0, { duration: 300, easing: Easing.inOut(Easing.quad) }) }],
+    }));
+    const handleDelete = () => {
+        setIsDeleting(true);
+        setTimeout(() => deleteTask(props.id), 300);
+    };
+
     return (
         // if there are multiple tasks, the animations won't play for some reason. they only play if there's one task rendered
         <Animated.View 
-          entering={FadeInRight.duration(300).easing(Easing.inOut(Easing.quad))} 
-          exiting={FadeOutLeft.duration(300).easing(Easing.inOut(Easing.quad))}>
-        <ReanimatedSwipeable
-            containerStyle={styles.container}
-            overshootRight={true}
-            // look into editing this so big swipe -> delete btn fills up space and triggers the delete function
-            renderRightActions={() => (
-                <View style={{flexDirection: 'row'}}>
-                    <TouchableOpacity
-                      style={styles.moveBtn}
-                      onPress={() => {
-                        props.scheduledDate === todayDate
-                            ? rescheduleTask(props.id, tomorrowDate())
-                            : rescheduleTask(props.id, todayDate);
-                        }}>
-                        <Ionicons name="arrow-forward-circle-outline" size={24} color="#FFF"/>
-                        <Text style={styles.btnTxt}>{props.scheduledDate === todayDate ? 'Do tmr' : 'Do today'}</Text>
-                    </TouchableOpacity>
+          entering={FadeInRight.duration(300).easing(Easing.inOut(Easing.quad))}>
+            <Animated.View style={animatedStyle}>
+                <ReanimatedSwipeable
+                containerStyle={styles.container}
+                overshootRight={true}
+                // look into editing this so big swipe -> delete btn fills up space and triggers the delete function
+                renderRightActions={() => (
+                    <View style={{flexDirection: 'row'}}>
+                        <TouchableOpacity
+                        style={styles.moveBtn}
+                        onPress={() => {
+                            props.scheduledDate === todayDate
+                                ? rescheduleTask(props.id, tomorrowDate())
+                                : rescheduleTask(props.id, todayDate);
+                            }}>
+                            <Ionicons name="arrow-forward-circle-outline" size={24} color="#FFF"/>
+                            <Text style={styles.btnTxt}>{props.scheduledDate === todayDate ? 'Do tmr' : 'Do today'}</Text>
+                        </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.deleteBtn}
-                        onPress={() => deleteTask(props.id)}>
-                        <Ionicons name="trash" size={24} color="#FFF"/>
-                        <Text style={styles.btnTxt}>Delete</Text>
-                    </TouchableOpacity>
-                </View>
-            )}>
-            <TouchableOpacity onPress={props.onPress} style={[styles.task, props.difficulty && difficultyStyles[props.difficulty]]}>
-                <TouchableOpacity
-                    onPress={async () => {
-                        toggleCompletion(props.id, props.completed, props.subtasks ?? []);
-                        if (!props.completed) {
-                            const awarded = await addProgressXp(props.difficulty);
-                            props.onTriggerReward?.(awarded);
-                            updateTaskXp(props.id, awarded)}
-                        else {
-                            const removed = await removeProgressXp(props.xpAwarded);
-                            props.onTriggerReward?.(removed, true);
-                            updateTaskXp(props.id, 0);
-                            }}}>
-                    <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
-                </TouchableOpacity>
-
-                <View style={styles.textContainer}>
-                    <Text style={[styles.taskText, props.completed && styles.completedText]}>
-                        {props.text}
-                    </Text>
-
-                    {taskDescSection}
-
-                    {subtaskSection}
-                </View>
-
-                <TouchableOpacity
-                onPress={() => toggleDread(props.id, props.dread)}>
-                    <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
-                        <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
+                        <TouchableOpacity
+                            style={styles.deleteBtn}
+                            onPress={handleDelete}>
+                            <Ionicons name="trash" size={24} color="#FFF"/>
+                            <Text style={styles.btnTxt}>Delete</Text>
+                        </TouchableOpacity>
                     </View>
+                )}>
+                <TouchableOpacity onPress={props.onPress} style={[styles.task, props.difficulty && difficultyStyles[props.difficulty]]}>
+                    <TouchableOpacity
+                        onPress={async () => {
+                            toggleCompletion(props.id, props.completed, props.subtasks ?? []);
+                            if (!props.completed) {
+                                const awarded = await addProgressXp(props.difficulty);
+                                props.onTriggerReward?.(awarded);
+                                updateTaskXp(props.id, awarded)}
+                            else {
+                                const removed = await removeProgressXp(props.xpAwarded);
+                                props.onTriggerReward?.(removed, true);
+                                updateTaskXp(props.id, 0);
+                                }}}>
+                        <Ionicons name={props.completed ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
+                    </TouchableOpacity>
+
+                    <View style={styles.textContainer}>
+                        <Text style={[styles.taskText, props.completed && styles.completedText]}>
+                            {props.text}
+                        </Text>
+
+                        {taskDescSection}
+
+                        {subtaskSection}
+                    </View>
+
+                    <TouchableOpacity
+                    onPress={() => toggleDread(props.id, props.dread)}>
+                        <View style={[styles.flagContainer, props.dread && styles.flagDread]}>
+                            <Ionicons name={props.dread ? "flag" : "flag-outline"} size={18} color={props.dread ? "#FFF" : "#937254"}/>
+                        </View>
+                    </TouchableOpacity>
                 </TouchableOpacity>
-            </TouchableOpacity>
-        </ReanimatedSwipeable>
+                </ReanimatedSwipeable>
+            </Animated.View>
         </Animated.View>
     )
 }

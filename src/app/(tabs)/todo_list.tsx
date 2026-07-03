@@ -9,6 +9,7 @@ import * as Progress from 'react-native-progress';
 import AddTask from '@/components/todo/AddTask';
 import EditTask from '@/components/todo/EditTask';
 import CalendarSheet from '@/components/todo/CalendarSheet';
+import SearchTasks from '@/components/todo/SearchTasks';
 import { CalendarProvider, WeekCalendar } from 'react-native-calendars';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import ShowReward from '@/components/ShowReward';
@@ -61,17 +62,20 @@ export default function TodoScreen() {
   const editTaskRef = useRef<BottomSheet>(null);
   const calendarRef = useRef<BottomSheet>(null);
   const pendingTasksRef = useRef<BottomSheet>(null);
+  const searchTasksRef = useRef<BottomSheet>(null);
   
     // open/ close functions for bottom sheet
   const openAddTaskSheet = () => addTaskRef.current?.expand();
   const openEditTaskSheet = () => editTaskRef.current?.expand();
   const openCalendarSheet = () => calendarRef.current?.expand();
   const openPendingTasksSheet = () => pendingTasksRef.current?.expand();
+  const openSearchTasksSheet = () => searchTasksRef.current?.expand();
 
   const closeAddTaskSheet = () => addTaskRef.current?.close();
   const closeEditTaskSheet = () => editTaskRef.current?.close();
   const closeCalendarSheet = () => calendarRef.current?.close();
   const closePendingTasksSheet = () => pendingTasksRef.current?.close();
+  const closeSearchTasksSheet = () => searchTasksRef.current?.close();
 
   if (tasksLoading) {
     return (
@@ -125,7 +129,7 @@ export default function TodoScreen() {
                         </TouchableOpacity>
 
                         <TouchableOpacity
-                          onPress={() => console.log("search")}>
+                          onPress={openSearchTasksSheet}>
                             <Ionicons name="search" size={25} color="#FFF"/>
                         </TouchableOpacity>
                       </View>
@@ -229,6 +233,7 @@ export default function TodoScreen() {
             <Ionicons name="add" size={40} color="#FFF"/>
       </TouchableOpacity>
 
+      <SearchTasks ref={searchTasksRef} close={closeSearchTasksSheet} openEditTaskSheet={openEditTaskSheet}></SearchTasks>
       <PendingTasks ref={pendingTasksRef} close={closePendingTasksSheet} openEditTaskSheet={openEditTaskSheet}></PendingTasks>
       <AddTask ref={addTaskRef} close={closeAddTaskSheet} openCalendar={openCalendarSheet}></AddTask>
       <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
