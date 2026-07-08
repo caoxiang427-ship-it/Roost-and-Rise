@@ -4,12 +4,7 @@
  * edge cases (zero, negative), and long sessions exceeding 1h.
 */
 
-function displayTime(seconds: number) {
-  const totalSeconds = Math.max(0, seconds);
-  const min = Math.floor(totalSeconds / 60);
-  const sec = totalSeconds % 60;
-  return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
-}
+import { displayTime } from '../src/lib/timer';
 
 describe('displayTime', () => {
   test('formats 25 minutes as 25:00', () => {

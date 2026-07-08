@@ -5,6 +5,7 @@
 import { useState, useEffect } from 'react';
 import { View, Text, Pressable, StyleSheet, Alert } from 'react-native';
 import { sessionRecorder, getTodayStudyMinutes, getTodaysFocusSessionCount } from '@/lib/sessions';
+import { displayTime, getCyclePosition, isLongBreakNext, isLateNight } from '@/lib/timer';
 import { useProfileStore } from '@/store/useProfileStore';
 import ShowReward from '@/components/ShowReward';
 
@@ -83,7 +84,7 @@ export default function TimerScreen() {
 
   // Late-night alert
   useEffect(() => {
-    if (isLateNight()) {
+    if (isLateNight(new Date().getHours())) {
       Alert.alert(
         "It's getting late 🌙",
         "Consider getting some rest and coming back tomorrow.",
@@ -93,9 +94,8 @@ export default function TimerScreen() {
   }, []);
 
   function getSessionSubtitle() {
-    const nextSession = todayFocusCount + 1;
-    const cyclePosition = ((nextSession - 1) % 4) + 1;
-    const isNextLongBreak = nextSession % 4 === 0;
+    const cyclePosition = getCyclePosition(todayFocusCount);
+    const isNextLongBreak = isLongBreakNext(todayFocusCount);
     const breakMins = isNextLongBreak ? LONG_BREAK_MINUTES : breakDuration;
     return `Session ${cyclePosition} of 4 · then a ${breakMins}-min break`;
   }
@@ -184,11 +184,6 @@ export default function TimerScreen() {
     }
   }
 
-  function isLateNight(): boolean {
-    const hour = new Date().getHours();
-    return hour >= 23 || hour < 5;
-  }
-
   // Replace 'sunny' with chicken name later.
   function getChickenMsg() {
     if (!isRunning) { 
@@ -201,17 +196,6 @@ export default function TimerScreen() {
       return 'Sunny is resting too 💛';
     }
     return '';
-  }
-
-  function displayTime(seconds: number) {
-    const totalSeconds = Math.max(0, seconds);
-    const min = Math.floor(totalSeconds / 60);
-    const sec = totalSeconds % 60;
-
-    const displayMin = min.toString().padStart(2, '0');
-    const displaySec = sec.toString().padStart(2, '0');
-  
-    return `${displayMin}:${displaySec}`;  
   }
 
   return (
