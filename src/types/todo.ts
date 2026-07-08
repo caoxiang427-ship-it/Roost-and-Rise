@@ -5,8 +5,9 @@ export type TaskItem = {
     dread: boolean;
     difficulty: "easy" | "moderate" | "difficult",
     scheduledDate: string,
-    taskDesc: string;
-    subtasks: SubtaskItem[];
+    taskDesc: string,
+    subtasks: SubtaskItem[],
+    xpAwarded: number,
 };
 
 export type NewSubtaskItem = {

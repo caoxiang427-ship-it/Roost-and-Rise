@@ -4,13 +4,15 @@ import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 type ShowRewardProp = {
     xp?: number;
     coins?: number;
+    decrease?: boolean;
 };
 
 
 const ShowReward = (props: ShowRewardProp) => {
     return (
         <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)} style={styles.container}>
-            {props.xp && <Text style={styles.xp}>+{props.xp} XP</Text>}
+            {props.xp && !props.decrease && <Text style={styles.xp}>+{props.xp} XP</Text>}
+            {props.xp && props.decrease && <Text style={styles.xp}>-{props.xp} XP</Text>}
             {props.coins &&
             <View style={styles.coinContainer}>
                 <Text style={styles.coin}>+{props.coins} </Text>

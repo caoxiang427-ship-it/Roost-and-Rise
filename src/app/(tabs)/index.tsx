@@ -30,9 +30,9 @@ export default function HomeScreen() {
 
   const insets = useSafeAreaInsets();
   const router = useRouter();
+  const [isMute, setIsMute] = useState<boolean>(false);
   const [showSpeech, setShowSpeech] = useState<boolean>(false);
   const [currentMood, setCurrentMood] = useState<string | null>(null);
-  const [levelUpVisible, setLevelUpVisible] = useState<boolean>(true);
   // temp local copy of chickname while user is typing so it syncs with saved value
   const [chickNameDraft, setChickNameDraft] = useState<string>('');
 
@@ -43,6 +43,8 @@ export default function HomeScreen() {
     xp,
     coins,
     isLoading,
+    pendingLevelUp,
+    clearLevelUp,
     init,
     setChickName,
   } = useProfileStore();
@@ -140,14 +142,6 @@ export default function HomeScreen() {
     return (xp - currentLevelXP) / (nextLevelXP - currentLevelXP);
   };
 
-  const triggerLevelUp = (xp: number) => {
-    const level = calculateXPLevel(xp);
-    const nextLevelXp = totalXpRequiredForLevel(level + 1);
-    if (xp === nextLevelXp) {
-      setLevelUpVisible(true);
-    }
-  };
-
   if (isLoading) {
     return (
      <ImageBackground
@@ -171,13 +165,15 @@ export default function HomeScreen() {
             </Link>
 
             <View style={styles.headerBtns}>
-              <TouchableOpacity style={styles.volume} onPress={() => console.log('toggle sound')}>
-                <Ionicons name="volume-high" size={30} color="#FFF"/>
+              <TouchableOpacity style={styles.volume} onPress={() => setIsMute(!isMute)}>
+                <Ionicons name={isMute ? "volume-mute" : "volume-high"} size={30} color="#FFF"/>
               </TouchableOpacity>
 
-              <TouchableOpacity onPress={() => console.log('settings')}>
-                <Ionicons name="settings-sharp" size={30} color="#FFF"/>
-              </TouchableOpacity>
+              <Link href="../settings" asChild>
+                <TouchableOpacity onPress={() => console.log('settings')}>
+                  <Ionicons name="settings-sharp" size={30} color="#FFF"/>
+                </TouchableOpacity>
+              </Link>
             </View>
 
           </View>
@@ -301,7 +297,12 @@ export default function HomeScreen() {
             ref={inventoryRef} 
             close={closeInventorySheet}></Inventory>
 
-          <LevelUp visible={levelUpVisible} onClose={() => setLevelUpVisible(false)} level={20} coinsEarned={300}></LevelUp>
+          <LevelUp 
+            visible={pendingLevelUp !== null} 
+            onClose={clearLevelUp}
+            level={pendingLevelUp?.level ?? 1}
+            coinsEarned={pendingLevelUp?.coinsEarned ?? 0}
+          />
           
       </ImageBackground>
     </View>

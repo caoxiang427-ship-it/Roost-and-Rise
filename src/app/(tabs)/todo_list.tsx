@@ -32,10 +32,13 @@ export default function TodoScreen() {
 
   const [showReward, setShowReward] = useState(false);
   const [rewardXP, setRewardXP] = useState(0);
+  // after toggle completion, xp will decrease, this is so the "showReward" component can reflect the -XP
+  const [decreaseXp, setDecreaseXp] = useState(false);
 
-  const triggerReward = (difficulty: 'easy' | 'moderate' | 'difficult' | '') => {
-    const xp = difficulty === 'easy' ? 5 : difficulty === 'moderate' ? 10 : 15;
-    setRewardXP(xp);
+  const triggerReward = (amount: number, decrease?: boolean) => {
+    if (amount <= 0) return;
+    setDecreaseXp(!!decrease);
+    setRewardXP(amount);
     setShowReward(true);
     setTimeout(() => setShowReward(false), 2000);
   };
@@ -135,7 +138,7 @@ export default function TodoScreen() {
                     </View>
                   </View>
                   <View style={ { alignSelf: 'flex-end', paddingRight: 20, paddingTop: 10}}>
-                    {showReward && <ShowReward xp={rewardXP}></ShowReward>}
+                    {showReward && <ShowReward xp={rewardXP} decrease={decreaseXp}></ShowReward>}
                   </View>
 
                   <View style={styles.progressBarWrapper}>
@@ -192,6 +195,7 @@ export default function TodoScreen() {
                 completed={item.completed}
                 dread={item.dread}
                 difficulty={item.difficulty}
+                xpAwarded={item.xpAwarded}
                 onTriggerReward={triggerReward}
                 taskDesc={item.taskDesc}
                 subtasks={item.subtasks}
@@ -222,8 +226,8 @@ export default function TodoScreen() {
       </TouchableOpacity>
 
       <AddTask ref={addTaskRef} close={closeAddTaskSheet} openCalendar={openCalendarSheet}></AddTask>
-      <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
       <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
+      <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
       <PendingTasks ref={pendingTasksRef} close={closePendingTasksSheet} openEditTaskSheet={openEditTaskSheet}></PendingTasks>
       
 
