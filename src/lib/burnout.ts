@@ -5,7 +5,7 @@
 import { supabase } from './supabase';
 import { BURNOUT_CONFIG } from './burnout_constants';
 import { getTodayStudyMinutes, getTodaysBreakCount } from './sessions';
-import { getTodaySelfCareCounts, getRecentMood } from './self-care';
+import { getTodaySelfCareCounts, getTodaysMood } from './self-care';
 
 export type BurnoutStatus = 'engaged' | 'balanced' | 'overextended' | 'burnout';
 
@@ -54,7 +54,7 @@ export async function calculateBurnoutScore(): Promise<BurnoutResult> {
   const studyMinutes = await getTodayStudyMinutes();
   const breaksTaken = await getTodaysBreakCount();
   const selfCareCounts = await getTodaySelfCareCounts();
-  const recentMoods = await getRecentMood(3);
+  const todaysMood = await getTodaysMood();
   const isChronic = await calculateChronicLoad();
 
   if (studyMinutes > BURNOUT_CONFIG.STUDY_SEVERE_OVERWORK_MINUTES) {
@@ -84,11 +84,10 @@ export async function calculateBurnoutScore(): Promise<BurnoutResult> {
     factors.push('Taking breaks');
   }
 
-  if (recentMoods.length > 0) {
-    const latestMood = recentMoods[0].mood as keyof typeof BURNOUT_CONFIG.MOOD_SCORES;
-    const moodAdj = BURNOUT_CONFIG.MOOD_SCORES[latestMood] || 0;
+  if (todaysMood) {
+    const moodAdj = BURNOUT_CONFIG.MOOD_SCORES[todaysMood as keyof typeof BURNOUT_CONFIG.MOOD_SCORES] || 0;
     score += moodAdj;
-    if (moodAdj !== 0) factors.push(`Feeling ${latestMood}`);
+    if (moodAdj !== 0) factors.push(`Feeling ${todaysMood}`);
   }
 
   score = Math.max(0, Math.min(100, score));
@@ -97,7 +96,7 @@ export async function calculateBurnoutScore(): Promise<BurnoutResult> {
   return { score, status, factors };
 }
 
-function getStatus(score: number): BurnoutStatus {
+export function getStatus(score: number): BurnoutStatus {
   if (score >= BURNOUT_CONFIG.THRESHOLDS.ENGAGED) return 'engaged';
   if (score >= BURNOUT_CONFIG.THRESHOLDS.BALANCED) return 'balanced';
   if (score >= BURNOUT_CONFIG.THRESHOLDS.OVEREXTENDED) return 'overextended';
