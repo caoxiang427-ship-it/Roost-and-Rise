@@ -2,14 +2,9 @@
  * Test whether wellness scores is mapped to the correct tier
 */
 
-import { BURNOUT_CONFIG } from '../src/lib/burnout_constants';
+jest.mock('../src/lib/supabase');
 
-function getStatus(score: number) {
-  if (score >= BURNOUT_CONFIG.THRESHOLDS.ENGAGED) return 'engaged';
-  if (score >= BURNOUT_CONFIG.THRESHOLDS.BALANCED) return 'balanced';
-  if (score >= BURNOUT_CONFIG.THRESHOLDS.OVEREXTENDED) return 'overextended';
-  return 'burnout';
-}
+import { getStatus } from '../src/lib/burnout';
 
 describe('Wellness status tiers', () => {
   test('score of 80 maps to engaged', () => {

@@ -4,9 +4,7 @@
  * does not fire during normal daytime hours.
 */
 
-function isLateNight(hour: number): boolean {
-  return hour >= 23 || hour < 5;
-}
+import { isLateNight } from '../src/lib/timer';
 
 describe('Late-night detection', () => {
   test('11pm triggers late-night warning', () => {
