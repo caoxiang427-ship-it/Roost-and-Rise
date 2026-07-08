@@ -7,9 +7,30 @@ import { supabase } from './supabase';
 export interface SelfCareCategory {
   id: string;
   label: string;
-  emoji: string;
+  icon: string;
   display_order: number;
 }
+
+export interface SelfCareLogEntry {
+  id: string;
+  category_id: string;
+  activity: string | null;
+  logged_at: string;
+}
+
+
+export const CATEGORY_CATALOG = [
+  { label: 'Sleep',    icon: 'moon-outline',          isDefault: true },
+  { label: 'Exercise', icon: 'barbell-outline',       isDefault: true },
+  { label: 'Connect',  icon: 'people-outline',        isDefault: true },
+  { label: 'Eat well', icon: 'restaurant-outline',    isDefault: true },
+  { label: 'Unwind',   icon: 'leaf-outline',          isDefault: true },
+  { label: 'Hobbies',  icon: 'color-palette-outline', isDefault: true },
+  { label: 'Outdoors', icon: 'sunny-outline',         isDefault: false },
+  { label: 'Hydrate',  icon: 'water-outline',         isDefault: false },
+  { label: 'Journal',  icon: 'book-outline',          isDefault: false },
+  { label: 'Breathe',  icon: 'pulse-outline',         isDefault: false },
+];
 
 // Get all active categories, ordered by display_order
 export async function getUserCategories(): Promise<SelfCareCategory[]> {
@@ -19,7 +40,7 @@ export async function getUserCategories(): Promise<SelfCareCategory[]> {
 
   const { data, error } = await supabase
     .from('selfcare_categories')
-    .select('id, label, emoji, display_order')
+    .select('id, label, icon, display_order')
     .eq('user_id', user.id)
     .eq('is_active', true)
     .order('display_order', { ascending: true });
@@ -29,7 +50,7 @@ export async function getUserCategories(): Promise<SelfCareCategory[]> {
   return data;
 }
 
-export async function addCategory(label: string, emoji: string) {
+export async function addCategory(label: string, icon: string) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { error: 'Not signed in' };
@@ -49,21 +70,21 @@ export async function addCategory(label: string, emoji: string) {
     .insert({
       user_id: user.id,
       label,
-      emoji,
+      icon,
       display_order: nextOrder,
     });
 
   return result;
 }
 
-export async function updateCategory(id: string, label: string, emoji: string) {
+export async function updateCategory(id: string, label: string, icon: string) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { error: 'Not signed in' };
 
   const result = await supabase
     .from('selfcare_categories')
-    .update({ label, emoji })
+    .update({ label, icon })
     .eq('id', id)
     .eq('user_id', user.id);
 
@@ -155,6 +176,25 @@ export async function getTodaySelfCareData() {
   }, {});
 
   return { counts, recentActivities };
+}
+
+export async function getTodayLogEntries(): Promise<SelfCareLogEntry[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('selfcare_logs')
+    .select('id, category_id, activity, logged_at')
+    .eq('user_id', user.id)
+    .gte('logged_at', today.toISOString())
+    .order('logged_at', { ascending: false });
+
+  if (!data || error) return [];
+  return data;
 }
 
 export async function logMood(mood: string) {

@@ -1,27 +1,28 @@
-/* 
+/*
  * Edit Categories for self-care log screen.
- * Users can add, delete, update categories, or change emoji.
+ * Grid of category tiles + centered edit/add modal.
 */
 
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, Alert } from 'react-native';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, Modal } from 'react-native';
 import {
   getUserCategories,
   addCategory,
   updateCategory,
   deleteCategory,
   SelfCareCategory,
+  CATEGORY_CATALOG,
 } from '@/lib/self-care';
 import EmojiPicker from '@/components/EmojiPicker';
-
-type Mode = 'add' | 'edit' | 'collapsed';
+import { styles } from '@/styles/editcateg_styles';
+import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export default function EditCategoriesScreen() {
   const [categories, setCategories] = useState<SelfCareCategory[]>([]);
-  const [activeId, setActiveId] = useState<string | null>(null);
-  const [mode, setMode] = useState<Mode>('collapsed');
-  const [editLabel, setEditLabel] = useState('');
-  const [editEmoji, setEditEmoji] = useState('😀');
+  const [addVisible, setAddVisible] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const insets = useSafeAreaInsets();
 
   useEffect(() => {
     loadCategories();
@@ -32,346 +33,128 @@ export default function EditCategoriesScreen() {
     setCategories(categs);
   }
 
-  function handleExpand(categ: SelfCareCategory) {
-    if (activeId == categ.id) {
-      setActiveId(null); // not expanded -> collapsed 
-      setMode('collapsed');
-    } else {
-      setActiveId(categ.id);
-      setMode('edit');
-      setEditLabel(categ.label);
-      setEditEmoji(categ.emoji);
-    }
-  }
+  const activeLabels = categories.map(c => c.label);
+  const available = CATEGORY_CATALOG.filter(c => !activeLabels.includes(c.label));
 
-  function handleAdd() {
-    setActiveId('new'); // placeholder id
-    setMode('add');
-    setEditLabel('');
-    setEditEmoji('🌿'); 
-  }
-
-  async function handleSave() {
-    if (!editLabel.trim()) {
-      Alert.alert('Error', 'Label cannot be empty');
+  async function handleAddFromCatalog(label: string, icon: string) {
+    const result = await addCategory(label, icon);
+    if (result.error) {
+      Alert.alert('Error', 'Could not add. Please try again.');
       return;
     }
-
-    if (mode == 'add') {
-      const result = await addCategory(editLabel.trim(), editEmoji);
-      if (result.error) {
-        Alert.alert('Error', 'Could not add category. Please try again.');
-        return;
-      }
-    } else if (activeId) {
-      const result = await updateCategory(activeId, editLabel.trim(), editEmoji);
-      if (result.error) {
-        Alert.alert('Error', 'Could not save changes. Please try again.');
-        return;
-      }
-    }
-
-    setActiveId(null);
-    setMode('collapsed');
+    setAddVisible(false);
     loadCategories();
-   }
+    showToast(`${label} added`);
+  }
 
-  async function handleDelete() {
-    if (!activeId || mode != 'edit') return;
-
-    Alert.alert('Delete category?',
-      'This category will be removed from your list. Past logs will not be deleted.',
+  function handleLongPress(categ: SelfCareCategory) {
+    Alert.alert(
+      `Remove ${categ.label}?`,
+      'It will be removed from your list. Past logs are kept.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
-          text: 'Delete',
+          text: 'Remove',
           style: 'destructive',
           onPress: async () => {
-            const result = await deleteCategory(activeId);
+            const result = await deleteCategory(categ.id);
             if (result.error) {
-              Alert.alert('Error', 'Could not delete. Please try again.');
+              Alert.alert('Error', 'Could not remove. Please try again.');
               return;
             }
-            setActiveId(null);
-            setMode('collapsed');
             loadCategories();
-          }
-        }
+          },
+        },
       ]
     );
   }
 
-  function handleCancel() {
-    setActiveId(null);
-    setMode('collapsed');
+  function showToast(msg: string) {
+    setToast(msg);
+    setTimeout(() => setToast(null), 1800);
   }
 
   return (
     <ScrollView 
-      style={styles.container}
-      contentContainerStyle={styles.contentContainer}
+      style={styles.container} 
+      contentContainerStyle={[
+        styles.contentContainer,
+        { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 100 },
+      ]}
     >
+      <Text style={styles.title}>Edit categories</Text>
       <Text style={styles.subtitle}>
-        Manage your self-care categories. Tap one to edit or delete.
+        Choose which self-care categories appear on your recovery screen.
       </Text>
 
-      {categories.map(categ => (
-        <View key={categ.id} style={styles.card}>
+      <View style={styles.tipCard}>
+        <Ionicons name="hand-left-outline" size={18} color="#8FB07A" />
+        <Text style={styles.tipText}>Long-press any tile to remove it. Your past logs are kept.</Text>
+      </View>
+
+      {/* Active categories grid */}
+      <View style={styles.grid}>
+        {categories.map(categ => (
           <Pressable
-            onPress={() => handleExpand(categ)}
-            style={styles.row}
+            key={categ.id}
+            style={styles.tile}
+            onLongPress={() => handleLongPress(categ)}
+            delayLongPress={350}
           >
-            <Text style={styles.rowLabel}>
-              {categ.emoji}  {categ.label}
-            </Text>
-            <Text style={styles.chevron}>
-              {activeId === categ.id ? '▴' : '▾'}
-            </Text>
+            <View style={styles.tileIcon}>
+              <Ionicons name={categ.icon as any} size={24} color="#6E7D67" />
+            </View>
+            <Text style={styles.tileLabel} numberOfLines={1}>{categ.label}</Text>
           </Pressable>
+        ))}
 
-          {activeId === categ.id && mode === 'edit' && (
-            <EditForm 
-              emoji={editEmoji}
-              setEmoji={setEditEmoji}
-              label={editLabel}
-              setLabel={setEditLabel}
-              onSave={handleSave}
-              onDelete={handleDelete}
-              onCancel={handleCancel}
-            />
-          )}
-        </View>
-      ))}
-
-      {mode !== 'add' ? (
-        <Pressable style={styles.addCard} onPress={handleAdd}>
-          <Text style={styles.addText}>+ Add new category</Text>
+        {/* Add tile */}
+        <Pressable style={styles.addTile} onPress={() => setAddVisible(true)}>
+          <Ionicons name="add" size={26} color="#6E7D67" />
+          <Text style={styles.addText}>Add new</Text>
         </Pressable>
-      ) : (
-        <View style={styles.card}>
-          <View style={styles.row}>
-            <Text style={styles.rowLabel}>New category</Text>
-          </View>
-          <AddForm
-            emoji={editEmoji}
-            setEmoji={setEditEmoji}
-            label={editLabel}
-            setLabel={setEditLabel}
-            onSave={handleSave}
-            onCancel={handleCancel}
-          />
+      </View>
+
+      {/* Catalog modal */}
+      <Modal visible={addVisible} transparent animationType="fade" onRequestClose={() => setAddVisible(false)}>
+        <Pressable style={styles.modalBackdrop} onPress={() => setAddVisible(false)}>
+          <Pressable style={styles.modalCard} onPress={() => {}}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add a category</Text>
+              <Pressable onPress={() => setAddVisible(false)} hitSlop={8}>
+                <Ionicons name="close" size={20} color="#6E7D67" />
+              </Pressable>
+            </View>
+
+            {available.length === 0 ? (
+              <Text style={styles.emptyText}>You've added every category.</Text>
+            ) : (
+              <ScrollView style={styles.catalogScroll}>
+                {available.map(item => (
+                  <Pressable
+                    key={item.label}
+                    style={styles.catalogRow}
+                    onPress={() => handleAddFromCatalog(item.label, item.icon)}
+                  >
+                    <View style={styles.catalogIcon}>
+                      <Ionicons name={item.icon as any} size={22} color="#6E7D67" />
+                    </View>
+                    <Text style={styles.catalogLabel}>{item.label}</Text>
+                    <Ionicons name="add-circle-outline" size={22} color="#8FB07A" />
+                  </Pressable>
+                ))}
+              </ScrollView>
+            )}
+          </Pressable>
+        </Pressable>
+      </Modal>
+      
+      {toast && (
+        <View style={styles.toast}>
+          <Ionicons name="checkmark-circle" size={18} color="#FFFFFF" />
+          <Text style={styles.toastText}>{toast}</Text>
         </View>
       )}
     </ScrollView>
   );
 }
-
-interface EditFormProps {
-  emoji: string;
-  setEmoji: (e: string) => void;
-  label: string;
-  setLabel: (s: string) => void;
-  onSave: () => void;
-  onDelete: () => void;
-  onCancel: () => void;
-}
-
-function EditForm({ emoji, setEmoji, label, setLabel, onSave, onDelete, onCancel }: EditFormProps) {
-  return (
-    <View style={styles.expandedField}>
-      <View style={styles.emojiSection}>
-        <EmojiPicker selectedEmoji={emoji} onSelect={setEmoji} />
-      </View>
-
-      <Text style={styles.fieldLabel}>Label</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={setLabel}
-        value={label}
-        placeholder="Name your category"
-        maxLength={20}
-      />
-
-      <View style={styles.buttonRow}>
-        <Pressable style={styles.cancelButton} onPress={onCancel}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </Pressable>
-
-        <Pressable style={styles.saveButton} onPress={onSave}>
-          <Text style={styles.saveButtonText}>Save</Text>
-        </Pressable>
-      </View>
-
-      <Pressable style={styles.deleteButton} onPress={onDelete}>
-        <Text style={styles.deleteButtonText}>Delete</Text>
-      </Pressable>
-    </View>
-  );
-}
-
-interface AddFormProps {
-  emoji: string;
-  setEmoji: (e: string) => void;
-  label: string;
-  setLabel: (s: string) => void;
-  onSave: () => void;
-  onCancel: () => void;
-}
-
-function AddForm({ emoji, setEmoji, label, setLabel, onSave, onCancel }: AddFormProps) {
-  return (
-    <View style={styles.expandedField}>
-      <View style={styles.emojiSection}>
-        <EmojiPicker selectedEmoji={emoji} onSelect={setEmoji} />
-      </View>
-
-      <Text style={styles.fieldLabel}>Label</Text>
-      <TextInput
-        style={styles.input}
-        onChangeText={setLabel}
-        value={label}
-        placeholder="e.g., Meditation, Reading"
-        maxLength={20}
-      />
-
-      <View style={styles.buttonRow}>
-        <Pressable style={styles.cancelButton} onPress={onCancel}>
-          <Text style={styles.cancelButtonText}>Cancel</Text>
-        </Pressable>
-
-        <Pressable style={styles.saveButton} onPress={onSave}>
-          <Text style={styles.saveButtonText}>Create</Text>
-        </Pressable>
-      </View>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFE8B8',
-  },
-  contentContainer: {
-    padding: 20,
-    paddingBottom: 40,
-    gap: 12,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#8B6F3F',
-    marginBottom: 8,
-    fontStyle: 'italic',
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    overflow: 'hidden',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-  },
-  rowLabel: {
-    fontSize: 16,
-    color: '#3D2914',
-    fontWeight: '600',
-  },
-  chevron: {
-    fontSize: 14,
-    color: '#A67C2E',
-  },
-  expandedField: {
-    paddingHorizontal: 16,
-    paddingBottom: 16,
-    gap: 12,
-    borderTopWidth: 1,
-    borderTopColor: '#F0E4C8',
-    paddingTop: 16,
-  },
-  emojiSection: {
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  fieldLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#3D2914',
-  },
-  input: {
-    backgroundColor: '#FFF9E6',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    color: '#3D2914',
-    borderWidth: 1,
-    borderColor: '#E0D4A8',
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginTop: 4,
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E0D4A8',
-    borderWidth: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  cancelButtonText: {
-    color: '#8B6F3F',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#E8A33D',
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-  },
-  saveButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#C44536',
-    borderWidth: 1,
-    paddingVertical: 10,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 4,
-  },
-  deleteButtonText: {
-    color: '#C44536',
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  addCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    paddingVertical: 18,
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#E0D4A8',
-    borderStyle: 'dashed',
-  },
-  addText: {
-    fontSize: 15,
-    color: '#A67C2E',
-    fontWeight: 'bold',
-  },
-});
