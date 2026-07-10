@@ -58,7 +58,7 @@ describe('getHabitPrediction — streaks', () => {
     mockedSupabase.from = jest.fn(() => mockQuery(rows));
 
     const { streaks } = await getHabitPrediction();
-    const sleep = streaks.find(s => s.label == 'Sleep');
+    const sleep = streaks.find(s => s.label === 'Sleep');
     
     expect(sleep?.streak).toBe(3);
     expect(sleep?.atRisk).toBe(false); 
@@ -72,7 +72,7 @@ describe('getHabitPrediction — streaks', () => {
     mockedSupabase.from = jest.fn(() => mockQuery(rows));
 
     const { streaks } = await getHabitPrediction();
-    const sleep = streaks.find(s => s.label == 'Sleep');
+    const sleep = streaks.find(s => s.label === 'Sleep');
     
     expect(sleep?.streak).toBe(2);
   });
@@ -86,7 +86,7 @@ describe('getHabitPrediction — streaks', () => {
     mockedSupabase.from = jest.fn(() => mockQuery(rows));
 
     const { streaks } = await getHabitPrediction();
-    const sleep = streaks.find(s => s.label == 'Sleep');
+    const sleep = streaks.find(s => s.label === 'Sleep');
     
     expect(sleep?.streak).toBe(3);
     expect(sleep?.atRisk).toBe(true); 
@@ -97,7 +97,7 @@ describe('getHabitPrediction — streaks', () => {
     mockedSupabase.from = jest.fn(() => mockQuery(rows));
 
     const { streaks } = await getHabitPrediction();
-    expect(streaks.find(s => s.label == 'Sleep')).toBeUndefined();
+    expect(streaks.find(s => s.label === 'Sleep')).toBeUndefined();
   });
 
   test('a gap breaks the streak', async () => {
@@ -109,7 +109,7 @@ describe('getHabitPrediction — streaks', () => {
 
     const { streaks } = await getHabitPrediction();
   
-    expect(streaks.find(s => s.label == 'Sleep')).toBeUndefined();
+    expect(streaks.find(s => s.label === 'Sleep')).toBeUndefined();
   });
 });
 
@@ -124,7 +124,7 @@ describe('getHabitPrediction — day-of-week patterns', () => {
     mockedSupabase.from = jest.fn(() => mockQuery(rows));
 
     const { patterns } = await getHabitPrediction();
-    const ex = patterns.find(p => p.label == 'Exercise');
+    const ex = patterns.find(p => p.label === 'Exercise');
     
     expect(ex).toBeDefined();
     
@@ -140,7 +140,7 @@ describe('getHabitPrediction — day-of-week patterns', () => {
     mockedSupabase.from = jest.fn(() => mockQuery(rows));
 
     const { patterns } = await getHabitPrediction();
-    expect(patterns.find(p => p.label == 'Exercise')).toBeUndefined();
+    expect(patterns.find(p => p.label === 'Exercise')).toBeUndefined();
   });
 });
 

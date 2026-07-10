@@ -13,7 +13,6 @@ import {
   getTodaysMood,
   hasLoggedMoodToday,
   deleteCategory,
-  getTodaySelfCareData, 
   getTodayLogEntries,  
   addCategory, 
 } from '../src/lib/self-care';
@@ -23,7 +22,7 @@ const mockedSupabase = supabase as any;
 function mockChain(terminal: string, result: any) {
   const chain: any = {};
   for (const m of ['select', 'eq', 'gte', 'order', 'limit', 'update']) {
-    chain[m] = m == terminal
+    chain[m] = m === terminal
       ? jest.fn(() => Promise.resolve(result))
       : jest.fn(() => chain);
   }
@@ -206,38 +205,6 @@ describe('deleteCategory', () => {
     };
     const result = await deleteCategory('cat-1');
     expect(result).toEqual({ error: 'Not signed in' });
-  });
-});
-
-describe('getTodaySelfCareData', () => {
-  test('returns counts and the most recent activity note per category', async () => {
-    const rows = [
-      { category_id: 'sleep', activity: 'Napped', logged_at: '2026-07-10T18:00:00Z' },
-      { category_id: 'sleep', activity: 'Early night', logged_at: '2026-07-10T09:00:00Z' },
-      { category_id: 'ex', activity: null, logged_at: '2026-07-10T12:00:00Z' },
-    ];
-    mockedSupabase.from = jest.fn(() => mockChain('order', { data: rows, error: null }));
-
-    const { counts, recentActivities } = await getTodaySelfCareData();
-   
-    expect(counts).toEqual({ sleep: 2, ex: 1 });
-    expect(recentActivities.sleep).toBe('Napped'); 
-  });
-
-  test('omits categories whose logs have no activity note', async () => {
-    const rows = [{ category_id: 'ex', activity: null, logged_at: '2026-07-10T12:00:00Z' }];
-    mockedSupabase.from = jest.fn(() => mockChain('order', { data: rows, error: null }));
-
-    const { recentActivities } = await getTodaySelfCareData();
-    expect(recentActivities.ex).toBeUndefined();
-  });
-
-  test('returns empty result when not signed in', async () => {
-    mockedSupabase.auth = {
-      getUser: jest.fn(async () => ({ data: { user: null } })),
-    };
-    const result = await getTodaySelfCareData();
-    expect(result).toEqual({ counts: {}, recentActivities: {} });
   });
 });
 

@@ -78,7 +78,7 @@ describe('getMoodData — same-day grouping', () => {
 
     const result = await getMoodData('week');
 
-    const todayEntry = result.find(r => r.dateKey == today.toDateString());
+    const todayEntry = result.find(r => r.dateKey === today.toDateString());
 
     expect(todayEntry?.value).toBe(5);
   });
@@ -100,7 +100,7 @@ describe('getMoodData — gap filling and range length', () => {
   test('days with no log have value 0 (not a neutral fallback)', async () => {
     mockedSupabase.from = jest.fn(() => mockQuery([]));
     const result = await getMoodData('week');
-    expect(result.every(r => r.value == 0)).toBe(true);
+    expect(result.every(r => r.value === 0)).toBe(true);
   });
 });
 

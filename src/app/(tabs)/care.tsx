@@ -1,13 +1,12 @@
 /*
  * Self-Care & recovery screen.
  * Log self-care activities & daily mood.
- */
+*/
 
-import { useState, useEffect, useCallback } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, StyleSheet, Alert, ImageBackground, Modal, } from 'react-native';
+import { useState, useCallback } from 'react';
+import { View, Text, TextInput, Pressable, ScrollView, Alert, ImageBackground, Modal, } from 'react-native';
 import {
   logSelfCare,
-  getTodaySelfCareData,
   getTodaySelfCareCounts,
   logMood,
   hasLoggedMoodToday,
@@ -26,9 +25,9 @@ import { styles } from '@/styles/care_styles';
 import { Ionicons } from '@expo/vector-icons';
 import WellnessNotice from '@/components/WellnessNotice';
 import { calculateBurnoutScore, BurnoutResult } from '@/lib/burnout';
-import { shouldShowWellnessNotice } from '@/lib/wellnessNotice';
 import WellnessToast from '@/components/WellnessToast';
 import { BURNOUT_CONFIG } from '@/lib/burnout_constants';
+import { shouldShowWellnessNotice } from '@/lib/wellnessNotice';
 
 const HEADER_IMG = require('@/assets/images/care/header.jpg');
 
@@ -71,7 +70,6 @@ export default function SelfCareScreen() {
   const [activityInput, setActivityInput] = useState('');
   const [selfCareCounts, setSelfCareCounts] = useState<Record<string, number>>({});
   const [isMoodLogged, setIsMoodLogged] = useState(false);
-  const [recentActivities, setRecentActivities] = useState<Record<string, string>>({});
   const [categories, setCategories] = useState<SelfCareCategory[]>([]);
   const [currentMood, setCurrentMood] = useState<string | null>(null);
   const insets = useSafeAreaInsets();
@@ -140,14 +138,12 @@ export default function SelfCareScreen() {
   }
 
   async function loadLogs() {
-    const { counts, recentActivities } = await getTodaySelfCareData();
-    
+    const counts = await getTodaySelfCareCounts();
     setSelfCareCounts(counts);
-    setRecentActivities(recentActivities);
 
     const entries = await getTodayLogEntries();
     setTodayLogs(entries);
-  
+
     const moodLogged = await hasLoggedMoodToday();
     setIsMoodLogged(moodLogged);
   }
@@ -191,19 +187,18 @@ export default function SelfCareScreen() {
   }
 
   async function loadBurnout() {
-    setBurnout(await calculateBurnoutScore());
-  }
-
-  function getMoodEmoji(mood: string | null): string {
-    const found = MOODS.find(m => m.id === mood);
-    return found ? `${found.emoji} ${found.label}` : '';
+    const result = await calculateBurnoutScore();
+    setBurnout(result);
+  
+    const show = await shouldShowWellnessNotice(result.status);
+    setShowNotice(show);
   }
 
   const todayLabel = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long',
   });
 
-  const selectedCategory = categories.find(c => c.id == activityCateg) || null;
+  const selectedCategory = categories.find(c => c.id === activityCateg) || null;
 
   function closeLogModal() {
     setActivityCateg(null);

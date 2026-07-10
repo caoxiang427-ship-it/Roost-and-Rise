@@ -50,7 +50,7 @@ export default function TimerScreen() {
     if (remainingSeconds > 0) return;
 
     async function handleZero() {
-      if (mode == 'focus') {
+      if (mode === 'focus') {
         await sessionRecorder(focusDuration, 'focus');
         await loadSummary();
 
@@ -58,7 +58,7 @@ export default function TimerScreen() {
         const awardedXp = await addFocusXp(focusDuration, 'focus', newCount);
         triggerReward(awardedXp);
 
-        const isLongBreak = newCount % SESSIONS_BEFORE_LONG_BREAK == 0;
+        const isLongBreak = newCount % SESSIONS_BEFORE_LONG_BREAK === 0;
         const nextBreakMinutes = isLongBreak ? LONG_BREAK_MINUTES : breakDuration;
 
         setCurrentBreakMinutes(nextBreakMinutes);

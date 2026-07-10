@@ -152,7 +152,7 @@ export default function AnalyticsScreen() {
 
   const now = new Date();
   const sinceDate = new Date();
-  sinceDate.setDate(now.getDate() - (mode == 'week' ? 6 : 29));
+  sinceDate.setDate(now.getDate() - (mode === 'week' ? 6 : 29));
   const rangeLabel = `${sinceDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${now.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
 
   const chartConfig = {
@@ -721,16 +721,16 @@ export default function AnalyticsScreen() {
         </View>
         <View style={styles.toggleRow}>
           <TouchableOpacity
-            style={[styles.toggleBtn, mode == 'week' && styles.toggleBtnActive]}
+            style={[styles.toggleBtn, mode === 'week' && styles.toggleBtnActive]}
             onPress={() => setMode('week')}
           >
-            <Text style={[styles.toggleText, mode == 'week' && styles.toggleTextActive]}>Week</Text>
+            <Text style={[styles.toggleText, mode === 'week' && styles.toggleTextActive]}>Week</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.toggleBtn, mode == 'month' && styles.toggleBtnActive]}
+            style={[styles.toggleBtn, mode === 'month' && styles.toggleBtnActive]}
             onPress={() => setMode('month')}
           >
-            <Text style={[styles.toggleText, mode == 'month' && styles.toggleTextActive]}>Month</Text>
+            <Text style={[styles.toggleText, mode === 'month' && styles.toggleTextActive]}>Month</Text>
           </TouchableOpacity>
         </View>
       </View>

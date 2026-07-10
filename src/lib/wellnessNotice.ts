@@ -24,7 +24,7 @@ export async function shouldShowWellnessNotice(current: BurnoutStatus): Promise<
 
   await AsyncStorage.setItem(LAST_TIER_KEY, current); // update tier memory to now
 
-  if (lastShown == todayKey()) return false;
+  if (lastShown === todayKey()) return false;
 
   // show only if tier dropped (or first time we have no previous tier)
   const dropped = !prevTier || TIER_RANK[current] < TIER_RANK[prevTier];

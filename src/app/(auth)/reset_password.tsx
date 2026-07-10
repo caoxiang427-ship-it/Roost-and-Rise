@@ -26,7 +26,7 @@ export default function ResetPasswordScreen() {
       return false;
     }
 
-    if (trimmedPassword != trimmedConfirm) {
+    if (trimmedPassword !== trimmedConfirm) {
       Alert.alert('Error:', 'Passwords do not match. Please try again.');
       return false;
     }
