@@ -4,16 +4,14 @@
 */
 
 import { useState, useEffect } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, Pressable, ScrollView, Alert, Modal } from 'react-native';
 import {
   getUserCategories,
   addCategory,
-  updateCategory,
   deleteCategory,
   SelfCareCategory,
   CATEGORY_CATALOG,
 } from '@/lib/self-care';
-import EmojiPicker from '@/components/EmojiPicker';
 import { styles } from '@/styles/editcateg_styles';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

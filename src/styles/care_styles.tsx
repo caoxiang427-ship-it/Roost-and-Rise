@@ -3,7 +3,7 @@ import { StyleSheet, Platform } from 'react-native';
 export const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: '#F1F4EC',  
+    backgroundColor: '#F1F4EC',
   },
   container: {
     flex: 1,
@@ -25,11 +25,11 @@ export const styles = StyleSheet.create({
   },
   headerImage: {
     borderRadius: 20,
-    opacity: 0.7, 
+    opacity: 0.7,
   },
   headerOverlay: {
     ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(241,244,236,0.15)', 
+    backgroundColor: 'rgba(241,244,236,0.15)',
   },
   headerRow: {
     flexDirection: 'row',
@@ -49,7 +49,7 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Hero card (BurnoutIndicator)
+  // BurnoutIndicator
   heroCard: {
     backgroundColor: '#FFFFFF',
     borderRadius: 20,
@@ -134,8 +134,8 @@ export const styles = StyleSheet.create({
     shadowOpacity: 0.04,
     shadowRadius: 3,
     elevation: 1,
-    alignItems: 'center', 
-    justifyContent: 'center'
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   careTileActive: {
     borderColor: '#8FB07A',
@@ -149,35 +149,24 @@ export const styles = StyleSheet.create({
     marginBottom: 8,
   },
   tileIcon: {
-    width: 32,
-    height: 32,
-    borderRadius: 10,
-    backgroundColor: '#E6ECE0',
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#F1F4EE',
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  tileEmoji: {
-    fontSize: 22,
-  },
-  tileCount: {
-    fontSize: 17,
-    fontWeight: 'bold',
-    color: '#7C9A66',
+    marginBottom: 6,
   },
   tileLabel: {
-    fontSize: 15,
+    fontSize: 13,
     fontWeight: '600',
     color: '#3C463A',
+    textAlign: 'center',
   },
-  tileRecent: {
-    fontSize: 12.5,
-    color: '#93A089',
-    fontStyle: 'italic',
-    marginTop: 2,
-  },
-  tileHint: {
-    fontSize: 12.5,
-    color: '#A6B49E',
+  tileCount: {
+    fontSize: 11,
+    color: '#7C9A66',
+    fontWeight: '600',
     marginTop: 2,
   },
 
@@ -267,27 +256,8 @@ export const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
   },
-  tileIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 12,
-    backgroundColor: '#F1F4EE',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 6,
-  },
-  tileLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#3C463A',
-    textAlign: 'center',
-  },
-  tileCount: {
-    fontSize: 11,
-    color: '#7C9A66',
-    fontWeight: '600',
-    marginTop: 2,
-  },
+
+  // Today's log
   logList: {
     gap: 10,
   },

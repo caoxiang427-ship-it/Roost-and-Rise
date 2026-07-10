@@ -46,8 +46,8 @@ describe('getSelfCareFrequency — counting and sorting', () => {
     mockedSupabase.from = jest.fn(() => mockQuery(rows));
 
     const result = await getSelfCareFrequency('week');
-    const sleep = result.find(c => c.label == 'Sleep');
-    const exercise = result.find(c => c.label == 'Exercise');
+    const sleep = result.find(c => c.label === 'Sleep');
+    const exercise = result.find(c => c.label === 'Exercise');
 
     expect(sleep?.count).toBe(2);
     expect(exercise?.count).toBe(1);

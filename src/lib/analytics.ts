@@ -64,12 +64,6 @@ function moodToNumber(mood: string): number {
 const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const SHORT_MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-function startOfDay(d: Date): Date {
-  const copy = new Date(d);
-  copy.setHours(0, 0, 0, 0);
-  return copy;
-}
-
 function formatLabel(d: Date, mode: 'week' | 'month'): string {
   if (mode === 'week') {
     return SHORT_DAYS[d.getDay()];
@@ -89,7 +83,7 @@ export async function getMoodData(mode: 'week' | 'month'): Promise<DailyMood[]> 
 
   if (!user) return [];
 
-  const days = mode == 'week' ? 7 : 30;
+  const days = mode === 'week' ? 7 : 30;
   const since = getSinceDate(days);
 
   const { data, error } = await supabase
@@ -366,7 +360,7 @@ export async function getInsights(
 
       const recentCatIds = new Set((recentLogs || []).map(l => l.category_id));
       const prevUsedCatIds = new Set(selfCareData.map(c => {
-        const match = categories.find(categ => categ.label == c.label);
+        const match = categories.find(categ => categ.label === c.label);
         return match?.id;
       }).filter(Boolean));
 
@@ -407,7 +401,7 @@ export async function getHabitPrediction(): Promise<HabitPrediction> {
     .gte('logged_at', since.toISOString())
     .order('logged_at', { ascending: true });
 
-  if (!logs || logs.length == 0) {
+  if (!logs || logs.length === 0) {
     return { streaks: [], patterns: [] };
   }
 

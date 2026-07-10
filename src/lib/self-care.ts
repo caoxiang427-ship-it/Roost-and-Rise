@@ -77,20 +77,6 @@ export async function addCategory(label: string, icon: string) {
   return result;
 }
 
-export async function updateCategory(id: string, label: string, icon: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { error: 'Not signed in' };
-
-  const result = await supabase
-    .from('selfcare_categories')
-    .update({ label, icon })
-    .eq('id', id)
-    .eq('user_id', user.id);
-
-  return result;
-}
-
 export async function deleteCategory(id: string) {
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -146,38 +132,6 @@ export async function getTodaySelfCareCounts() {
   }, {});
 }
 
-export async function getTodaySelfCareData() {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { counts: {}, recentActivities: {} };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const { data, error } = await supabase
-    .from('selfcare_logs')
-    .select('category_id, activity, logged_at')
-    .eq('user_id', user.id)
-    .gte('logged_at', today.toISOString())
-    .order('logged_at', { ascending: false });
-
-  if (!data || error) return { counts: {}, recentActivities: {} };
-
-  const counts = data.reduce<Record<string, number>>((acc, log) => {
-    acc[log.category_id] = (acc[log.category_id] || 0) + 1;
-    return acc;
-  }, {});
-
-  const recentActivities = data.reduce<Record<string, string>>((acc, log) => {
-    if (log.activity && !acc[log.category_id]) {
-      acc[log.category_id] = log.activity;
-    }
-    return acc;
-  }, {});
-
-  return { counts, recentActivities };
-}
-
 export async function getTodayLogEntries(): Promise<SelfCareLogEntry[]> {
   const { data: { user } } = await supabase.auth.getUser();
   
@@ -209,25 +163,6 @@ export async function logMood(mood: string) {
     mood: mood
   });
 }
-
-// for burnout scores
-export async function getRecentMood(days: number = 7) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return [];
-
-  const since = new Date();
-  since.setDate(since.getDate() - days);
-
-  const { data } = await supabase
-    .from('mood_logs')
-    .select('mood, logged_at')
-    .eq('user_id', user.id)
-    .gte('logged_at', since.toISOString())
-    .order('logged_at', { ascending: false });
-
-  return data || [];
-}  
 
 export async function getTodaysMood() {
   const { data: { user } } = await supabase.auth.getUser();

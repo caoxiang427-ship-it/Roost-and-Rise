@@ -90,7 +90,7 @@ describe('getSessionData — gap filling and range length', () => {
   test('days with no sessions have count 0 and minutes 0', async () => {
     mockedSupabase.from = jest.fn(() => mockQuery([]));
     const result = await getSessionData('week');
-    expect(result.every(d => d.count == 0 && d.minutes == 0)).toBe(true);
+    expect(result.every(d => d.count === 0 && d.minutes === 0)).toBe(true);
   });
 });
 

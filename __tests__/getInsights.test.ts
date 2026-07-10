@@ -18,7 +18,7 @@ function mood(value: number, i: number): DailyMood {
     date: `D${i}`,
     dateKey: d.toDateString(),
     value,
-    raw: value == 0 ? '' : 'x',
+    raw: value === 0 ? '' : 'x',
   };
 }
 

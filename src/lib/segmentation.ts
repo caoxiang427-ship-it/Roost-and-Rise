@@ -112,7 +112,7 @@ function normalise(users: UserVector[]): number[][] {
 
       const range = max - min;
 
-      if (range == 0) return 0;
+      if (range === 0) return 0;
   
       const userDiff = u[k] - min;
 
@@ -165,13 +165,13 @@ function kMeans(
     });
 
     // Stop if nothing changed since the last round
-    const converged = newAssignments.every((a, i) => a == assignments[i]);
+    const converged = newAssignments.every((a, i) => a === assignments[i]);
     if (converged) break;
     assignments = newAssignments;
 
     // Move each centroid to the avg of its members
     centroids = centroids.map((oldCentroid, ci) => {
-      const members = data.filter((_, di) => assignments[di] == ci);
+      const members = data.filter((_, di) => assignments[di] === ci);
       if (members.length === 0) {
         return oldCentroid;
       }
@@ -280,7 +280,7 @@ export async function getUserSegment(): Promise<UserSegment | null> {
   const avgSessionLength = totalSessions > 0 ? totalMinutes / totalSessions : 0;
   const totalSelfCare = selfCareData.reduce((s, c) => s + c.count, 0);
 
-  if (totalSessions == 0 && totalSelfCare == 0 && logged.length == 0) {
+  if (totalSessions === 0 && totalSelfCare === 0 && logged.length === 0) {
     return null;
   }
 

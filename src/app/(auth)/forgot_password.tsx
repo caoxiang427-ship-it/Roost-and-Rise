@@ -4,7 +4,7 @@
 */
 
 import { useState } from 'react';
-import { Link, router } from 'expo-router';
+import { Link } from 'expo-router';
 import { resetPasswordRequest } from '@/lib/auth';
 import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
 
