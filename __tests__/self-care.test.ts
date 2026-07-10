@@ -13,6 +13,9 @@ import {
   getTodaysMood,
   hasLoggedMoodToday,
   deleteCategory,
+  getTodaySelfCareData, 
+  getTodayLogEntries,  
+  addCategory, 
 } from '../src/lib/self-care';
 
 const mockedSupabase = supabase as any;
@@ -205,3 +208,120 @@ describe('deleteCategory', () => {
     expect(result).toEqual({ error: 'Not signed in' });
   });
 });
+
+describe('getTodaySelfCareData', () => {
+  test('returns counts and the most recent activity note per category', async () => {
+    const rows = [
+      { category_id: 'sleep', activity: 'Napped', logged_at: '2026-07-10T18:00:00Z' },
+      { category_id: 'sleep', activity: 'Early night', logged_at: '2026-07-10T09:00:00Z' },
+      { category_id: 'ex', activity: null, logged_at: '2026-07-10T12:00:00Z' },
+    ];
+    mockedSupabase.from = jest.fn(() => mockChain('order', { data: rows, error: null }));
+
+    const { counts, recentActivities } = await getTodaySelfCareData();
+   
+    expect(counts).toEqual({ sleep: 2, ex: 1 });
+    expect(recentActivities.sleep).toBe('Napped'); 
+  });
+
+  test('omits categories whose logs have no activity note', async () => {
+    const rows = [{ category_id: 'ex', activity: null, logged_at: '2026-07-10T12:00:00Z' }];
+    mockedSupabase.from = jest.fn(() => mockChain('order', { data: rows, error: null }));
+
+    const { recentActivities } = await getTodaySelfCareData();
+    expect(recentActivities.ex).toBeUndefined();
+  });
+
+  test('returns empty result when not signed in', async () => {
+    mockedSupabase.auth = {
+      getUser: jest.fn(async () => ({ data: { user: null } })),
+    };
+    const result = await getTodaySelfCareData();
+    expect(result).toEqual({ counts: {}, recentActivities: {} });
+  });
+});
+
+describe('getTodayLogEntries', () => {
+  test('returns the log entries for today', async () => {
+    const rows = [
+      { id: '1', category_id: 'sleep', activity: 'Napped', logged_at: '2026-07-10T18:00:00Z' },
+      { id: '2', category_id: 'ex', activity: null, logged_at: '2026-07-10T12:00:00Z' },
+    ];
+    mockedSupabase.from = jest.fn(() => mockChain('order', { data: rows, error: null }));
+
+    const result = await getTodayLogEntries();
+    
+    expect(result).toHaveLength(2);
+    expect(result[0].id).toBe('1');
+  });
+
+  test('returns an empty array when there are no entries', async () => {
+    mockedSupabase.from = jest.fn(() => mockChain('order', { data: [], error: null }));
+    const result = await getTodayLogEntries();
+    expect(result).toEqual([]);
+  });
+
+  test('returns an empty array when not signed in', async () => {
+    mockedSupabase.auth = {
+      getUser: jest.fn(async () => ({ data: { user: null } })),
+    };
+    const result = await getTodayLogEntries();
+    expect(result).toEqual([]);
+  });
+});
+
+describe('addCategory — write', () => {
+  test('assigns display_order 1 when the user has no categories yet', async () => {
+    const insertMock = jest.fn(() => Promise.resolve({ data: null, error: null }));
+    
+    const readChain: any = {
+      select: jest.fn(() => readChain),
+      eq: jest.fn(() => readChain),
+      order: jest.fn(() => readChain),
+      limit: jest.fn(() => Promise.resolve({ data: [], error: null })),
+    };
+
+    mockedSupabase.from = jest.fn()
+      .mockReturnValueOnce(readChain)
+      .mockReturnValueOnce({ insert: insertMock });
+
+    await addCategory('Journal', 'book-outline');
+    
+    expect(insertMock).toHaveBeenCalledWith({
+      user_id: 'test-user',
+      label: 'Journal',
+      icon: 'book-outline',
+      display_order: 1,
+    });
+  });
+
+  test('places the new category after the existing highest display_order', async () => {
+    const insertMock = jest.fn(() => Promise.resolve({ data: null, error: null }));
+    
+    const readChain: any = {
+      select: jest.fn(() => readChain),
+      eq: jest.fn(() => readChain),
+      order: jest.fn(() => readChain),
+      limit: jest.fn(() => Promise.resolve({ data: [{ display_order: 6 }], error: null })),
+    };
+    
+    mockedSupabase.from = jest.fn()
+      .mockReturnValueOnce(readChain)
+      .mockReturnValueOnce({ insert: insertMock });
+
+    await addCategory('Breathe', 'pulse-outline');
+    
+    expect(insertMock).toHaveBeenCalledWith(
+      expect.objectContaining({ display_order: 7 })
+    );
+  });
+
+  test('returns an error when not signed in', async () => {
+    mockedSupabase.auth = {
+      getUser: jest.fn(async () => ({ data: { user: null } })),
+    };
+    const result = await addCategory('Journal', 'book-outline');
+    expect(result).toEqual({ error: 'Not signed in' });
+  });
+});
+
