@@ -28,6 +28,8 @@ import { calculateBurnoutScore, BurnoutResult } from '@/lib/burnout';
 import WellnessToast from '@/components/WellnessToast';
 import { BURNOUT_CONFIG } from '@/lib/burnout_constants';
 import { shouldShowWellnessNotice } from '@/lib/wellnessNotice';
+import * as ImagePicker from 'expo-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HEADER_IMG = require('@/assets/images/care/header.jpg');
 
@@ -88,12 +90,15 @@ export default function SelfCareScreen() {
   const [showNotice, setShowNotice] = useState(false);
   const {addWellbeingXp} = useProfileStore();
 
+  const [headerUri, setHeaderUri] = useState<string | null>(null);
+  
   useFocusEffect(
     useCallback(() => {
       loadCategories();
       loadLogs();
       loadCurrentMood();
       loadBurnout();
+      AsyncStorage.getItem('careHeaderUri').then(setHeaderUri); 
     }, [])
   );
 
@@ -216,6 +221,27 @@ export default function SelfCareScreen() {
     return categories.find(c => c.id === categoryId);
   }
 
+  async function pickHeaderImage() {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (!perm.granted) {
+      Alert.alert('Permission needed', 'Allow photo access to set a custom header.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [16, 7],
+      quality: 0.8,
+    });
+
+    if (!result.canceled) {
+      const uri = result.assets[0].uri;
+      setHeaderUri(uri);
+      await AsyncStorage.setItem('careHeaderUri', uri);  
+    }
+  }
+
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -227,7 +253,7 @@ export default function SelfCareScreen() {
       >
         {/* Header: title + date */}
         <ImageBackground
-          source={HEADER_IMG}
+          source={headerUri ? { uri: headerUri } : HEADER_IMG}
           style={styles.headerBand}
           imageStyle={styles.headerImage}
           resizeMode="cover"
@@ -239,6 +265,10 @@ export default function SelfCareScreen() {
               <Text style={styles.date}>{todayLabel}</Text>
             </View>
           </View>
+
+          <Pressable onPress={pickHeaderImage} style={styles.headerEditBtn} hitSlop={8}>
+            <Ionicons name="camera-outline" size={18} color="#13301B" />
+          </Pressable>
         </ImageBackground>
 
         {/* Hero card = wellness ring (BurnoutIndicator) */}
