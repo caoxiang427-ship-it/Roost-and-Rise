@@ -8,13 +8,13 @@
  * If users have logged in already, they should be kept out of auth screens.
 */
 
-import { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import {  useFonts } from 'expo-font';
+import { useFonts } from 'expo-font';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 

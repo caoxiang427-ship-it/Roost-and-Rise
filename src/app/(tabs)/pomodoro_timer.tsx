@@ -2,20 +2,19 @@
  * Pomodoro timer screen.
 */
 
-import { useState, useEffect } from 'react';
-import { View, Text, Pressable, StyleSheet, Alert, ScrollView, Image, Modal, ImageBackground } from 'react-native';
-import { useRouter } from 'expo-router';
-import Svg, { Circle } from 'react-native-svg';
-import { Ionicons } from '@expo/vector-icons';
-import { sessionRecorder, getTodayStudyMinutes, getTodaysFocusSessionCount } from '@/lib/sessions';
-import { displayTime, getCyclePosition, isLongBreakNext, isLateNight } from '@/lib/timer';
-import { useProfileStore } from '@/store/useProfileStore';
-import ShowReward from '@/components/ShowReward';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { styles } from '@/styles/timer_styles';
-import * as ImagePicker from 'expo-image-picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { imageMap } from '@/constants/storeItems';
+import { getTodayStudyMinutes, getTodaysFocusSessionCount, sessionRecorder } from '@/lib/sessions';
+import { displayTime, getCyclePosition, isLateNight, isLongBreakNext } from '@/lib/timer';
+import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
+import { styles } from '@/styles/timer_styles';
+import { Ionicons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import { Alert, Image, ImageBackground, Modal, Pressable, ScrollView, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 
 const DEFAULT_HEADER = require('@/assets/images/timer/header.jpeg');
 
@@ -39,7 +38,8 @@ export default function TimerScreen() {
   const [showReward, setShowReward] = useState(false);
   const [rewardXP, setRewardXP] = useState(0);
  
-  const { addFocusXp, equippedItemId } = useProfileStore();
+  // For chicken companion card
+  const { addFocusXp, equippedItemId, chickName, xp } = useProfileStore();
 
   const insets = useSafeAreaInsets();
 
@@ -296,10 +296,10 @@ export default function TimerScreen() {
       return "Tap start when you're ready";
     }
     if (mode === 'focus') {
-      return 'Sunny is studying with you';
+      return `${chickName || 'Sunny'} is studying with you`;
     }
     if (mode === 'break') {
-      return 'Sunny is resting too 💛';
+      return `${chickName || 'Sunny'} is resting too 💛`;
     }
     return '';
   }
@@ -307,6 +307,15 @@ export default function TimerScreen() {
   const todayLabel = new Date().toLocaleDateString('en-GB', {
     weekday: 'long', day: 'numeric', month: 'long',
   });
+
+  // XP progress bar helpers
+  const petLevel = calculateXPLevel(xp);
+  const levelProgress = (() => {
+    const cur = totalXpRequiredForLevel(petLevel);
+    const next = totalXpRequiredForLevel(petLevel + 1);
+    return (xp - cur) / (next - cur);
+  })();
+  const levelPct = Math.round(levelProgress * 100);
 
   // For UI: progress ring + cycle dots
   const totalSeconds = (mode === 'focus' ? focusDuration : currentBreakMinutes) * 60;
@@ -353,43 +362,43 @@ export default function TimerScreen() {
         </View>
       </ImageBackground>
 
-      <View style={styles.heroRow}>
-        {/* Left: chicken */}
-        <View style={styles.heroChickenCol}>
+      {/* Chicken card */}
+      <View style={styles.companionCard}>
+        <View style={styles.companionTop}>
+          <View>
+            <Text style={styles.companionName}>{chickName || 'Your study companion'}</Text>
+            <Text style={styles.companionLevel}>Lv.{petLevel}</Text>
+          </View>
+          <View style={styles.readyPill}>
+            <Text style={styles.readyPillText}>ready</Text>
+            <Ionicons name="sparkles" size={13} color="#A6791E" />
+          </View>
+        </View>
+
+        {/* Speech bubble + companion art */}
+        <View style={styles.speechBubble}>
+          <Text style={styles.speechText}>{getChickenMsg()}</Text>
+          <View style={styles.speechTail} />
+        </View>
+
+        <View style={styles.companionArtWrap}>
           <Image
             source={
               equippedItemId === null
                 ? require('@/assets/images/home/chicken.png')
                 : imageMap[equippedItemId]
             }
-            style={styles.portraitChicken}
+            style={styles.companionArt}
             resizeMode="contain"
           />
         </View>
 
-        {/* Summary tiles */}
-        <View style={styles.heroSummaryCol}>
-          <View style={styles.tile}>
-            <View style={[styles.tileIcon, styles.tileIconGreen]}>
-              <Ionicons name="leaf-outline" size={20} color="#3E8574" />
-            </View>
-            <View>
-              <Text style={styles.tileNumber}>{todayFocusCount}</Text>
-              <Text style={styles.tileLabel}>session{todayFocusCount !== 1 ? 's' : ''} today</Text>
-            </View>
-          </View>
-
-          <View style={styles.tile}>
-            <View style={[styles.tileIcon, styles.tileIconBlue]}>
-              <Ionicons name="hourglass-outline" size={20} color="#4E7C9B" />
-            </View>
-            <View>
-              <Text style={styles.tileNumber}>
-                {Math.floor(todayStudyMinutes / 60)}h {todayStudyMinutes % 60}m
-              </Text>
-              <Text style={styles.tileLabel}>focused</Text>
-            </View>
-          </View>
+        <View style={styles.levelRow}>
+          <Text style={styles.levelLabel}>Level progress</Text>
+          <Text style={styles.levelValue}>{levelPct}%</Text>
+        </View>
+        <View style={styles.levelTrack}>
+          <View style={[styles.levelFill, { width: `${levelPct}%` }]} />
         </View>
       </View>
 
@@ -460,6 +469,7 @@ export default function TimerScreen() {
           <Text style={styles.secondaryBtnText}>Pause</Text>
         </Pressable>
         <Pressable style={styles.primaryBtn} onPress={handleStart}>
+          <Ionicons name="play" size={16} color="#FFFFFF" />
           <Text style={styles.primaryBtnText}>Start</Text>
         </Pressable>
         <Pressable style={styles.secondaryBtn} onPress={handleCancel}>

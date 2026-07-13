@@ -1,4 +1,4 @@
-import { StyleSheet, Platform } from 'react-native';
+import { Platform, StyleSheet } from 'react-native';
 
 export const styles = StyleSheet.create({
   screen: {
@@ -60,6 +60,100 @@ export const styles = StyleSheet.create({
     marginTop: 2,
   },
 
+  // Chicken companion
+  companionCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 14,
+  },
+  companionTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+  },
+  companionName: {
+    fontSize: 17,
+    fontWeight: '500',
+    color: '#22403B',
+  },
+  companionLevel: {
+    fontSize: 12,
+    color: '#6F8A85',
+    marginTop: 1,
+  },
+  readyPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FBF0D0',
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  readyPillText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#A6791E',
+  },
+  speechBubble: {
+    alignSelf: 'center',
+    backgroundColor: '#EAF3EE',
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    marginTop: 10,
+    maxWidth: '85%',
+  },
+  speechText: {
+    fontSize: 13,
+    color: '#3E7264',
+    textAlign: 'center',
+  },
+  speechTail: {
+    position: 'absolute',
+    bottom: -6,
+    alignSelf: 'center',
+    left: '50%',
+    marginLeft: -6,
+    width: 12,
+    height: 12,
+    backgroundColor: '#EAF3EE',
+    transform: [{ rotate: '45deg' }],
+  },
+  companionArtWrap: {
+    alignItems: 'center',
+    paddingVertical: 14,
+  },
+  companionArt: {
+    width: 160,
+    height: 160,
+  },
+  levelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  levelLabel: {
+    fontSize: 15,
+    color: '#6F8A85',
+  },
+  levelValue: {
+    fontSize: 15,
+    fontWeight: '500',
+    color: '#C79A24',
+  },
+  levelTrack: {
+    height: 8,
+    borderRadius: 999,
+    backgroundColor: '#E4EDE8',
+    overflow: 'hidden',
+  },
+  levelFill: {
+    height: '100%',
+    backgroundColor: '#F5C13D',
+    borderRadius: 999,
+  },
   // Hero: chicken + summary
   heroRow: {
     flexDirection: 'row',
@@ -185,9 +279,11 @@ export const styles = StyleSheet.create({
     paddingVertical: 11,
   },
   controlLabel: {
-    fontSize: 12,
+    fontFamily: 'InterSemiBold',
+    fontSize: 18,
     color: '#6F8A85',
     marginBottom: 9,
+    fontWeight: '500',
   },
   stepper: {
     flexDirection: 'row',
@@ -225,6 +321,9 @@ export const styles = StyleSheet.create({
     borderRadius: 999,
     paddingVertical: 14,
     alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 6,
   },
   primaryBtnText: {
     color: '#FFFFFF',
