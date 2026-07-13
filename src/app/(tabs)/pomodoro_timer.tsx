@@ -1,11 +1,15 @@
 /*
- * Pomodoro timer screen.
+ * Pomodoro timer screen: 
+ * chicken companion, timer, 
+ * three-tabs card (summary, settings, tasks), 
+ * and modal for break/focus/recovery.
 */
 
 import { imageMap } from '@/constants/storeItems';
 import { getTodayStudyMinutes, getTodaysFocusSessionCount, sessionRecorder } from '@/lib/sessions';
 import { displayTime, getCyclePosition, isLateNight, isLongBreakNext } from '@/lib/timer';
 import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
+import { calculateProgress, useRenderedTaskItems, useTodoStore } from '@/store/useTodoStore';
 import { styles } from '@/styles/timer_styles';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -20,6 +24,15 @@ const DEFAULT_HEADER = require('@/assets/images/timer/header.jpeg');
 
 const RADIUS = 106;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+const QUOTES = [
+  { text: 'The secret of getting ahead is getting started.', author: 'Mark Twain' },
+  { text: 'Rest when you\'re weary. Refresh and renew yourself.', author: 'Ralph Marston' },
+  { text: 'Almost everything will work again if you unplug it for a few minutes — including you.', author: 'Anne Lamott' },
+  { text: 'Little by little, one travels far.', author: 'J.R.R. Tolkien' },
+  { text: 'You don\'t have to see the whole staircase, just take the first step.', author: 'Martin Luther King Jr.' },
+  { text: 'Take rest; a field that has rested gives a bountiful crop.', author: 'Ovid' },
+];
 
 export default function TimerScreen() {
   const [focusDuration, setFocusDuration] = useState(25);
@@ -40,6 +53,18 @@ export default function TimerScreen() {
  
   // For chicken companion card
   const { addFocusXp, equippedItemId, chickName, xp } = useProfileStore();
+
+  // For three-tab card
+  const [activeTab, setActiveTab] = useState<'summary' | 'settings' | 'tasks'>('summary');
+  const { init: initTodos, selectedDate, setSelectedDate } = useTodoStore();
+  const taskItems = useRenderedTaskItems();
+  const taskProgress = calculateProgress(taskItems);
+  const tasksDone = taskItems.filter(t => t.completed).length;
+  const now = new Date();
+  const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+  // For quote
+  const quote = QUOTES[new Date().getDate() % QUOTES.length];
 
   const insets = useSafeAreaInsets();
 
@@ -122,6 +147,17 @@ export default function TimerScreen() {
   useEffect(() => {
     AsyncStorage.getItem('timerHeaderUri').then(setHeaderUri);
   }, []);
+
+  // Load store and point at today when Tasks tab is opened
+  useEffect(() => {
+    initTodos();
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'tasks' && selectedDate !== todayDate) {
+      setSelectedDate(todayDate);
+    }
+  }, [activeTab]);
 
   async function pickHeaderImage() {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -435,34 +471,6 @@ export default function TimerScreen() {
         </View>
       </View>
 
-      {/* Duration steppers */}
-      <View style={styles.controlsRow}>
-        <View style={styles.controlCard}>
-          <Text style={styles.controlLabel}>Focus</Text>
-          <View style={styles.stepper}>
-            <Pressable onPress={decreaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
-              <Ionicons name="remove" size={15} color="#4A7A6E" />
-            </Pressable>
-            <Text style={styles.stepValue}>{focusDuration} min</Text>
-            <Pressable onPress={increaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
-              <Ionicons name="add" size={15} color="#4A7A6E" />
-            </Pressable>
-          </View>
-        </View>
-        <View style={styles.controlCard}>
-          <Text style={styles.controlLabel}>Break</Text>
-          <View style={styles.stepper}>
-            <Pressable onPress={decreaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
-              <Ionicons name="remove" size={15} color="#4E7C9B" />
-            </Pressable>
-            <Text style={styles.stepValue}>{breakDuration} min</Text>
-            <Pressable onPress={increaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
-              <Ionicons name="add" size={15} color="#4E7C9B" />
-            </Pressable>
-          </View>
-        </View>
-      </View>
-
       {/* Controls: Pause, Start, Cancel */}
       <View style={styles.buttonRow}>
         <Pressable style={styles.secondaryBtn} onPress={handlePause}>
@@ -477,27 +485,133 @@ export default function TimerScreen() {
         </Pressable>
       </View>
 
-      {/* XP reward card */}
-      <View style={styles.xpCard}>
-        <View style={styles.xpHeader}>
-          <Ionicons name="nutrition-outline" size={16} color="#C7695A" />
-          <Text style={styles.xpHeaderText}>Earn XP as you go</Text>
+      {/* Three-tab card */}
+      <View style={styles.tabCard}>
+        <View style={styles.tabRow}>
+          <Pressable
+            style={[styles.tabBtn, activeTab === 'summary' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('summary')}
+          >
+            <Ionicons name="stats-chart-outline" size={14} color={activeTab === 'summary' ? '#2F6E60' : '#6F8A85'} />
+            <Text style={[styles.tabText, activeTab === 'summary' && styles.tabTextActive]}>Summary</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.tabBtn, activeTab === 'settings' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('settings')}
+          >
+            <Ionicons name="settings-outline" size={14} color={activeTab === 'settings' ? '#2F6E60' : '#6F8A85'} />
+            <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>Settings</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.tabBtn, activeTab === 'tasks' && styles.tabBtnActive]}
+            onPress={() => setActiveTab('tasks')}
+          >
+            <Ionicons name="checkbox-outline" size={14} color={activeTab === 'tasks' ? '#2F6E60' : '#6F8A85'} />
+            <Text style={[styles.tabText, activeTab === 'tasks' && styles.tabTextActive]}>Tasks</Text>
+          </Pressable>
         </View>
-        <View style={styles.xpRow}>
-          <Text style={styles.xpLabel}>Finish a focus session</Text>
-          <Text style={styles.xpValue}>+10 XP</Text>
-        </View>
-        <View style={styles.xpRow}>
-          <Text style={styles.xpLabel}>Take your break</Text>
-          <Text style={styles.xpValue}>+5 XP</Text>
-        </View>
-        <View style={styles.xpRow}>
-          <Text style={styles.xpLabel}>Complete a full cycle (4)</Text>
-          <Text style={styles.xpValue}>+25 XP</Text>
+
+        {/* SUMMARY */}
+        {activeTab === 'summary' && (
+          <View style={styles.tabBody}>
+            <View style={styles.tilesRow}>
+              <View style={[styles.tile, { backgroundColor: '#F2F9F5' }]}>
+                <View style={[styles.tileIcon, styles.tileIconGreen]}>
+                  <Ionicons name="flame-outline" size={18} color="#3E8574" />
+                </View>
+                <View>
+                  <Text style={styles.tileNumber}>{todayFocusCount}</Text>
+                  <Text style={styles.tileLabel}>session{todayFocusCount !== 1 ? 's' : ''} today</Text>
+                </View>
+              </View>
+              <View style={[styles.tile, { backgroundColor: '#F1F7FA' }]}>
+                <View style={[styles.tileIcon, styles.tileIconBlue]}>
+                  <Ionicons name="hourglass-outline" size={18} color="#4E7C9B" />
+                </View>
+                <View>
+                  <Text style={styles.tileNumber}>
+                    {Math.floor(todayStudyMinutes / 60)}h {todayStudyMinutes % 60}m
+                  </Text>
+                  <Text style={styles.tileLabel}>focused</Text>
+                </View>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* SETTINGS */}
+        {activeTab === 'settings' && (
+          <View style={styles.tabBody}>
+            <View style={styles.settingRow}>
+              <Text style={styles.settingLabel}>Focus duration</Text>
+              <View style={styles.stepper}>
+                <Pressable onPress={decreaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Ionicons name="remove" size={15} color="#4A7A6E" />
+                </Pressable>
+                <Text style={styles.stepValue}>{focusDuration} min</Text>
+                <Pressable onPress={increaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Ionicons name="add" size={15} color="#4A7A6E" />
+                </Pressable>
+              </View>
+            </View>
+            <View style={styles.settingDivider} />
+            <View style={styles.settingRow}>
+              <Text style={styles.settingLabel}>Break duration</Text>
+              <View style={styles.stepper}>
+                <Pressable onPress={decreaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Ionicons name="remove" size={15} color="#4E7C9B" />
+                </Pressable>
+                <Text style={styles.stepValue}>{breakDuration} min</Text>
+                <Pressable onPress={increaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Ionicons name="add" size={15} color="#4E7C9B" />
+                </Pressable>
+              </View>
+            </View>
+          </View>
+        )}
+
+        {/* TASKS (read-only) */}
+        {activeTab === 'tasks' && (
+          <View style={styles.tabBody}>
+            <View style={styles.taskHeaderRow}>
+              <Text style={styles.taskTitle}>Today's tasks</Text>
+              <Text style={styles.taskCount}>
+                {tasksDone} of {taskItems.length} done
+              </Text>
+            </View>
+            <View style={styles.taskProgressTrack}>
+              <View style={[styles.taskProgressFill, { width: `${Math.round(taskProgress * 100)}%` }]} />
+            </View>
+
+            {taskItems.length === 0 ? (
+              <Text style={styles.taskEmpty}>No tasks for today yet.</Text>
+            ) : (
+              taskItems.map(task => (
+                <View key={task.id} style={styles.taskRow}>
+                  <View style={[styles.taskCircle, task.completed && styles.taskCircleDone]}>
+                    {task.completed && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
+                  </View>
+                  <Text style={[styles.taskText, task.completed && styles.taskTextDone]} numberOfLines={1}>
+                    {task.text}
+                  </Text>
+                </View>
+              ))
+            )}
+
+            <Text style={styles.taskHint}>Add or edit tasks on the Tasks screen</Text>
+          </View>
+        )}
+      </View>
+
+      <View style={styles.quoteCard}>
+        <Ionicons name="star" size={16} color="#E0A81E" style={styles.quoteIcon} />
+        <View style={{ flex: 1 }}>
+          <Text style={styles.quoteText}>"{quote.text}"</Text>
+          <Text style={styles.quoteAuthor}>— {quote.author}</Text>
         </View>
       </View>
-      </ScrollView>
 
+      {/* Modal for break/focus/recovery */}
       <Modal visible={!!modal} transparent animationType="fade" onRequestClose={() => setModal(null)}>
         <View style={styles.modalBackdrop}>
           <View style={styles.modalCard}>
@@ -596,7 +710,8 @@ export default function TimerScreen() {
           </View>
         </View>
       </Modal>
-    </View>
-  );
+    </ScrollView>
+  </View>
+);
 }
 

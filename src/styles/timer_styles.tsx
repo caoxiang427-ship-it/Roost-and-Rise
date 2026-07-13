@@ -154,35 +154,140 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F5C13D',
     borderRadius: 999,
   },
-  // Hero: chicken + summary
-  heroRow: {
+  
+  // 3-tab card
+  tabCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    padding: 6,
+    marginBottom: 16,
+  },
+  tabRow: {
+    flexDirection: 'row',
+    backgroundColor: '#F2F7F4',
+    borderRadius: 12,
+    padding: 4,
+  },
+  tabBtn: {
+    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 8,
+    borderRadius: 9,
   },
-  heroChickenCol: {
-    flex: 1,
+  tabBtnActive: {
+    backgroundColor: '#FFFFFF',
+  },
+  tabText: {
+    fontSize: 12,
+    color: '#6F8A85',
+  },
+  tabTextActive: {
+    color: '#2F6E60',
+    fontWeight: '500',
+  },
+  tabBody: {
+    padding: 10,
+  },
+
+  settingRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  settingLabel: {
+    fontSize: 13,
+    color: '#6F8A85',
+  },
+  settingDivider: {
+    height: 1,
+    backgroundColor: '#EEF3F0',
+    marginVertical: 4,
+  },
+
+  taskHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: 8,
+  },
+  taskTitle: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#22403B',
+  },
+  taskCount: {
+    fontSize: 12,
+    color: '#6F8A85',
+  },
+  taskProgressTrack: {
+    height: 6,
+    borderRadius: 999,
+    backgroundColor: '#E4EDE8',
+    overflow: 'hidden',
+    marginBottom: 14,
+  },
+  taskProgressFill: {
+    height: '100%',
+    backgroundColor: '#4E9A87',
+    borderRadius: 999,
+  },
+  taskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 11,
+    borderWidth: 1,
+    borderColor: '#E1EAE5',
+    borderRadius: 12,
+    paddingVertical: 11,
+    paddingHorizontal: 13,
+    marginBottom: 8,
+  },
+  taskCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#C9D8D0',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  heroSummaryCol: {
+  taskCircleDone: {
+    backgroundColor: '#4E9A87',
+    borderColor: '#4E9A87',
+  },
+  taskText: {
     flex: 1,
-    gap: 10,
+    fontSize: 14,
+    color: '#22403B',
   },
-  portraitChicken: {
-    width: 150,
-    height: 160,
+  taskTextDone: {
+    color: '#9CB0A8',
+    textDecorationLine: 'line-through',
   },
-  message: {
-    textAlign: 'center',
+  taskEmpty: {
     fontSize: 13,
-    color: '#5E9A8B',
-    marginBottom: 18,
+    color: '#9CB0A8',
+    textAlign: 'center',
+    paddingVertical: 8,
+  },
+  taskHint: {
+    fontSize: 12,
+    color: '#9CB0A8',
+    textAlign: 'center',
+    marginTop: 8,
   },
 
   // Summary tiles
+  tilesRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
   tile: {
+    flex: 1,
     backgroundColor: '#FFFFFF',
     borderRadius: 16,
     padding: 13,
@@ -211,6 +316,33 @@ export const styles = StyleSheet.create({
   tileLabel: {
     fontSize: 11,
     color: '#6F8A85',
+  },
+
+  // Stepper
+  stepper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+  },
+  stepBtn: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  stepBtnGreen: {
+    backgroundColor: '#EAF2EE',
+  },
+  stepBtnBlue: {
+    backgroundColor: '#E6EFF4',
+  },
+  stepValue: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#22403B',
+    minWidth: 52,
+    textAlign: 'center',
   },
 
   // Circular timer
@@ -265,50 +397,6 @@ export const styles = StyleSheet.create({
     backgroundColor: '#CBDDD5',
   },
 
-  // Duration steppers
-  controlsRow: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 16,
-  },
-  controlCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingHorizontal: 13,
-    paddingVertical: 11,
-  },
-  controlLabel: {
-    fontFamily: 'InterSemiBold',
-    fontSize: 18,
-    color: '#6F8A85',
-    marginBottom: 9,
-    fontWeight: '500',
-  },
-  stepper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  stepBtn: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  stepBtnGreen: {
-    backgroundColor: '#EAF2EE',
-  },
-  stepBtnBlue: {
-    backgroundColor: '#E6EFF4',
-  },
-  stepValue: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#22403B',
-  },
-
   // Controls
   buttonRow: {
     flexDirection: 'row',
@@ -345,37 +433,30 @@ export const styles = StyleSheet.create({
     fontWeight: '500',
   },
 
-  // XP reward card
-  xpCard: {
-    backgroundColor: '#E7EFF4',
+  // Quote card
+  quoteCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#F4F1E8',
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
+    marginTop: 16,
   },
-  xpHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 10,
+  quoteIcon: {
+    marginTop: 2,
   },
-  xpHeaderText: {
+  quoteText: {
     fontSize: 13,
-    fontWeight: '500',
-    color: '#2E5A72',
+    color: '#5A6B4E',
+    fontStyle: 'italic',
+    lineHeight: 19,
   },
-  xpRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 3,
-  },
-  xpLabel: {
+  quoteAuthor: {
     fontSize: 12,
-    color: '#5E7E90',
-  },
-  xpValue: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#3D7391',
+    color: '#8A9B7E',
+    marginTop: 4,
   },
 
   // Completion modals
