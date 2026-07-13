@@ -5,9 +5,9 @@
  * Add lockout for failed attempts.
 */
 
-import { supabase } from './supabase';
-import * as WebBrowser from 'expo-web-browser';
 import * as AuthSession from 'expo-auth-session';
+import * as WebBrowser from 'expo-web-browser';
+import { supabase } from './supabase';
 
 export async function signUp(email: string, password: string, name: string) {
   const { data, error } = await supabase.auth.signUp({
@@ -75,7 +75,7 @@ export async function signInWithGoogle() {
     redirectTo
   );
 
-  if (result.url && result.type === 'success') {
+  if (result.type === 'success' && result.url) {
     const authUrl = new URL(result.url);
     const fragment = authUrl.hash.substring(1);
     const params = new URLSearchParams(fragment);

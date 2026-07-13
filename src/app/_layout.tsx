@@ -8,13 +8,13 @@
  * If users have logged in already, they should be kept out of auth screens.
 */
 
-import { useEffect, useState } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
 import { supabase } from '@/lib/supabase';
 import { Session } from '@supabase/supabase-js';
-import { ActivityIndicator, View, StyleSheet } from 'react-native';
-import {  useFonts } from 'expo-font';
+import { useFonts } from 'expo-font';
+import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -30,7 +30,8 @@ export default function RootLayout() {
   const [fontLoaded, error] = useFonts({
       InterRegular: require("../../assets/fonts/Inter_18pt-Regular.ttf"),
       InterSemiBold: require("../../assets/fonts/Inter_18pt-SemiBold.ttf"),
-      InterBold: require("../../assets/fonts/Inter_18pt-Bold.ttf")
+      InterBold: require("../../assets/fonts/Inter_18pt-Bold.ttf"),
+      Fredoka: require("../../assets/fonts/Fredoka-SemiBold.ttf"), 
     });
 
     // if fonts aren't loaded, keep splashscreen until it's loaded
@@ -51,7 +52,7 @@ export default function RootLayout() {
       }
     }
     checkUser();
-  }, []); // this dependency array allows only the code to run once, to avoid phone crash
+  }, []); 
 
   // Track for auth state changes
   useEffect(() => {
@@ -60,7 +61,6 @@ export default function RootLayout() {
         setSession(loadedSession);
     });
     
-    // turn off the login tracker, which can prevent app from slowing down
     return () => tracker.subscription.unsubscribe();
   }, []);
 
@@ -75,7 +75,7 @@ export default function RootLayout() {
     } else if (session && isViewingAuth) {
       router.replace('/'); 
     }
-  }, [session, isLoading, segments]);// update whenever login status, loading status, and current screen changes
+  }, [session, isLoading, segments]);
 
   // Loading UI
   if (isLoading) {
