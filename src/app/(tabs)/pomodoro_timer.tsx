@@ -430,7 +430,10 @@ export default function TimerScreen() {
         </View>
 
         <View style={styles.levelRow}>
-          <Text style={styles.levelLabel}>Level progress</Text>
+          <View style={styles.levelLabelRow}>
+            <Ionicons name="trending-up" size={14} color="#6F8A85" />
+            <Text style={styles.levelLabel}>Level progress</Text>
+          </View>
           <Text style={styles.levelValue}>{levelPct}%</Text>
         </View>
         <View style={styles.levelTrack}>
