@@ -61,11 +61,20 @@ export const styles = StyleSheet.create({
   },
 
   // Chicken companion
-  companionCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
+  cardWrapper: {
+    borderRadius: 28,
+    borderWidth: 3,
+    borderColor: '#9D7957',
+    overflow: 'hidden',
     marginBottom: 14,
+  },
+  companionCard: {
+    borderRadius: 25,
+    overflow: 'hidden',
+    padding: 16,
+  },
+  companionCardBg: {
+    borderRadius: 25,
   },
   companionTop: {
     flexDirection: 'row',
@@ -73,12 +82,14 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   companionName: {
+    fontFamily: "InterBold",
     fontSize: 22,
     fontWeight: '600',
-    color: '#22403B',
+    color: '#5E4833',
   },
   companionLevel: {
-    fontSize: 15,
+    fontFamily: "InterBold",
+    fontSize: 16,
     color: '#6F8A85',
     marginTop: 2,
   },
@@ -146,19 +157,22 @@ export const styles = StyleSheet.create({
     gap: 5,
   },
   levelLabel: {
-    fontSize: 13,
-    color: '#6F8A85',
+    fontFamily: "InterBold",
+    fontSize: 16,
+    color: '#5E4833',
+    fontWeight: '500',
   },
   levelValue: {
-    fontSize: 13,
+    fontFamily: "InterBold",
+    fontSize: 16,
     fontWeight: '500',
-    color: '#C79A24',
+    color: '#5E4833',
   },
   levelTrack: {
-    height: 14,             
+    height: 20,             
     borderRadius: 999,
     backgroundColor: '#F1EEE6',
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: '#9D7957', 
     overflow: 'hidden',
     justifyContent: 'center',
@@ -215,6 +229,7 @@ export const styles = StyleSheet.create({
   settingLabel: {
     fontSize: 13,
     color: '#6F8A85',
+    fontWeight: '500',
   },
   settingDivider: {
     height: 1,

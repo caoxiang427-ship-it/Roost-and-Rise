@@ -45,8 +45,11 @@ export default function TimerScreen() {
   const [todayStudyMinutes, setTodayStudyMinutes] = useState(0);
   const [sessionStarted, setSessionStarted] = useState(false);
   const router = useRouter();
+
+  // For modals
   const [modal, setModal] = useState<ModalState | null>(null);
   const [modalBreakMin, setModalBreakMin] = useState(5);
+  const [modalFocusMin, setModalFocusMin] = useState(25);
 
   const [showReward, setShowReward] = useState(false);
   const [rewardXP, setRewardXP] = useState(0);
@@ -122,6 +125,9 @@ export default function TimerScreen() {
         const awardedXp = await addFocusXp(currentBreakMinutes, 'break');
         
         setIsRunning(false);
+
+        setModalFocusMin(focusDuration);
+        setModal({ type: 'toFocus', focusMin: focusDuration, xp: awardedXp });
         setModal({ type: 'toFocus', focusMin: focusDuration, xp: awardedXp });
       }
     }
@@ -241,6 +247,14 @@ export default function TimerScreen() {
     setMode('focus');
 
     setRemainingSeconds(focusDuration * 60);
+  }
+
+  function increaseModalFocus() {
+    setModalFocusMin(m => Math.min(m + 5, 60));
+  }
+
+  function decreaseModalFocus() {
+    setModalFocusMin(m => Math.max(m - 5, 5));
   }
 
   function increaseModalBreak() {
@@ -399,46 +413,53 @@ export default function TimerScreen() {
       </ImageBackground>
 
       {/* Chicken card */}
-      <View style={styles.companionCard}>
-        <View style={styles.companionTop}>
-          <View>
-            <Text style={styles.companionName}>{chickName || 'Your study companion'}</Text>
-            <Text style={styles.companionLevel}>Lv.{petLevel}</Text>
+      <View style={styles.cardWrapper}>
+        <ImageBackground
+          source={require('@/assets/images/timer/card_bg.png')}
+          style={styles.companionCard}
+          imageStyle={styles.companionCardBg}
+        >
+          <View style={styles.companionTop}>
+            <View>
+              <Text style={styles.companionName}>{chickName || 'Your study companion'}</Text>
+              <Text style={styles.companionLevel}>Lv.{petLevel}</Text>
+            </View>
+            <View style={styles.readyPill}>
+              <Text style={styles.readyPillText}>ready</Text>
+              <Ionicons name="sparkles" size={13} color="#A6791E" />
+            </View>
           </View>
-          <View style={styles.readyPill}>
-            <Text style={styles.readyPillText}>ready</Text>
-            <Ionicons name="sparkles" size={13} color="#A6791E" />
+
+          {/* Speech bubble + companion art */}
+          <View style={styles.speechBubble}>
+            <Text style={styles.speechText}>{getChickenMsg()}</Text>
+            <View style={styles.speechTail} />
           </View>
-        </View>
 
-        {/* Speech bubble + companion art */}
-        <View style={styles.speechBubble}>
-          <Text style={styles.speechText}>{getChickenMsg()}</Text>
-          <View style={styles.speechTail} />
-        </View>
-
-        <View style={styles.companionArtWrap}>
-          <Image
-            source={
-              equippedItemId === null
-                ? require('@/assets/images/home/chicken.png')
-                : imageMap[equippedItemId]
-            }
-            style={styles.companionArt}
-            resizeMode="contain"
-          />
-        </View>
-
-        <View style={styles.levelRow}>
-          <View style={styles.levelLabelRow}>
-            <Ionicons name="trending-up" size={14} color="#6F8A85" />
-            <Text style={styles.levelLabel}>Level progress</Text>
+          <View style={styles.companionArtWrap}>
+            <Image
+              source={
+                equippedItemId === null
+                  ? require('@/assets/images/home/chicken.png')
+                  : imageMap[equippedItemId]
+              }
+              style={styles.companionArt}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.levelValue}>{levelPct}%</Text>
-        </View>
-        <View style={styles.levelTrack}>
-          <View style={[styles.levelFill, { width: `${levelPct}%` }]} />
-        </View>
+
+          <View style={styles.levelRow}>
+            <View style={styles.levelLabelRow}>
+              <Ionicons name="trending-up" size={14} color="#6F8A85" />
+              <Text style={styles.levelLabel}>Level progress</Text>
+            </View>
+            <Text style={styles.levelValue}>{levelPct}%</Text>
+          </View>
+        
+          <View style={styles.levelTrack}>
+            <View style={[styles.levelFill, { width: `${levelPct}%` }]} />
+          </View>
+        </ImageBackground>
       </View>
 
       {/* Circular timer */}
@@ -666,9 +687,18 @@ export default function TimerScreen() {
                 {modal.xp > 0 && (
                   <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
                 )}
-                <Text style={styles.modalMessage}>
-                  Ready for a <Text style={styles.modalAccent}>{modal.focusMin}-min</Text> focus session?
-                </Text>
+
+                <Text style={styles.modalMessage}>How long to focus?</Text>
+                <View style={styles.modalStepper}>
+                  <Pressable onPress={decreaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                    <Ionicons name="remove" size={16} color="#4A7A6E" />
+                  </Pressable>
+                  <Text style={styles.modalStepperValue}>{modalFocusMin} min</Text>
+                  <Pressable onPress={increaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                    <Ionicons name="add" size={16} color="#4A7A6E" />
+                  </Pressable>
+                </View>
+
                 <Pressable style={styles.modalPrimary} onPress={() => startFocus(modal.focusMin)}>
                   <Text style={styles.modalPrimaryText}>Start focus</Text>
                 </Pressable>
