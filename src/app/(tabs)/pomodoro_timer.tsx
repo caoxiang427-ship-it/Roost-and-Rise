@@ -400,6 +400,7 @@ export default function TimerScreen() {
         imageStyle={styles.headerImage}
         resizeMode="cover"
       >
+
         <View style={styles.headerOverlay} />
         <View style={styles.headerRow}>
           <View style={{ flex: 1 }}>
@@ -419,14 +420,11 @@ export default function TimerScreen() {
           style={styles.companionCard}
           imageStyle={styles.companionCardBg}
         >
+          
           <View style={styles.companionTop}>
             <View>
               <Text style={styles.companionName}>{chickName || 'Your study companion'}</Text>
               <Text style={styles.companionLevel}>Lv.{petLevel}</Text>
-            </View>
-            <View style={styles.readyPill}>
-              <Text style={styles.readyPillText}>ready</Text>
-              <Ionicons name="sparkles" size={13} color="#A6791E" />
             </View>
           </View>
 
@@ -449,11 +447,13 @@ export default function TimerScreen() {
           </View>
 
           <View style={styles.levelRow}>
-            <View style={styles.levelLabelRow}>
-              <Ionicons name="trending-up" size={14} color="#6F8A85" />
-              <Text style={styles.levelLabel}>Level progress</Text>
+            <View style={styles.levelPill}>
+              <Ionicons name="star" size={14} color="#A6791E" />
+              <Text style={styles.levelPillText}>Level progress</Text>
             </View>
-            <Text style={styles.levelValue}>{levelPct}%</Text>
+            <View style={styles.levelPill}>
+              <Text style={styles.levelPillText}>{levelPct}%</Text>
+            </View>
           </View>
         
           <View style={styles.levelTrack}>
@@ -635,116 +635,117 @@ export default function TimerScreen() {
         </View>
       </View>
 
-      {/* Modal for break/focus/recovery */}
-      <Modal visible={!!modal} transparent animationType="fade" onRequestClose={() => setModal(null)}>
-        <View style={styles.modalBackdrop}>
-          <View style={styles.modalCard}>
+    {/* Modal for break/focus/recovery */}
+    <Modal visible={!!modal} transparent animationType="fade" onRequestClose={() => setModal(null)}>
+      <View style={styles.modalBackdrop}>
+        <View style={styles.modalCard}>
 
-            {modal?.type === 'toBreak' && (
-              <>
-                <View style={[styles.modalBadge, { backgroundColor: '#D9E7EF' }]}>
-                  <Ionicons name="cafe-outline" size={26} color="#4E7C9B" />
+          {modal?.type === 'toBreak' && (
+            <>
+              <View style={[styles.modalBadge, { backgroundColor: '#D9E7EF' }]}>
+                <Ionicons name="cafe-outline" size={26} color="#4E7C9B" />
+              </View>
+              <Text style={styles.modalTitle}>Nice work 🌱</Text>
+              <Text style={styles.modalFeedback}>
+                You've focused{' '}
+                <Text style={styles.modalStrong}>
+                  {Math.floor(todayStudyMinutes / 60)}h {todayStudyMinutes % 60}m
+                </Text>{' '}
+                today.
+              </Text>
+              {modal.xp > 0 && (
+                <View style={styles.xpPill}>
+                  <Text style={styles.xpPillText}>+{modal.xp} XP</Text>
                 </View>
-                <Text style={styles.modalTitle}>Nice work 🌱</Text>
-                <Text style={styles.modalFeedback}>
-                  You've focused{' '}
-                  <Text style={styles.modalStrong}>
-                    {Math.floor(todayStudyMinutes / 60)}h {todayStudyMinutes % 60}m
-                  </Text>{' '}
-                  today.
-                </Text>
-                {modal.xp > 0 && (
-                  <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
-                )}
+              )}
 
-                {/* editable break length */}
-                <Text style={styles.modalMessage}>How long a breather?</Text>
-                <View style={styles.modalStepper}>
-                  <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                    <Ionicons name="remove" size={16} color="#4E7C9B" />
-                  </Pressable>
-                  <Text style={styles.modalStepperValue}>{modalBreakMin} min</Text>
-                  <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                    <Ionicons name="add" size={16} color="#4E7C9B" />
-                  </Pressable>
-                </View>
-                
-                <Pressable style={styles.modalPrimary} onPress={() => startBreak(modalBreakMin)}>
-                  <Text style={styles.modalPrimaryText}>Start {modalBreakMin}-min break</Text>
+              {/* editable break length */}
+              <Text style={styles.modalMessage}>How long a breather?</Text>
+              <View style={styles.modalStepper}>
+                <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Ionicons name="remove" size={16} color="#4E7C9B" />
                 </Pressable>
-                <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
-                  <Text style={styles.modalSecondaryText}>Skip break</Text>
+                <Text style={styles.modalStepperValue}>{modalBreakMin} min</Text>
+                <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Ionicons name="add" size={16} color="#4E7C9B" />
                 </Pressable>
-              </>
-            )}
+              </View>
+              
+              <Pressable style={styles.modalPrimary} onPress={() => startBreak(modalBreakMin)}>
+                <Text style={styles.modalPrimaryText}>Start {modalBreakMin}-min break</Text> 
+              </Pressable>
+              <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
+                <Text style={styles.modalSecondaryText}>Skip break</Text>
+              </Pressable>
+            </>
+          )}
 
-            {modal?.type === 'toFocus' && (
-              <>
-                <View style={[styles.modalBadge, { backgroundColor: '#D8ECE4' }]}>
-                  <Ionicons name="play" size={24} color="#3E8574" />
-                </View>
-                <Text style={styles.modalTitle}>Feeling refreshed?</Text>
-                {modal.xp > 0 && (
-                  <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
-                )}
+          {modal?.type === 'toFocus' && (
+            <>
+              <View style={[styles.modalBadge, { backgroundColor: '#D8ECE4' }]}>
+                <Ionicons name="play" size={24} color="#3E8574" />
+              </View>
+              <Text style={styles.modalTitle}>Feeling refreshed?</Text>
+              {modal.xp > 0 && (
+                <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
+              )}
 
-                <Text style={styles.modalMessage}>How long to focus?</Text>
-                <View style={styles.modalStepper}>
-                  <Pressable onPress={decreaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
-                    <Ionicons name="remove" size={16} color="#4A7A6E" />
-                  </Pressable>
-                  <Text style={styles.modalStepperValue}>{modalFocusMin} min</Text>
-                  <Pressable onPress={increaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
-                    <Ionicons name="add" size={16} color="#4A7A6E" />
-                  </Pressable>
-                </View>
-
-                <Pressable style={styles.modalPrimary} onPress={() => startFocus(modal.focusMin)}>
-                  <Text style={styles.modalPrimaryText}>Start focus</Text>
+              <Text style={styles.modalMessage}>How long to focus?</Text>                <View style={styles.modalStepper}>
+                <Pressable onPress={decreaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Ionicons name="remove" size={16} color="#4A7A6E" />
                 </Pressable>
-                <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
-                  <Text style={styles.modalSecondaryText}>I'm done for now</Text>
+                <Text style={styles.modalStepperValue}>{modalFocusMin} min</Text>
+                <Pressable onPress={increaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Ionicons name="add" size={16} color="#4A7A6E" />
                 </Pressable>
-              </>
-            )}
+              </View>
 
-            {modal?.type === 'recovery' && (
-              <>
-                <View style={[styles.modalBadge, { backgroundColor: '#F6E7E2' }]}>
-                  <Ionicons name="sparkles-outline" size={24} color="#C7695A" />
-                </View>
-                <Text style={styles.modalTitle}>4 sessions done 🎉</Text>
-                {modal.xp > 0 && (
-                  <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
-                )}
-                <Text style={styles.modalMessage}>
-                  You've earned some real recovery.{'\n'}Take a moment for yourself.
-                </Text>
+              <Pressable style={styles.modalPrimary} onPress={() => startFocus(modal.focusMin)}>
+                <Text style={styles.modalPrimaryText}>Start focus</Text>
+              </Pressable>
+              <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
+                <Text style={styles.modalSecondaryText}>I'm done for now</Text>
+              </Pressable>
+            </>
+          )}
 
-                {/* editable rest length */}
-                <View style={styles.modalStepper}>
-                  <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                    <Ionicons name="remove" size={16} color="#4E7C9B" />
-                  </Pressable>
-                  <Text style={styles.modalStepperValue}>{modalBreakMin} min</Text>
-                  <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                    <Ionicons name="add" size={16} color="#4E7C9B" />
-                  </Pressable>
-                </View>
+          {modal?.type === 'recovery' && (
+            <>
+              <View style={[styles.modalBadge, { backgroundColor: '#F6E7E2' }]}>
+                <Ionicons name="sparkles-outline" size={24} color="#C7695A" />
+              </View>
+              <Text style={styles.modalTitle}>4 sessions done 🎉</Text>
+              {modal.xp > 0 && (
+                <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
+              )}
+              <Text style={styles.modalMessage}>
+                You've earned some real recovery.{'\n'}Take a moment for yourself.
+              </Text>
 
-                <Pressable style={styles.modalPrimary} onPress={goToRecovery}>
-                  <Text style={styles.modalPrimaryText}>Take me to recovery →</Text>
+              {/* editable rest length */}
+              <View style={styles.modalStepper}>
+                <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Ionicons name="remove" size={16} color="#4E7C9B" />
                 </Pressable>
-                <Pressable style={styles.modalSecondary} onPress={() => startBreak(modalBreakMin)}>
-                  <Text style={styles.modalSecondaryText}>Rest here ({modalBreakMin} min)</Text>
+                <Text style={styles.modalStepperValue}>{modalBreakMin} min</Text>
+                <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Ionicons name="add" size={16} color="#4E7C9B" />
                 </Pressable>
-              </>
-            )}
-          </View>
+              </View>
+
+              <Pressable style={styles.modalPrimary} onPress={goToRecovery}>
+                <Text style={styles.modalPrimaryText}>Take me to recovery →</Text>
+              </Pressable>
+              <Pressable style={styles.modalSecondary} onPress={() => startBreak(modalBreakMin)}>
+                <Text style={styles.modalSecondaryText}>Rest here ({modalBreakMin} min)</Text>
+              </Pressable>
+            </>
+          )}
         </View>
-      </Modal>
+       </View>
+    </Modal>
     </ScrollView>
   </View>
-);
+  );
 }
 

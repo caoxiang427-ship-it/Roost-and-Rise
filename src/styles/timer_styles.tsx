@@ -61,6 +61,18 @@ export const styles = StyleSheet.create({
   },
 
   // Chicken companion
+  cardScrimTop: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
+    height: 90,
+    backgroundColor: 'rgba(0,0,0,0.18)',
+  },
+  cardScrimBottom: {
+    position: 'absolute',
+    bottom: 0, left: 0, right: 0,
+    height: 90,
+    backgroundColor: 'rgba(0,0,0,0.20)',
+  },
   cardWrapper: {
     borderRadius: 28,
     borderWidth: 3,
@@ -82,30 +94,21 @@ export const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   companionName: {
-    fontFamily: "InterBold",
-    fontSize: 22,
-    fontWeight: '600',
-    color: '#5E4833',
+    fontSize: 24,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    textShadowColor: 'rgba(0,0,0,0.35)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 3,
   },
   companionLevel: {
-    fontFamily: "InterBold",
-    fontSize: 16,
-    color: '#6F8A85',
+    fontSize: 19,
+    fontWeight: '800',
+    color: '#F0F4EE',        
     marginTop: 2,
-  },
-  readyPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#FBF0D0',
-    paddingHorizontal: 11,
-    paddingVertical: 5,
-    borderRadius: 999,
-  },
-  readyPillText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#A6791E',
+    textShadowColor: 'rgba(0,0,0,0.3)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 2,
   },
   speechBubble: {
     alignSelf: 'center',
@@ -156,17 +159,31 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 5,
   },
+  levelPill: {
+    borderColor: "#534217",
+    borderWidth: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FBF0D0',
+    paddingHorizontal: 11,
+    paddingVertical: 5,
+    borderRadius: 999,
+  },
+  levelPillText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#563f13',
+  },
   levelLabel: {
-    fontFamily: "InterBold",
-    fontSize: 16,
-    color: '#5E4833',
-    fontWeight: '500',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   levelValue: {
-    fontFamily: "InterBold",
-    fontSize: 16,
-    fontWeight: '500',
-    color: '#5E4833',
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
   levelTrack: {
     height: 20,             
@@ -182,7 +199,7 @@ export const styles = StyleSheet.create({
     backgroundColor: '#F5C13D',
     borderRadius: 999,
   },
-  
+
   // 3-tab card
   tabCard: {
     backgroundColor: '#FFFFFF',
@@ -209,7 +226,8 @@ export const styles = StyleSheet.create({
     backgroundColor: '#FFFFFF',
   },
   tabText: {
-    fontSize: 12,
+    fontSize: 13,
+    fontFamily: "InterBold",
     color: '#6F8A85',
   },
   tabTextActive: {
@@ -513,8 +531,8 @@ export const styles = StyleSheet.create({
     marginBottom: 12,
   },
   modalTitle: {
-    fontSize: 18,
-    fontWeight: '500',
+    fontSize: 16,
+    fontWeight: '800',
     color: '#22403B',
     marginBottom: 6,
     textAlign: 'center',

@@ -35,8 +35,10 @@ export default function RootLayout() {
 
     // if fonts aren't loaded, keep splashscreen until it's loaded
   useEffect(() => {
-      if (fontLoaded || error) SplashScreen.hideAsync();
-    }, [fontLoaded, error]);
+    if (fontLoaded || error) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [fontLoaded, error]);
 
   // Load any saved session and track login/logout changes
   useEffect(() => {
