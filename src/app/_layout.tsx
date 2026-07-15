@@ -18,13 +18,13 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setLoading] = useState(true);
-
-  SplashScreen.preventAutoHideAsync();
 
     // load custom fonts
   const [fontLoaded, error] = useFonts({

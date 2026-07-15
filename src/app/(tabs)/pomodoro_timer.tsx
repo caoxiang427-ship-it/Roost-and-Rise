@@ -391,361 +391,395 @@ export default function TimerScreen() {
           styles.contentContainer,
           { paddingTop: insets.top + 8, paddingBottom: insets.bottom + 100 },
         ]}
-      >    
-
-      {/* Header */}
-      <ImageBackground
-        source={headerUri ? { uri: headerUri } : DEFAULT_HEADER}
-        style={styles.headerBand}
-        imageStyle={styles.headerImage}
-        resizeMode="cover"
       >
-
-        <View style={styles.headerOverlay} />
-        <View style={styles.headerRow}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Focus timer</Text>
-            <Text style={styles.date}>{todayLabel}</Text>
-          </View>
-          <Pressable onPress={pickHeaderImage} style={styles.headerEditBtn} hitSlop={8}>
-            <Ionicons name="camera-outline" size={18} color="#173E33" />
-          </Pressable>
-        </View>
-      </ImageBackground>
-
-      {/* Chicken card */}
-      <View style={styles.cardWrapper}>
+        {/* Header */}
         <ImageBackground
-          source={require('@/assets/images/timer/card_bg.png')}
-          style={styles.companionCard}
-          imageStyle={styles.companionCardBg}
+          source={headerUri ? { uri: headerUri } : DEFAULT_HEADER}
+          style={styles.headerBand}
+          imageStyle={styles.headerImage}
+          resizeMode="cover"
         >
-          
-          <View style={styles.companionTop}>
-            <View>
-              <Text style={styles.companionName}>{chickName || 'Your study companion'}</Text>
-              <Text style={styles.companionLevel}>Lv.{petLevel}</Text>
+          <View style={styles.headerOverlay} />
+          <View style={styles.headerRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.title}>Focus timer</Text>
+              <Text style={styles.date}>{todayLabel}</Text>
             </View>
-          </View>
-
-          {/* Speech bubble + companion art */}
-          <View style={styles.speechBubble}>
-            <Text style={styles.speechText}>{getChickenMsg()}</Text>
-            <View style={styles.speechTail} />
-          </View>
-
-          <View style={styles.companionArtWrap}>
-            <Image
-              source={
-                equippedItemId === null
-                  ? require('@/assets/images/home/chicken.png')
-                  : imageMap[equippedItemId]
-              }
-              style={styles.companionArt}
-              resizeMode="contain"
-            />
-          </View>
-
-          <View style={styles.levelRow}>
-            <View style={styles.levelPill}>
-              <Ionicons name="star" size={14} color="#A6791E" />
-              <Text style={styles.levelPillText}>Level progress</Text>
-            </View>
-            <View style={styles.levelPill}>
-              <Text style={styles.levelPillText}>{levelPct}%</Text>
-            </View>
-          </View>
-        
-          <View style={styles.levelTrack}>
-            <View style={[styles.levelFill, { width: `${levelPct}%` }]} />
+            <Pressable onPress={pickHeaderImage} style={styles.headerEditBtn} hitSlop={8}>
+              <Ionicons name="camera-outline" size={18} color="#173E33" />
+            </Pressable>
           </View>
         </ImageBackground>
-      </View>
 
-      {/* Circular timer */}
-      <View style={styles.ringWrap}>
-        <Svg width={210} height={210} viewBox="0 0 240 240">
-          <Circle cx={120} cy={120} r={RADIUS} fill="#FFFFFF" stroke="#DCE8E3" strokeWidth={14} />
-          <Circle
-            cx={120}
-            cy={120}
-            r={RADIUS}
-            fill="none"
-            stroke={ringColor}
-            strokeWidth={14}
-            strokeLinecap="round"
-            strokeDasharray={CIRCUMFERENCE}
-            strokeDashoffset={dashoffset}
-            transform="rotate(-90 120 120)"
-          />
-        </Svg>
-        <View style={styles.ringCenter}>
-          <Text style={[styles.ringMode, { color: ringLabelColor }]}>{mode.toUpperCase()}</Text>
-          <Text style={styles.ringTime}>{displayTime(remainingSeconds)}</Text>
-        </View>
-      </View>
-
-      {/* Cycle position + dots */}
-      <View style={styles.cycleWrap}>
-        <Text style={styles.subtitle}>{getSessionSubtitle()}</Text>
-        <View style={styles.dotsRow}>
-          {[0, 1, 2, 3].map((i) => (
-            <View key={i} style={[styles.dot, i < filledDots ? styles.dotActive : styles.dotInactive]} />
-          ))}
-        </View>
-      </View>
-
-      {/* Controls: Pause, Start, Cancel */}
-      <View style={styles.buttonRow}>
-        <Pressable style={styles.secondaryBtn} onPress={handlePause}>
-          <Text style={styles.secondaryBtnText}>Pause</Text>
-        </Pressable>
-        <Pressable style={styles.primaryBtn} onPress={handleStart}>
-          <Ionicons name="play" size={16} color="#FFFFFF" />
-          <Text style={styles.primaryBtnText}>Start</Text>
-        </Pressable>
-        <Pressable style={styles.secondaryBtn} onPress={handleCancel}>
-          <Text style={styles.secondaryBtnText}>Cancel</Text>
-        </Pressable>
-      </View>
-
-      {/* Three-tab card */}
-      <View style={styles.tabCard}>
-        <View style={styles.tabRow}>
-          <Pressable
-            style={[styles.tabBtn, activeTab === 'summary' && styles.tabBtnActive]}
-            onPress={() => setActiveTab('summary')}
+        {/* Chicken card */}
+        <View style={styles.cardWrapper}>
+          <ImageBackground
+            source={require('@/assets/images/timer/card_bg.png')}
+            style={styles.companionCard}
+            imageStyle={styles.companionCardBg}
           >
-            <Ionicons name="stats-chart-outline" size={14} color={activeTab === 'summary' ? '#2F6E60' : '#6F8A85'} />
-            <Text style={[styles.tabText, activeTab === 'summary' && styles.tabTextActive]}>Summary</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tabBtn, activeTab === 'settings' && styles.tabBtnActive]}
-            onPress={() => setActiveTab('settings')}
-          >
-            <Ionicons name="settings-outline" size={14} color={activeTab === 'settings' ? '#2F6E60' : '#6F8A85'} />
-            <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>Settings</Text>
-          </Pressable>
-          <Pressable
-            style={[styles.tabBtn, activeTab === 'tasks' && styles.tabBtnActive]}
-            onPress={() => setActiveTab('tasks')}
-          >
-            <Ionicons name="checkbox-outline" size={14} color={activeTab === 'tasks' ? '#2F6E60' : '#6F8A85'} />
-            <Text style={[styles.tabText, activeTab === 'tasks' && styles.tabTextActive]}>Tasks</Text>
-          </Pressable>
-        </View>
-
-        {/* SUMMARY */}
-        {activeTab === 'summary' && (
-          <View style={styles.tabBody}>
-            <View style={styles.tilesRow}>
-              <View style={[styles.tile, { backgroundColor: '#F2F9F5' }]}>
-                <View style={[styles.tileIcon, styles.tileIconGreen]}>
-                  <Ionicons name="flame-outline" size={18} color="#3E8574" />
-                </View>
-                <View>
-                  <Text style={styles.tileNumber}>{todayFocusCount}</Text>
-                  <Text style={styles.tileLabel}>session{todayFocusCount !== 1 ? 's' : ''} today</Text>
-                </View>
-              </View>
-              <View style={[styles.tile, { backgroundColor: '#F1F7FA' }]}>
-                <View style={[styles.tileIcon, styles.tileIconBlue]}>
-                  <Ionicons name="hourglass-outline" size={18} color="#4E7C9B" />
-                </View>
-                <View>
-                  <Text style={styles.tileNumber}>
-                    {Math.floor(todayStudyMinutes / 60)}h {todayStudyMinutes % 60}m
-                  </Text>
-                  <Text style={styles.tileLabel}>focused</Text>
-                </View>
+            <View style={styles.companionTop}>
+              <View>
+                <Text style={styles.companionName}>{chickName || 'Your study companion'}</Text>
+                <Text style={styles.companionLevel}>Lv.{petLevel}</Text>
               </View>
             </View>
+
+            {/* Speech bubble + companion art */}
+            <View style={styles.speechBubble}>
+              <Text style={styles.speechText}>{getChickenMsg()}</Text>
+              <View style={styles.speechTail} />
+            </View>
+
+            <View style={styles.companionArtWrap}>
+              <Image
+                source={
+                  equippedItemId === null
+                    ? require('@/assets/images/home/chicken.png')
+                    : imageMap[equippedItemId]
+                }
+                style={styles.companionArt}
+                resizeMode="contain"
+              />
+            </View>
+
+            <View style={styles.levelRow}>
+              <View style={styles.levelPill}>
+                <Ionicons name="star" size={14} color="#A6791E" />
+                <Text style={styles.levelPillText}>Level progress</Text>
+              </View>
+              <View style={styles.levelPill}>
+                <Text style={styles.levelPillText}>{levelPct}%</Text>
+              </View>
+            </View>
+
+            <View style={styles.levelTrack}>
+              <View style={[styles.levelFill, { width: `${levelPct}%` }]} />
+            </View>
+          </ImageBackground>
+        </View>
+
+        {/* Circular timer */}
+        <View style={styles.ringWrap}>
+          <Svg width={210} height={210} viewBox="0 0 240 240">
+            <Circle cx={120} cy={120} r={RADIUS} fill="#FFFFFF" stroke="#DCE8E3" strokeWidth={14} />
+            <Circle
+              cx={120}
+              cy={120}
+              r={RADIUS}
+              fill="none"
+              stroke={ringColor}
+              strokeWidth={14}
+              strokeLinecap="round"
+              strokeDasharray={CIRCUMFERENCE}
+              strokeDashoffset={dashoffset}
+              transform="rotate(-90 120 120)"
+            />
+          </Svg>
+          <View style={styles.ringCenter}>
+            <Text style={[styles.ringMode, { color: ringLabelColor }]}>{mode.toUpperCase()}</Text>
+            <Text style={styles.ringTime}>{displayTime(remainingSeconds)}</Text>
           </View>
-        )}
+        </View>
 
-        {/* SETTINGS */}
-        {activeTab === 'settings' && (
-          <View style={styles.tabBody}>
-            <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Focus duration</Text>
-              <View style={styles.stepper}>
-                <Pressable onPress={decreaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
-                  <Ionicons name="remove" size={15} color="#4A7A6E" />
-                </Pressable>
-                <Text style={styles.stepValue}>{focusDuration} min</Text>
-                <Pressable onPress={increaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
-                  <Ionicons name="add" size={15} color="#4A7A6E" />
-                </Pressable>
-              </View>
-            </View>
-            <View style={styles.settingDivider} />
-            <View style={styles.settingRow}>
-              <Text style={styles.settingLabel}>Break duration</Text>
-              <View style={styles.stepper}>
-                <Pressable onPress={decreaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                  <Ionicons name="remove" size={15} color="#4E7C9B" />
-                </Pressable>
-                <Text style={styles.stepValue}>{breakDuration} min</Text>
-                <Pressable onPress={increaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                  <Ionicons name="add" size={15} color="#4E7C9B" />
-                </Pressable>
-              </View>
-            </View>
+        {/* Cycle position + dots */}
+        <View style={styles.cycleWrap}>
+          <Text style={styles.subtitle}>{getSessionSubtitle()}</Text>
+          <View style={styles.dotsRow}>
+            {[0, 1, 2, 3].map((i) => (
+              <View
+                key={i}
+                style={[styles.dot, i < filledDots ? styles.dotActive : styles.dotInactive]}
+              />
+            ))}
           </View>
-        )}
+        </View>
 
-        {/* TASKS (read-only) */}
-        {activeTab === 'tasks' && (
-          <View style={styles.tabBody}>
-            <View style={styles.taskHeaderRow}>
-              <Text style={styles.taskTitle}>Today's tasks</Text>
-              <Text style={styles.taskCount}>
-                {tasksDone} of {taskItems.length} done
+        {/* Controls: Pause, Start, Cancel */}
+        <View style={styles.buttonRow}>
+          <Pressable style={styles.secondaryBtn} onPress={handlePause}>
+            <Text style={styles.secondaryBtnText}>Pause</Text>
+          </Pressable>
+          <Pressable style={styles.primaryBtn} onPress={handleStart}>
+            <Ionicons name="play" size={16} color="#FFFFFF" />
+            <Text style={styles.primaryBtnText}>Start</Text>
+          </Pressable>
+          <Pressable style={styles.secondaryBtn} onPress={handleCancel}>
+            <Text style={styles.secondaryBtnText}>Cancel</Text>
+          </Pressable>
+        </View>
+
+        {/* Three-tab card */}
+        <View style={styles.tabCard}>
+          <View style={styles.tabRow}>
+            <Pressable
+              style={[styles.tabBtn, activeTab === 'summary' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('summary')}
+            >
+              <Ionicons
+                name="stats-chart-outline"
+                size={14}
+                color={activeTab === 'summary' ? '#2F6E60' : '#6F8A85'}
+              />
+              <Text style={[styles.tabText, activeTab === 'summary' && styles.tabTextActive]}>
+                Summary
               </Text>
-            </View>
-            <View style={styles.taskProgressTrack}>
-              <View style={[styles.taskProgressFill, { width: `${Math.round(taskProgress * 100)}%` }]} />
-            </View>
+            </Pressable>
+            <Pressable
+              style={[styles.tabBtn, activeTab === 'settings' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('settings')}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={14}
+                color={activeTab === 'settings' ? '#2F6E60' : '#6F8A85'}
+              />
+              <Text style={[styles.tabText, activeTab === 'settings' && styles.tabTextActive]}>
+                Settings
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.tabBtn, activeTab === 'tasks' && styles.tabBtnActive]}
+              onPress={() => setActiveTab('tasks')}
+            >
+              <Ionicons
+                name="checkbox-outline"
+                size={14}
+                color={activeTab === 'tasks' ? '#2F6E60' : '#6F8A85'}
+              />
+              <Text style={[styles.tabText, activeTab === 'tasks' && styles.tabTextActive]}>
+                Tasks
+              </Text>
+            </Pressable>
+          </View>
 
-            {taskItems.length === 0 ? (
-              <Text style={styles.taskEmpty}>No tasks for today yet.</Text>
-            ) : (
-              taskItems.map(task => (
-                <View key={task.id} style={styles.taskRow}>
-                  <View style={[styles.taskCircle, task.completed && styles.taskCircleDone]}>
-                    {task.completed && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
+          {/* SUMMARY */}
+          {activeTab === 'summary' ? (
+            <View style={styles.tabBody}>
+              <View style={styles.tilesRow}>
+                <View style={[styles.tile, { backgroundColor: '#F2F9F5' }]}>
+                  <View style={[styles.tileIcon, styles.tileIconGreen]}>
+                    <Ionicons name="flame-outline" size={18} color="#3E8574" />
                   </View>
-                  <Text style={[styles.taskText, task.completed && styles.taskTextDone]} numberOfLines={1}>
-                    {task.text}
-                  </Text>
+                  <View>
+                    <Text style={styles.tileNumber}>{todayFocusCount}</Text>
+                    <Text style={styles.tileLabel}>
+                      {todayFocusCount !== 1 ? 'sessions today' : 'session today'}
+                    </Text>
+                  </View>
                 </View>
-              ))
-            )}
+                <View style={[styles.tile, { backgroundColor: '#F1F7FA' }]}>
+                  <View style={[styles.tileIcon, styles.tileIconBlue]}>
+                    <Ionicons name="hourglass-outline" size={18} color="#4E7C9B" />
+                  </View>
+                  <View>
+                    <Text style={styles.tileNumber}>
+                      {`${Math.floor(todayStudyMinutes / 60)}h ${todayStudyMinutes % 60}m`}
+                    </Text>
+                    <Text style={styles.tileLabel}>focused</Text>
+                  </View>
+                </View>
+              </View>
+            </View>
+          ) : null}
 
-            <Text style={styles.taskHint}>Add or edit tasks on the Tasks screen</Text>
+          {/* SETTINGS */}
+          {activeTab === 'settings' ? (
+            <View style={styles.tabBody}>
+              <View style={styles.settingRow}>
+                <Text style={styles.settingLabel}>Focus duration</Text>
+                <View style={styles.stepper}>
+                  <Pressable onPress={decreaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                    <Ionicons name="remove" size={15} color="#4A7A6E" />
+                  </Pressable>
+                  <Text style={styles.stepValue}>{`${focusDuration} min`}</Text>
+                  <Pressable onPress={increaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                    <Ionicons name="add" size={15} color="#4A7A6E" />
+                  </Pressable>
+                </View>
+              </View>
+              <View style={styles.settingDivider} />
+              <View style={styles.settingRow}>
+                <Text style={styles.settingLabel}>Break duration</Text>
+                <View style={styles.stepper}>
+                  <Pressable onPress={decreaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                    <Ionicons name="remove" size={15} color="#4E7C9B" />
+                  </Pressable>
+                  <Text style={styles.stepValue}>{`${breakDuration} min`}</Text>
+                  <Pressable onPress={increaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                    <Ionicons name="add" size={15} color="#4E7C9B" />
+                  </Pressable>
+                </View>
+              </View>
+            </View>
+          ) : null}
+
+          {/* TASKS (read-only) */}
+          {activeTab === 'tasks' ? (
+            <View style={styles.tabBody}>
+              <View style={styles.taskHeaderRow}>
+                <Text style={styles.taskTitle}>Today&apos;s tasks</Text>
+                <Text style={styles.taskCount}>{`${tasksDone} of ${taskItems.length} done`}</Text>
+              </View>
+              <View style={styles.taskProgressTrack}>
+                <View
+                  style={[styles.taskProgressFill, { width: `${Math.round(taskProgress * 100)}%` }]}
+                />
+              </View>
+
+              {taskItems.length === 0 ? (
+                <Text style={styles.taskEmpty}>No tasks for today yet.</Text>
+              ) : (
+                taskItems.map((task) => (
+                  <View key={task.id} style={styles.taskRow}>
+                    <View style={[styles.taskCircle, task.completed && styles.taskCircleDone]}>
+                      {task.completed ? (
+                        <Ionicons name="checkmark" size={12} color="#FFFFFF" />
+                      ) : null}
+                    </View>
+                    <Text
+                      style={[styles.taskText, task.completed && styles.taskTextDone]}
+                      numberOfLines={1}
+                    >
+                      {task.text}
+                    </Text>
+                  </View>
+                ))
+              )}
+
+              <Text style={styles.taskHint}>Add or edit tasks on the Tasks screen</Text>
+            </View>
+          ) : null}
+        </View>
+
+        {/* Quote */}
+        <View style={styles.quoteCard}>
+          <Ionicons name="star" size={16} color="#E0A81E" style={styles.quoteIcon} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.quoteText}>{`"${quote.text}"`}</Text>
+            <Text style={styles.quoteAuthor}>{`— ${quote.author}`}</Text>
           </View>
-        )}
-      </View>
-
-      <View style={styles.quoteCard}>
-        <Ionicons name="star" size={16} color="#E0A81E" style={styles.quoteIcon} />
-        <View style={{ flex: 1 }}>
-          <Text style={styles.quoteText}>"{quote.text}"</Text>
-          <Text style={styles.quoteAuthor}>— {quote.author}</Text>
         </View>
-      </View>
+      </ScrollView>
 
-    {/* Modal for break/focus/recovery */}
-    <Modal visible={!!modal} transparent animationType="fade" onRequestClose={() => setModal(null)}>
-      <View style={styles.modalBackdrop}>
-        <View style={styles.modalCard}>
-
-          {modal?.type === 'toBreak' && (
-            <>
-              <View style={[styles.modalBadge, { backgroundColor: '#D9E7EF' }]}>
-                <Ionicons name="cafe-outline" size={26} color="#4E7C9B" />
-              </View>
-              <Text style={styles.modalTitle}>Nice work 🌱</Text>
-              <Text style={styles.modalFeedback}>
-                You've focused{' '}
-                <Text style={styles.modalStrong}>
-                  {Math.floor(todayStudyMinutes / 60)}h {todayStudyMinutes % 60}m
-                </Text>{' '}
-                today.
-              </Text>
-              {modal.xp > 0 && (
-                <View style={styles.xpPill}>
-                  <Text style={styles.xpPillText}>+{modal.xp} XP</Text>
+      {/* Modal for break/focus/recovery */}
+      <Modal
+        visible={!!modal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setModal(null)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalCard}>
+            {modal?.type === 'toBreak' ? (
+              <>
+                <View style={[styles.modalBadge, { backgroundColor: '#D9E7EF' }]}>
+                  <Ionicons name="cafe-outline" size={26} color="#4E7C9B" />
                 </View>
-              )}
+                <Text style={styles.modalTitle}>Nice work 🌱</Text>
+                <Text style={styles.modalFeedback}>
+                  You&apos;ve focused{' '}
+                  <Text style={styles.modalStrong}>
+                    {`${Math.floor(todayStudyMinutes / 60)}h ${todayStudyMinutes % 60}m`}
+                  </Text>
+                  {' today.'}
+                </Text>
+                {modal.xp > 0 ? (
+                  <View style={styles.xpPill}>
+                    <Text style={styles.xpPillText}>{`+${modal.xp} XP`}</Text>
+                  </View>
+                ) : null}
 
-              {/* editable break length */}
-              <Text style={styles.modalMessage}>How long a breather?</Text>
-              <View style={styles.modalStepper}>
-                <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                  <Ionicons name="remove" size={16} color="#4E7C9B" />
+                {/* editable break length */}
+                <Text style={styles.modalMessage}>How long a breather?</Text>
+                <View style={styles.modalStepper}>
+                  <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                    <Ionicons name="remove" size={16} color="#4E7C9B" />
+                  </Pressable>
+                  <Text style={styles.modalStepperValue}>{`${modalBreakMin} min`}</Text>
+                  <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                    <Ionicons name="add" size={16} color="#4E7C9B" />
+                  </Pressable>
+                </View>
+
+                <Pressable style={styles.modalPrimary} onPress={() => startBreak(modalBreakMin)}>
+                  <Text style={styles.modalPrimaryText}>{`Start ${modalBreakMin}-min break`}</Text>
                 </Pressable>
-                <Text style={styles.modalStepperValue}>{modalBreakMin} min</Text>
-                <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                  <Ionicons name="add" size={16} color="#4E7C9B" />
+                <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
+                  <Text style={styles.modalSecondaryText}>Skip break</Text>
                 </Pressable>
-              </View>
-              
-              <Pressable style={styles.modalPrimary} onPress={() => startBreak(modalBreakMin)}>
-                <Text style={styles.modalPrimaryText}>Start {modalBreakMin}-min break</Text> 
-              </Pressable>
-              <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
-                <Text style={styles.modalSecondaryText}>Skip break</Text>
-              </Pressable>
-            </>
-          )}
+              </>
+            ) : null}
 
-          {modal?.type === 'toFocus' && (
-            <>
-              <View style={[styles.modalBadge, { backgroundColor: '#D8ECE4' }]}>
-                <Ionicons name="play" size={24} color="#3E8574" />
-              </View>
-              <Text style={styles.modalTitle}>Feeling refreshed?</Text>
-              {modal.xp > 0 && (
-                <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
-              )}
+            {modal?.type === 'toFocus' ? (
+              <>
+                <View style={[styles.modalBadge, { backgroundColor: '#D8ECE4' }]}>
+                  <Ionicons name="play" size={24} color="#3E8574" />
+                </View>
+                <Text style={styles.modalTitle}>Feeling refreshed?</Text>
+                {modal.xp > 0 ? (
+                  <View style={styles.xpPill}>
+                    <Text style={styles.xpPillText}>{`+${modal.xp} XP`}</Text>
+                  </View>
+                ) : null}
 
-              <Text style={styles.modalMessage}>How long to focus?</Text>                <View style={styles.modalStepper}>
-                <Pressable onPress={decreaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
-                  <Ionicons name="remove" size={16} color="#4A7A6E" />
+                <Text style={styles.modalMessage}>How long to focus?</Text>
+                <View style={styles.modalStepper}>
+                  <Pressable onPress={decreaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                    <Ionicons name="remove" size={16} color="#4A7A6E" />
+                  </Pressable>
+                  <Text style={styles.modalStepperValue}>{`${modalFocusMin} min`}</Text>
+                  <Pressable onPress={increaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                    <Ionicons name="add" size={16} color="#4A7A6E" />
+                  </Pressable>
+                </View>
+
+                <Pressable style={styles.modalPrimary} onPress={() => startFocus(modalFocusMin)}>
+                  <Text style={styles.modalPrimaryText}>{`Start ${modalFocusMin}-min focus`}</Text>
                 </Pressable>
-                <Text style={styles.modalStepperValue}>{modalFocusMin} min</Text>
-                <Pressable onPress={increaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
-                  <Ionicons name="add" size={16} color="#4A7A6E" />
+                <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
+                  <Text style={styles.modalSecondaryText}>I&apos;m done for now</Text>
                 </Pressable>
-              </View>
+              </>
+            ) : null}
 
-              <Pressable style={styles.modalPrimary} onPress={() => startFocus(modal.focusMin)}>
-                <Text style={styles.modalPrimaryText}>Start focus</Text>
-              </Pressable>
-              <Pressable style={styles.modalSecondary} onPress={resetToIdleFocus}>
-                <Text style={styles.modalSecondaryText}>I'm done for now</Text>
-              </Pressable>
-            </>
-          )}
+            {modal?.type === 'recovery' ? (
+              <>
+                <View style={[styles.modalBadge, { backgroundColor: '#F6E7E2' }]}>
+                  <Ionicons name="sparkles-outline" size={24} color="#C7695A" />
+                </View>
+                <Text style={styles.modalTitle}>4 sessions done 🎉</Text>
+                {modal.xp > 0 ? (
+                  <View style={styles.xpPill}>
+                    <Text style={styles.xpPillText}>{`+${modal.xp} XP`}</Text>
+                  </View>
+                ) : null}
+                <Text style={styles.modalMessage}>
+                  {'You\'ve earned some real recovery.\nTake a moment for yourself.'}
+                </Text>
 
-          {modal?.type === 'recovery' && (
-            <>
-              <View style={[styles.modalBadge, { backgroundColor: '#F6E7E2' }]}>
-                <Ionicons name="sparkles-outline" size={24} color="#C7695A" />
-              </View>
-              <Text style={styles.modalTitle}>4 sessions done 🎉</Text>
-              {modal.xp > 0 && (
-                <View style={styles.xpPill}><Text style={styles.xpPillText}>+{modal.xp} XP</Text></View>
-              )}
-              <Text style={styles.modalMessage}>
-                You've earned some real recovery.{'\n'}Take a moment for yourself.
-              </Text>
+                {/* editable rest length */}
+                <View style={styles.modalStepper}>
+                  <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                    <Ionicons name="remove" size={16} color="#4E7C9B" />
+                  </Pressable>
+                  <Text style={styles.modalStepperValue}>{`${modalBreakMin} min`}</Text>
+                  <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                    <Ionicons name="add" size={16} color="#4E7C9B" />
+                  </Pressable>
+                </View>
 
-              {/* editable rest length */}
-              <View style={styles.modalStepper}>
-                <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                  <Ionicons name="remove" size={16} color="#4E7C9B" />
+                <Pressable style={styles.modalPrimary} onPress={goToRecovery}>
+                  <Text style={styles.modalPrimaryText}>Take me to recovery →</Text>
                 </Pressable>
-                <Text style={styles.modalStepperValue}>{modalBreakMin} min</Text>
-                <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
-                  <Ionicons name="add" size={16} color="#4E7C9B" />
+                <Pressable style={styles.modalSecondary} onPress={() => startBreak(modalBreakMin)}>
+                  <Text style={styles.modalSecondaryText}>{`Rest here (${modalBreakMin} min)`}</Text>
                 </Pressable>
-              </View>
-
-              <Pressable style={styles.modalPrimary} onPress={goToRecovery}>
-                <Text style={styles.modalPrimaryText}>Take me to recovery →</Text>
-              </Pressable>
-              <Pressable style={styles.modalSecondary} onPress={() => startBreak(modalBreakMin)}>
-                <Text style={styles.modalSecondaryText}>Rest here ({modalBreakMin} min)</Text>
-              </Pressable>
-            </>
-          )}
+              </>
+            ) : null}
+          </View>
         </View>
-       </View>
-    </Modal>
-    </ScrollView>
-  </View>
+      </Modal>
+    </View>
   );
 }
-
