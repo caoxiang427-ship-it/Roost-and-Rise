@@ -1,189 +1,413 @@
 /*
  * Integration tests for calculateBurnoutScore.
- * This helper function composes four other helpers
- * Those modules are mocked with factory mocks rather than Supabase. 
- * Supabase itself is mocked only for the internal chronic-load query
+ * The two data modules are mocked, so Supabase never loads
 */
 
-jest.mock('../src/lib/supabase');
+import { calculateBurnoutScore } from '../src/lib/burnout';
+import {
+  getMoodsByDay,
+  getSelfCareCountsByDay,
+  getTodaySelfCareCounts,
+  getTodaysMoods,
+} from '../src/lib/self-care';
+import { getRecentDailyTotals, getTodaySessionStats } from '../src/lib/sessions';
 
 jest.mock('../src/lib/sessions', () => ({
-  getTodayStudyMinutes: jest.fn(),
-  getTodaysBreakCount: jest.fn(),
+  getTodaySessionStats: jest.fn(),
+  getRecentDailyTotals: jest.fn(),
 }));
 
 jest.mock('../src/lib/self-care', () => ({
   getTodaySelfCareCounts: jest.fn(),
-  getTodaysMood: jest.fn(),
+  getSelfCareCountsByDay: jest.fn(),
+  getTodaysMoods: jest.fn(),
+  getMoodsByDay: jest.fn(),
 }));
 
-import { supabase } from '../src/lib/supabase';
-import { calculateBurnoutScore } from '../src/lib/burnout';
-import { getTodaySelfCareCounts, getTodaysMood } from '../src/lib/self-care';
-import { getTodayStudyMinutes, getTodaysBreakCount } from '../src/lib/sessions';
-
-const mockedSupabase = supabase as any;
-const mockTodaysMood = getTodaysMood as jest.Mock;
-const mockBreakCount = getTodaysBreakCount as jest.Mock;
-const mockStudyMinutes = getTodayStudyMinutes as jest.Mock;
+const mockStats = getTodaySessionStats as jest.Mock;
+const mockDailyTotals = getRecentDailyTotals as jest.Mock;
 const mockSelfCareCounts = getTodaySelfCareCounts as jest.Mock;
+const mockSelfCareByDay = getSelfCareCountsByDay as jest.Mock;
+const mockMoodsToday = getTodaysMoods as jest.Mock;
+const mockMoodsByDay = getMoodsByDay as jest.Mock;
 
-function mockChronicQuery(rows: any[]) {
-  const chain: any = {
-    select: jest.fn(() => chain),
-    eq: jest.fn(() => chain),
-    gte: jest.fn(() => Promise.resolve({ data: rows, error: null })),
-  };
-  return chain;
-}
-
-// Build a heavy-study day (> 360 min threshold) 
-function heavyDay(daysAgo: number) {
+function dayKey(daysAgo: number): string {
   const d = new Date();
   d.setDate(d.getDate() - daysAgo);
-  return { duration_in_min: 400, stopped_at: d.toISOString() };
+  return d.toDateString();
+}
+
+function stats(over: Partial<{
+  studyMinutes: number; breakMinutes: number;
+  focusStarted: number; focusCompleted: number;
+}> = {}) {
+  return {
+    studyMinutes: 0, breakMinutes: 0, focusStarted: 0, focusCompleted: 0, ...over,
+  };
+}
+
+// Builds a history where each of the given days had that many study minutes. 
+function history(minutesByDaysAgo: Record<number, number>) {
+  const out: Record<string, { studyMinutes: number; breakMinutes: number }> = {};
+  for (const [daysAgo, mins] of Object.entries(minutesByDaysAgo)) {
+    out[dayKey(Number(daysAgo))] = { studyMinutes: mins, breakMinutes: 0 };
+  }
+  return out;
 }
 
 beforeEach(() => {
   jest.clearAllMocks();
 
-  mockStudyMinutes.mockResolvedValue(0);
-  mockBreakCount.mockResolvedValue(0);
+  mockStats.mockResolvedValue(stats());
+  mockDailyTotals.mockResolvedValue({});
   mockSelfCareCounts.mockResolvedValue({});
-  mockTodaysMood.mockResolvedValue(null);
-
-  mockedSupabase.auth = {
-    getUser: jest.fn(async () => ({ data: { user: { id: 'test-user' } } })),
-  };
-  mockedSupabase.from = jest.fn(() => mockChronicQuery([]));
+  mockSelfCareByDay.mockResolvedValue({});
+  mockMoodsToday.mockResolvedValue([]);
+  mockMoodsByDay.mockResolvedValue({});
 });
 
 describe('calculateBurnoutScore — baseline', () => {
-  test('returns the baseline score of 80 with no activity', async () => {
+  test('returns the baseline score of 65 with no data', async () => {
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(80);
+    expect(result.score).toBe(65);
+    expect(result.status).toBe('balanced');
+  });
+
+  test('no data produces no factors', async () => {
+    const result = await calculateBurnoutScore();
+    expect(result.factors).toEqual([]);
+  });
+});
+
+describe('calculateBurnoutScore — study load', () => {
+  test('4 hours of study is inside the free zone and costs nothing', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 240 }));
+    const result = await calculateBurnoutScore();
+    expect(result.score).toBe(65);
+  });
+
+  test('6 hours of study drops the score to Balanced', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 360 }));
+    const result = await calculateBurnoutScore();
+    expect(result.score).toBe(51); // 65 - 14
+    expect(result.status).toBe('balanced');
+  });
+
+  test('8 hours of study drops the score to Overextended', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 480 }));
+    const result = await calculateBurnoutScore();
+    expect(result.score).toBe(37); // 65 - 28
+    expect(result.status).toBe('overextended');
+  });
+
+  test('the exhaustion penalty stops increasing past 11 hours', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 720 }));
+    const result = await calculateBurnoutScore();
+    expect(result.breakdown.exhaustion).toBe(40);
+    expect(result.score).toBe(25); // 65 - 40
+  });
+
+  test('there is no jump around the 4-hour mark', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 239 }));
+    const below = (await calculateBurnoutScore()).breakdown.exhaustion;
+
+    mockStats.mockResolvedValue(stats({ studyMinutes: 241 }));
+    const above = (await calculateBurnoutScore()).breakdown.exhaustion;
+
+    expect(Math.abs(above - below)).toBeLessThan(0.5);
+  });
+});
+
+describe('calculateBurnoutScore — recovery offsets load', () => {
+  test('8 hours with no recovery is Overextended', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 480 }));
+    const result = await calculateBurnoutScore();
+    expect(result.score).toBe(37);
+    expect(result.status).toBe('overextended');
+  });
+
+  test('the same 8 hours with full recovery is Balanced', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 480, breakMinutes: 60 }));
+    mockSelfCareCounts.mockResolvedValue({ sleep: 2, move: 2 });
+    const result = await calculateBurnoutScore();
+
+    expect(result.breakdown.effectiveLoad).toBe(6);  
+    expect(result.score).toBe(61);                  
+    expect(result.status).toBe('balanced');
+  });
+
+  test('a pure rest day without any studying is Engaged', async () => {
+    mockStats.mockResolvedValue(stats({ breakMinutes: 0 }));
+    mockSelfCareCounts.mockResolvedValue({ sleep: 2, unwind: 2 });
+    mockMoodsToday.mockResolvedValue(['good']);
+    const result = await calculateBurnoutScore();
+
+    expect(result.score).toBe(77); // 65 + 6 + 6
     expect(result.status).toBe('engaged');
-    expect(result.factors).toEqual([]);
   });
 });
 
-describe('calculateBurnoutScore — study penalties', () => {
-  test('no penalty at exactly the overwork threshold (360 min)', async () => {
-    mockStudyMinutes.mockResolvedValue(360);
+describe('calculateBurnoutScore — mood', () => {
+  test('an exhausted check-in lowers the score by 16', async () => {
+    mockMoodsToday.mockResolvedValue(['exhausted']);
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(80);
+    expect(result.score).toBe(49);
   });
 
-  test('applies the long-study penalty just above the threshold (361 min)', async () => {
-    mockStudyMinutes.mockResolvedValue(361);
+  test('a great check-in raises the score by 12', async () => {
+    mockMoodsToday.mockResolvedValue(['great']);
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(65); // 80-15
-    expect(result.factors).toContain('Long study day');
+    expect(result.score).toBe(77);
+    expect(result.status).toBe('engaged');
   });
 
-  test('still only the long-study penalty at exactly 480 min', async () => {
-    mockStudyMinutes.mockResolvedValue(480);
+  test('a bad check-in and a good one on the same day cancel out (baseline)', async () => {
+    mockMoodsToday.mockResolvedValue(['exhausted', 'great']);
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(65); 
-    expect(result.factors).toContain('Long study day');
+    expect(result.score).toBe(65);
   });
 
-  test('applies the severe penalty just above 480 min (481 min)', async () => {
-    mockStudyMinutes.mockResolvedValue(481);
+  test('when today has no check-ins, yesterday’s mood counts at half weight', async () => {
+    mockMoodsByDay.mockResolvedValue({ [dayKey(1)]: ['great'] });
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(50); // 80-30
-    expect(result.factors).toContain('Heavy study load (8+ hrs)');
-  });
-});
-
-describe('calculateBurnoutScore — self-care and break bonuses', () => {
-  test('no bonus with only 2 self-care logs', async () => {
-    mockSelfCareCounts.mockResolvedValue({ sleep: 1, exercise: 1 });
-    const result = await calculateBurnoutScore();
-    expect(result.score).toBe(80);
+    expect(result.score).toBe(71); // 65 + (0.5 * 2 * 6)
   });
 
-  test('awards the self-care bonus at exactly 3 logs', async () => {
-    mockSelfCareCounts.mockResolvedValue({ sleep: 2, exercise: 1 });
+  test('today’s mood outweighs the previous days', async () => {
+    mockMoodsToday.mockResolvedValue(['great']);
+    mockMoodsByDay.mockResolvedValue({ [dayKey(1)]: ['exhausted'] });
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(90); // 80+10
-    expect(result.factors).toContain('Great self-care 🌿');
+    expect(result.score).toBe(70); // 65 + 4.8
   });
 
-  test('awards the break bonus when at least one break is taken', async () => {
-    mockBreakCount.mockResolvedValue(1);
+  test('prevent today’s mood from being counted twice', async () => {
+    mockMoodsToday.mockResolvedValue(['good']);
+    mockMoodsByDay.mockResolvedValue({ [dayKey(0)]: ['exhausted'] });
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(90); // 80+10
-    expect(result.factors).toContain('Taking breaks');
-  });
-});
-
-describe('calculateBurnoutScore — mood logs', () => {
-  test('a great mood raises the score', async () => {
-    mockTodaysMood.mockResolvedValue('great');
-    const result = await calculateBurnoutScore();
-    expect(result.score).toBe(95); // 80+15
-    expect(result.factors).toContain('Feeling great');
-  });
-
-  test('an exhausted mood lowers the score', async () => {
-    mockTodaysMood.mockResolvedValue('exhausted');
-    const result = await calculateBurnoutScore();
-    expect(result.score).toBe(60); // 80-20
-    expect(result.factors).toContain('Feeling exhausted');
-  });
-
-  test('a neutral mood does not change the score or add a factor', async () => {
-    mockTodaysMood.mockResolvedValue('okay');
-    const result = await calculateBurnoutScore();
-    expect(result.score).toBe(80);
-    expect(result.factors).toEqual([]);
+    expect(result.score).toBe(71); // 65 + 6, exhausted ignored
   });
 });
 
 describe('calculateBurnoutScore — chronic load', () => {
-  test('applies the chronic penalty when two or more heavy days occurred', async () => {
-    mockedSupabase.from = jest.fn(() => mockChronicQuery([heavyDay(1), heavyDay(2)]));
+  test('one heavy day on its own carries no chronic penalty', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 360 }));
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(65); // 80-15
-    expect(result.factors).toContain('Heavy days in a row');
+    expect(result.breakdown.chronic).toBe(0);
   });
 
-  test('no chronic penalty for a single heavy day', async () => {
-    mockedSupabase.from = jest.fn(() => mockChronicQuery([heavyDay(1)]));
+  test('a whole week at 6h/day adds a chronic penalty on top of today’s', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 360 }));
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 360, 2: 360, 3: 360, 4: 360, 5: 360, 6: 360 })
+    );
     const result = await calculateBurnoutScore();
-    expect(result.score).toBe(80);
+
+    expect(result.breakdown.chronic).toBeCloseTo(13, 5);
+    expect(result.score).toBe(38); // 65 - 14 - 13
+    expect(result.status).toBe('overextended');
+  });
+
+  test('taking today off after a heavy week breaks the streak', async () => {
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 360, 2: 360, 3: 360, 4: 360, 5: 360, 6: 360 })
+    );
+    const result = await calculateBurnoutScore();
+    expect(result.score).toBe(62); // streak resets, only the average remains
+    expect(result.status).toBe('balanced');
+  });
+
+  test('self-care reduces the effective load of past days', async () => {
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 360, 2: 360, 3: 360, 4: 360, 5: 360, 6: 360 })
+    );
+    mockSelfCareByDay.mockResolvedValue({
+      [dayKey(1)]: 4, [dayKey(2)]: 4, [dayKey(3)]: 4,
+      [dayKey(4)]: 4, [dayKey(5)]: 4, [dayKey(6)]: 4,
+    });
+
+    const withCare = await calculateBurnoutScore();
+
+    mockSelfCareByDay.mockResolvedValue({});
+
+    const withoutCare = await calculateBurnoutScore();
+
+    expect(withCare.breakdown.chronic).toBeLessThan(withoutCare.breakdown.chronic);
+  });
+
+  test('the chronic penalty caps at 20', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 720 }));
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 720, 2: 720, 3: 720, 4: 720, 5: 720, 6: 720 })
+    );
+    const result = await calculateBurnoutScore();
+    expect(result.breakdown.chronic).toBe(20);
   });
 });
 
-describe('calculateBurnoutScore — score clamping and tiers', () => {
-  test('caps the score at 100 when all bonuses apply', async () => {
-    mockSelfCareCounts.mockResolvedValue({ sleep: 3 }); // +10
-    mockBreakCount.mockResolvedValue(2); // +10
-    mockTodaysMood.mockResolvedValue('great'); // +15
+describe('calculateBurnoutScore — efficacy and the gate', () => {
+  test('finishing every session on a light day earns the full bonus', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 120, focusStarted: 4, focusCompleted: 4 })
+    );
+    const result = await calculateBurnoutScore();
 
-    const result = await calculateBurnoutScore(); // 80 + 35 = 115
-    expect(result.score).toBe(100);
+    expect(result.breakdown.efficacy).toBeCloseTo(12, 5);
+    expect(result.score).toBe(77);
     expect(result.status).toBe('engaged');
   });
 
-  test('a heavily penalised day falls into the burnout tier', async () => {
-    mockStudyMinutes.mockResolvedValue(500); // -30
-    mockTodaysMood.mockResolvedValue('exhausted'); // -20
-    mockedSupabase.from = jest.fn(() => mockChronicQuery([heavyDay(1), heavyDay(2)])); // -15
+  test('abandoning half the sessions halves the bonus', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 120, focusStarted: 4, focusCompleted: 2 })
+    );
+    const result = await calculateBurnoutScore();
+    expect(result.breakdown.efficacy).toBeCloseTo(6, 5);
+  });
 
-    const result = await calculateBurnoutScore(); // 80 - 65 = 15
-    expect(result.score).toBe(15);
+  test('one session alone is not enough data to earn the bonus', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 60, focusStarted: 1, focusCompleted: 1 })
+    );
+    const result = await calculateBurnoutScore();
+
+    expect(result.breakdown.efficacy).toBe(0);
+    expect(result.score).toBe(65);
+  });
+
+  test('being productive does not offset an exhausting day - Overextended', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 510, focusStarted: 8, focusCompleted: 8 })
+    );
+    const result = await calculateBurnoutScore();
+
+    expect(result.breakdown.exhaustion).toBe(30);
+    expect(result.breakdown.efficacy).toBeCloseTo(3, 5); 
+    expect(result.score).toBe(38);
+    expect(result.status).toBe('overextended');
+  });
+});
+
+describe('calculateBurnoutScore — the scenario from README', () => {
+  test('8.5 hours with no breaks and no self-care scores 31 (Overextended)', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 510, focusStarted: 9, focusCompleted: 9 })
+    );
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 510, 2: 510, 3: 510, 4: 240, 5: 240, 6: 0 })
+    );
+
+    const result = await calculateBurnoutScore();
+
+    expect(result.breakdown.effectiveLoad).toBe(8.5);
+    expect(result.breakdown.exhaustion).toBe(30);
+    expect(result.breakdown.chronic).toBeCloseTo(7, 5);
+    expect(result.breakdown.efficacy).toBeCloseTo(3, 5);
+    expect(result.score).toBe(31);
+    expect(result.status).toBe('overextended');
+  });
+});
+
+describe('calculateBurnoutScore — range', () => {
+  test('the best possible day reaches 99, no need to clamp', async () => {
+    mockStats.mockResolvedValue(
+      stats({ breakMinutes: 60, focusStarted: 4, focusCompleted: 4 })
+    );
+    mockSelfCareCounts.mockResolvedValue({ sleep: 2, move: 2 });
+    mockMoodsToday.mockResolvedValue(['great']);
+
+    const result = await calculateBurnoutScore();
+    expect(result.score).toBe(99);
+    expect(result.status).toBe('engaged');
+  });
+
+  test('the worst possible day (-11) clamps to 0 and lands in Burnout', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 720, focusStarted: 5, focusCompleted: 0 })
+    );
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 720, 2: 720, 3: 720, 4: 720, 5: 720, 6: 720 })
+    );
+    mockMoodsToday.mockResolvedValue(['exhausted']);
+
+    const result = await calculateBurnoutScore();
+    expect(result.score).toBe(0);                   
     expect(result.status).toBe('burnout');
   });
 
-  test('never returns a score below 0 or above 100', async () => {
-    mockSelfCareCounts.mockResolvedValue({ sleep: 5 });
-    mockBreakCount.mockResolvedValue(3);
-    mockTodaysMood.mockResolvedValue('great');
+  test('the score is always a whole number between 0 and 100', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 9999, breakMinutes: 9999, focusStarted: 50, focusCompleted: 50 })
+    );
+    mockSelfCareCounts.mockResolvedValue({ sleep: 99 });
+    mockMoodsToday.mockResolvedValue(['great']);
 
     const result = await calculateBurnoutScore();
+    expect(Number.isInteger(result.score)).toBe(true);
     expect(result.score).toBeGreaterThanOrEqual(0);
     expect(result.score).toBeLessThanOrEqual(100);
+  });
+});
+
+describe('calculateBurnoutScore — factors', () => {
+  test('picks the biggest reasons, in order of size', async () => {
+    mockStats.mockResolvedValue(
+      stats({ studyMinutes: 510, focusStarted: 9, focusCompleted: 9 })
+    );
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 510, 2: 510, 3: 510, 4: 240, 5: 240, 6: 0 })
+    );
+
+    const result = await calculateBurnoutScore();
+    expect(result.factors).toEqual([
+      'Very heavy study load today',
+      'Barely any breaks today',
+      'Load creeping up this week',
+    ]);
+  });
+
+  test('never returns more than 3 factors', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 510 }));
+    mockDailyTotals.mockResolvedValue(
+      history({ 1: 360, 2: 360, 3: 360, 4: 360, 5: 360, 6: 360 })
+    );
+    mockMoodsToday.mockResolvedValue(['exhausted']);
+
+    const result = await calculateBurnoutScore();
+    expect(result.factors).toHaveLength(3);
+  });
+
+  test('a moderate day reads as a long study day, not a very heavy one', async () => {
+    mockStats.mockResolvedValue(stats({ studyMinutes: 360 }));
+    const result = await calculateBurnoutScore();
+    expect(result.factors).toContain('Long study day');
+    expect(result.factors).not.toContain('Very heavy study load today');
+  });
+
+  test('good behaviour shows up as positive factors', async () => {
+    mockStats.mockResolvedValue(stats({ breakMinutes: 45 }));
+    mockSelfCareCounts.mockResolvedValue({ sleep: 3 });
+    mockMoodsToday.mockResolvedValue(['great']);
+
+    const result = await calculateBurnoutScore();
+    expect(result.factors).toContain('Great self-care 🌿');
+    expect(result.factors).toContain('Feeling good lately');
+  });
+});
+
+describe('calculateBurnoutScore — data fetching', () => {
+  test('fetches every source exactly once', async () => {
+    await calculateBurnoutScore();
+    expect(mockStats).toHaveBeenCalledTimes(1);
+    expect(mockDailyTotals).toHaveBeenCalledTimes(1);
+    expect(mockSelfCareCounts).toHaveBeenCalledTimes(1);
+    expect(mockSelfCareByDay).toHaveBeenCalledTimes(1);
+    expect(mockMoodsToday).toHaveBeenCalledTimes(1);
+    expect(mockMoodsByDay).toHaveBeenCalledTimes(1);
+  });
+
+  test('asks for a 7-day window of history', async () => {
+    await calculateBurnoutScore();
+    expect(mockDailyTotals).toHaveBeenCalledWith(7);
+    expect(mockSelfCareByDay).toHaveBeenCalledWith(7);
   });
 });

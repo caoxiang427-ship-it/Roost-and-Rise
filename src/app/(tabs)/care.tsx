@@ -3,33 +3,32 @@
  * Log self-care activities & daily mood.
 */
 
-import { useState, useCallback } from 'react';
-import { View, Text, TextInput, Pressable, ScrollView, Alert, ImageBackground, Modal, } from 'react-native';
+import BurnoutIndicator from '@/components/BurnoutIndicator';
+import ShowReward from '@/components/ShowReward';
+import WellnessNotice from '@/components/WellnessNotice';
+import WellnessToast from '@/components/WellnessToast';
+import { BurnoutResult, calculateBurnoutScore } from '@/lib/burnout';
 import {
-  logSelfCare,
-  getTodaySelfCareCounts,
-  logMood,
-  hasLoggedMoodToday,
-  getUserCategories,
-  SelfCareCategory,
-  getTodaysMood,
   getTodayLogEntries,
+  getTodaySelfCareCounts,
+  getTodaysMood,
+  getUserCategories,
+  hasLoggedMoodToday,
+  logMood,
+  logSelfCare,
+  SelfCareCategory,
   SelfCareLogEntry,
 } from '@/lib/self-care';
-import BurnoutIndicator from '@/components/BurnoutIndicator';
-import { Link, useFocusEffect } from 'expo-router';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { shouldShowWellnessNotice } from '@/lib/wellnessNotice';
 import { useProfileStore } from '@/store/useProfileStore';
-import ShowReward from '@/components/ShowReward';
 import { styles } from '@/styles/care_styles';
 import { Ionicons } from '@expo/vector-icons';
-import WellnessNotice from '@/components/WellnessNotice';
-import { calculateBurnoutScore, BurnoutResult } from '@/lib/burnout';
-import WellnessToast from '@/components/WellnessToast';
-import { BURNOUT_CONFIG } from '@/lib/burnout_constants';
-import { shouldShowWellnessNotice } from '@/lib/wellnessNotice';
-import * as ImagePicker from 'expo-image-picker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as ImagePicker from 'expo-image-picker';
+import { Link, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { Alert, ImageBackground, Modal, Pressable, ScrollView, Text, TextInput, View, } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const HEADER_IMG = require('@/assets/images/care/header.jpg');
 
@@ -55,7 +54,6 @@ export const CATEGORY_CATALOG = [
   { key: 'journal',   label: 'Journal',   icon: 'book-outline',           isDefault: false },
   { key: 'breathe',   label: 'Breathe',   icon: 'pulse-outline',          isDefault: false },
 ];
-
 const CHIP_COLORS = [
   { card: '#EBF1E4', chip: '#D6E3C8', fg: '#4F6B3C' },
   { card: '#E3EDDA', chip: '#CCDDBC', fg: '#4F6B3C' },
@@ -97,7 +95,7 @@ export default function SelfCareScreen() {
       loadCategories();
       loadLogs();
       loadCurrentMood();
-      loadBurnout();
+      refreshBurnout();
       AsyncStorage.getItem('careHeaderUri').then(setHeaderUri); 
     }, [])
   );
@@ -119,27 +117,20 @@ export default function SelfCareScreen() {
 
   async function handleSelfCareLog(categoryId: string) {
     const result = await logSelfCare(categoryId, activityInput || null);
-    
+
     if (result.error) {
       Alert.alert('Error:', 'Could not log. Please try again.');
       return;
     }
 
     setActivityInput('');
-    
     setActivityCateg(null);
-    
-    loadLogs();
+    await loadLogs();
 
-    // for each log XP is awarded
     await addWellbeingXp(LOG_RECOVERY_XP, LOG_RECOVERY_COIN_BONUS);
-    triggerReward(LOG_RECOVERY_XP, LOG_RECOVERY_COIN_BONUS)
+    triggerReward(LOG_RECOVERY_XP, LOG_RECOVERY_COIN_BONUS);
 
-    // for wellness gain
-    const totalToday = Object.values(selfCareCounts).reduce((s, n) => s + n, 0) + 1;
-    if (totalToday === BURNOUT_CONFIG.GOOD_SELFCARE_COUNT) {
-      triggerWellnessToast(BURNOUT_CONFIG.SELFCARE_BONUS, 'Great self-care today');
-    }
+    await refreshBurnout('Recovery logged');
   }
 
   async function loadLogs() {
@@ -159,31 +150,23 @@ export default function SelfCareScreen() {
   }
 
   async function handleMoodLog(moodId: string) {
-    // check if it's the first time user logs mood today
     const isFirstToday = !isMoodLogged;
 
     const result = await logMood(moodId);
-    
     if (result.error) {
       Alert.alert('Error:', 'Could not log mood.');
       return;
     }
     setCurrentMood(moodId);
 
+    setIsMoodLogged(true);
+
     if (isFirstToday) {
       await addWellbeingXp(LOG_MOOD_XP, LOG_MOOD_COIN_BONUS);
-      triggerReward(LOG_MOOD_XP, LOG_MOOD_COIN_BONUS)
+      triggerReward(LOG_MOOD_XP, LOG_MOOD_COIN_BONUS);
     }
 
-    const moodAdj = BURNOUT_CONFIG.MOOD_SCORES[moodId as keyof typeof BURNOUT_CONFIG.MOOD_SCORES] || 0;
-    if (moodAdj > 0) {
-      triggerWellnessToast(
-        moodAdj,
-        moodId === 'great' ? 'Feeling great today' : 'Feeling good today'
-      );
-    }
-
-    await loadBurnout(); 
+    await refreshBurnout('Mood check-in');
   }
 
   async function loadCurrentMood() {
@@ -191,12 +174,17 @@ export default function SelfCareScreen() {
     setCurrentMood(mood);
   }
 
-  async function loadBurnout() {
+  async function refreshBurnout(reason?: string) {
+    const before = burnout?.score ?? null;
+
     const result = await calculateBurnoutScore();
     setBurnout(result);
-  
-    const show = await shouldShowWellnessNotice(result.status);
-    setShowNotice(show);
+    setShowNotice(await shouldShowWellnessNotice(result.status));
+
+    if (reason && before !== null && result.score > before) {
+      triggerWellnessToast(result.score - before, reason);
+    }
+    return result;
   }
 
   const todayLabel = new Date().toLocaleDateString('en-GB', {
