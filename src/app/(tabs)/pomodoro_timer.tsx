@@ -37,7 +37,8 @@ const QUOTES = [
 export default function TimerScreen() {
   const [focusDuration, setFocusDuration] = useState(25);
   const [breakDuration, setBreakDuration] = useState(5);
-  const [currentBreakMinutes, setCurrentBreakMinutes] = useState(breakDuration);
+  const [currentFocusMinutes, setCurrentFocusMinutes] = useState(25);
+  const [currentBreakMinutes, setCurrentBreakMinutes] = useState(5);
   const [remainingSeconds, setRemainingSeconds] = useState(focusDuration * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [mode, setMode] = useState<'focus' | 'break'>('focus');
@@ -103,31 +104,31 @@ export default function TimerScreen() {
 
     async function handleZero() {
       if (mode === 'focus') {
-        await sessionRecorder(focusDuration, 'focus');
+        await sessionRecorder(currentFocusMinutes, 'focus');
         await loadSummary();
 
         const newCount = todayFocusCount + 1;
-        const awardedXp = await addFocusXp(focusDuration, 'focus', newCount);
+        const awardedXp = await addFocusXp(currentFocusMinutes, 'focus', newCount);
 
         setIsRunning(false);
         if (newCount % SESSIONS_BEFORE_LONG_BREAK === 0) {
-          setModalBreakMin(LONG_BREAK_MINUTES); // seed 15 for long break
+          setModalBreakMin(LONG_BREAK_MINUTES);
           setModal({ type: 'recovery', breakMin: LONG_BREAK_MINUTES, xp: awardedXp });
         } else {
-          const suggested = getSuggestedBreak(focusDuration);
+          const suggested = getSuggestedBreak(currentFocusMinutes);
           setCurrentBreakMinutes(suggested);
           setModalBreakMin(suggested);
           setModal({ type: 'toBreak', breakMin: suggested, xp: awardedXp });
         }
       } else {
-        await sessionRecorder(breakDuration, 'break');
+        await sessionRecorder(currentBreakMinutes, 'break');
         await loadSummary();
         const awardedXp = await addFocusXp(currentBreakMinutes, 'break');
-        
+
         setIsRunning(false);
 
         setModalFocusMin(focusDuration);
-        setModal({ type: 'toFocus', focusMin: focusDuration, xp: awardedXp });
+
         setModal({ type: 'toFocus', focusMin: focusDuration, xp: awardedXp });
       }
     }
@@ -188,7 +189,7 @@ export default function TimerScreen() {
   function getSessionSubtitle() {
     const cyclePosition = getCyclePosition(todayFocusCount);
     const isNextLongBreak = isLongBreakNext(todayFocusCount);
-    const breakMins = isNextLongBreak ? LONG_BREAK_MINUTES : breakDuration;
+    const breakMins = isNextLongBreak ? LONG_BREAK_MINUTES : getSuggestedBreak(currentFocusMinutes);
     return `Session ${cyclePosition} of 4 · then a ${breakMins}-min break`;
   }
 
@@ -227,25 +228,21 @@ export default function TimerScreen() {
   async function handleCancel() {
     if (!sessionStarted) return;
 
-    const totalSeconds = (mode === 'focus' ? focusDuration : breakDuration) * 60;
+    const totalSeconds = (mode === 'focus' ? currentFocusMinutes : currentBreakMinutes) * 60;
     const elapsedSec = totalSeconds - remainingSeconds;
     const elapsedMin = Math.round(elapsedSec / 60);
 
-    // time elapsed below 1 min is not meaningful to save
     if (elapsedMin >= 1) {
       await sessionRecorder(elapsedMin, mode, true);
       const awardedXp = await addFocusXp(elapsedMin, mode);
       await loadSummary();
-
       triggerReward(awardedXp);
     }
 
     setIsRunning(false);
-
     setSessionStarted(false);
-
     setMode('focus');
-
+    setCurrentFocusMinutes(focusDuration);   
     setRemainingSeconds(focusDuration * 60);
   }
 
@@ -276,6 +273,7 @@ export default function TimerScreen() {
 
   function startFocus(min: number) {
     setMode('focus');
+    setCurrentFocusMinutes(min);   
     setRemainingSeconds(min * 60);
     setSessionStarted(true);
     setIsRunning(true);
@@ -285,6 +283,7 @@ export default function TimerScreen() {
   // Skip break
   function resetToIdleFocus() {
     setMode('focus');
+    setCurrentFocusMinutes(focusDuration);   
     setRemainingSeconds(focusDuration * 60);
     setSessionStarted(false);
     setIsRunning(false);
@@ -300,9 +299,11 @@ export default function TimerScreen() {
     if (isRunning) return;
 
     const newDuration = Math.min(focusDuration + 5, 60);
+
     setFocusDuration(newDuration);
 
     if (mode === 'focus') {
+      setCurrentFocusMinutes(newDuration);   
       setRemainingSeconds(newDuration * 60);
     }
   }
@@ -311,9 +312,11 @@ export default function TimerScreen() {
     if (isRunning) return;
 
     const newDuration = Math.max(focusDuration - 5, 5);
+
     setFocusDuration(newDuration);
 
     if (mode === 'focus') {
+      setCurrentFocusMinutes(newDuration);   
       setRemainingSeconds(newDuration * 60);
     }
   }
@@ -325,6 +328,7 @@ export default function TimerScreen() {
     setBreakDuration(newDuration);
 
     if (mode === 'break') {
+      setCurrentBreakMinutes(newDuration);   
       setRemainingSeconds(newDuration * 60);
     }
   }
@@ -336,6 +340,7 @@ export default function TimerScreen() {
     setBreakDuration(newDuration);
 
     if (mode === 'break') {
+      setCurrentBreakMinutes(newDuration);   
       setRemainingSeconds(newDuration * 60);
     }
   }
@@ -368,7 +373,7 @@ export default function TimerScreen() {
   const levelPct = Math.round(levelProgress * 100);
 
   // For UI: progress ring + cycle dots
-  const totalSeconds = (mode === 'focus' ? focusDuration : currentBreakMinutes) * 60;
+  const totalSeconds = (mode === 'focus' ? currentFocusMinutes : currentBreakMinutes) * 60;
   const progress = totalSeconds > 0 ? Math.max(0, Math.min(1, remainingSeconds / totalSeconds)) : 0;
   const dashoffset = CIRCUMFERENCE * (1 - progress);
   const ringColor = mode === 'focus' ? '#4E9A87' : '#4E7C9B';
