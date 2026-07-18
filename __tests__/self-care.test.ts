@@ -4,18 +4,21 @@
 
 import { supabase } from '../src/lib/supabase';
 
-jest.mock('../src/lib/supabase');
-
 import {
-  logSelfCare,
-  getTodaySelfCareCounts,
-  getUserCategories,
-  getTodaysMood,
-  hasLoggedMoodToday,
+  addCategory,
   deleteCategory,
-  getTodayLogEntries,  
-  addCategory, 
+  getMoodsByDay,
+  getSelfCareCountsByDay,
+  getTodayLogEntries,
+  getTodaySelfCareCounts,
+  getTodaysMood,
+  getTodaysMoods,
+  getUserCategories,
+  hasLoggedMoodToday,
+  logSelfCare,
 } from '../src/lib/self-care';
+
+jest.mock('../src/lib/supabase');
 
 const mockedSupabase = supabase as any;
 
@@ -27,6 +30,18 @@ function mockChain(terminal: string, result: any) {
       : jest.fn(() => chain);
   }
   return chain;
+}
+
+function dayKey(daysAgo: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.toDateString();
+}
+
+function isoDaysAgo(daysAgo: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - daysAgo);
+  return d.toISOString();
 }
 
 let insertMock: jest.Mock;
@@ -292,3 +307,109 @@ describe('addCategory — write', () => {
   });
 });
 
+describe('getTodaysMoods', () => {
+  test('returns every mood logged today (newest first)', async () => {
+    const rows = [{ mood: 'great' }, { mood: 'okay' }, { mood: 'stressed' }];
+    mockedSupabase.from = jest.fn(() => mockChain('order', { data: rows, error: null }));
+
+    const result = await getTodaysMoods();
+    expect(result).toEqual(['great', 'okay', 'stressed']);
+  });
+
+  test('returns all moods where the singular version (getTodaysMood) returns only the latest', async () => {
+    const rows = [{ mood: 'great' }, { mood: 'exhausted' }];
+    mockedSupabase.from = jest.fn(() => mockChain('order', { data: rows, error: null }));
+    expect(await getTodaysMoods()).toHaveLength(2);
+
+    mockedSupabase.from = jest.fn(() => mockChain('limit', { data: rows, error: null }));
+    expect(await getTodaysMood()).toBe('great');
+  });
+
+  test('returns an empty array when nothing was logged today', async () => {
+    mockedSupabase.from = jest.fn(() => mockChain('order', { data: [], error: null }));
+    expect(await getTodaysMoods()).toEqual([]);
+  });
+
+  test('returns an empty array on a query error', async () => {
+    mockedSupabase.from = jest.fn(() =>
+      mockChain('order', { data: null, error: { message: 'boom' } })
+    );
+    expect(await getTodaysMoods()).toEqual([]);
+  });
+
+  test('returns an empty array when users not signed in', async () => {
+    mockedSupabase.auth = {
+      getUser: jest.fn(async () => ({ data: { user: null } })),
+    };
+    expect(await getTodaysMoods()).toEqual([]);
+  });
+});
+
+describe('getMoodsByDay', () => {
+  test('groups moods under the day they were logged', async () => {
+    const rows = [
+      { mood: 'great', logged_at: isoDaysAgo(1) },
+      { mood: 'okay', logged_at: isoDaysAgo(1) },
+      { mood: 'exhausted', logged_at: isoDaysAgo(2) },
+    ];
+    mockedSupabase.from = jest.fn(() => mockChain('gte', { data: rows, error: null }));
+
+    const result = await getMoodsByDay(4);
+    expect(result[dayKey(1)]).toEqual(['great', 'okay']);
+    expect(result[dayKey(2)]).toEqual(['exhausted']);
+  });
+
+  test('days with no moods are absent rather than empty', async () => {
+    const rows = [{ mood: 'good', logged_at: isoDaysAgo(1) }];
+    mockedSupabase.from = jest.fn(() => mockChain('gte', { data: rows, error: null }));
+
+    const result = await getMoodsByDay(4);
+    expect(result[dayKey(3)]).toBeUndefined();
+  });
+
+  test('returns an empty object when there are no moods', async () => {
+    mockedSupabase.from = jest.fn(() => mockChain('gte', { data: [], error: null }));
+    expect(await getMoodsByDay(4)).toEqual({});
+  });
+
+  test('returns an empty object when users not signed in', async () => {
+    mockedSupabase.auth = {
+      getUser: jest.fn(async () => ({ data: { user: null } })),
+    };
+    expect(await getMoodsByDay(4)).toEqual({});
+  });
+});
+
+describe('getSelfCareCountsByDay', () => {
+  test('counts logs per day', async () => {
+    const rows = [
+      { logged_at: isoDaysAgo(1) },
+      { logged_at: isoDaysAgo(1) },
+      { logged_at: isoDaysAgo(1) },
+      { logged_at: isoDaysAgo(4) },
+    ];
+    mockedSupabase.from = jest.fn(() => mockChain('gte', { data: rows, error: null }));
+
+    const result = await getSelfCareCountsByDay(7);
+    expect(result[dayKey(1)]).toBe(3);
+    expect(result[dayKey(4)]).toBe(1);
+  });
+
+  test('queries the selfcare_logs table', async () => {
+    mockedSupabase.from = jest.fn(() => mockChain('gte', { data: [], error: null }));
+    await getSelfCareCountsByDay(7);
+    expect(mockedSupabase.from).toHaveBeenCalledWith('selfcare_logs');
+  });
+
+  test('returns an empty object when there are no logs', async () => {
+    mockedSupabase.from = jest.fn(() => mockChain('gte', { data: [], error: null }));
+    expect(await getSelfCareCountsByDay(7)).toEqual({});
+  });
+
+  test('returns an empty object when users not signed in', async () => {
+    mockedSupabase.auth = {
+      getUser: jest.fn(async () => ({ data: { user: null } })),
+    };
+    expect(await getSelfCareCountsByDay(7)).toEqual({});
+  });
+});

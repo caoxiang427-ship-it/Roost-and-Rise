@@ -2,11 +2,11 @@
  * Used for care and home screens.
 */
 
-import { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Pressable, Modal } from 'react-native';
-import { calculateBurnoutScore, BurnoutStatus, BurnoutResult } from '@/lib/burnout';
-import Svg, { Circle } from 'react-native-svg';
+import { BurnoutResult, BurnoutStatus, calculateBurnoutScore } from '@/lib/burnout';
 import { Ionicons } from '@expo/vector-icons';
+import { useEffect, useState } from 'react';
+import { Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import Svg, { Circle } from 'react-native-svg';
 
 const STATUS_DISPLAY: Record<BurnoutStatus, { label: string; color: string; message: string }> = {
   engaged:     { label: 'Engaged', color: '#5E9C4F', message: 'Sunny is thriving. Keep it up.' },
@@ -16,10 +16,10 @@ const STATUS_DISPLAY: Record<BurnoutStatus, { label: string; color: string; mess
 };
 
 const TIERS = [
-  { color: '#5E9C4F', label: 'Engaged', range: '70–100', desc: 'Sustainable balance of exertion and recovery.' },
+  { color: '#5E9C4F', label: 'Engaged', range: '70-100', desc: 'Sustainable balance of exertion and recovery.' },
   { color: '#8FB07A', label: 'Balanced', range: '45-69',  desc: 'Coping adequately, with mild markers of accumulating fatigue.' },
-  { color: '#E0A03E', label: 'Overextended', range: '25–44',  desc: 'At-risk workload pattern; recovery strategies are recommended.' },
-  { color: '#C44536', label: 'Burnout', range: '0–24',   desc: 'Elevated burnout risk; sustained rest and intervention advised.' },
+  { color: '#E07B39', label: 'Overextended', range: '25-44',  desc: 'At-risk workload pattern; recovery strategies are recommended.' },
+  { color: '#C44536', label: 'Burnout', range: '0-24',   desc: 'Elevated burnout risk; sustained rest and intervention advised.' },
 ];
 
 // Ring
@@ -117,7 +117,7 @@ export default function BurnoutIndicator({
         <Pressable style={styles.modalBackdrop} onPress={() => setInfoVisible(false)}>
           <Pressable style={styles.modalCard} onPress={() => {}}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>What does the tiers mean?</Text>
+              <Text style={styles.modalTitle}>What do the tiers mean?</Text>
               <Pressable onPress={() => setInfoVisible(false)} hitSlop={8}>
                 <Ionicons name="close" size={20} color="#6E7D67" />
               </Pressable>

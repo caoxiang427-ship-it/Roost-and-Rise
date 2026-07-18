@@ -204,3 +204,72 @@ export async function hasLoggedMoodToday() {
   return data.length > 0; // check whether data exists && it's not an empty array
 }
   
+export async function getTodaysMoods(): Promise<string[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('mood_logs')
+    .select('mood')
+    .eq('user_id', user.id)
+    .gte('logged_at', today.toISOString())
+    .order('logged_at', { ascending: false });
+
+  if (!data || error) return [];
+  return data.map(r => r.mood);
+}
+
+export async function getMoodsByDay(days: number): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {};
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return out;
+
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('mood_logs')
+    .select('mood, logged_at')
+    .eq('user_id', user.id)
+    .gte('logged_at', start.toISOString());
+
+  if (!data || error) return out;
+
+  for (const r of data) {
+    const key = new Date(r.logged_at).toDateString();
+    (out[key] ||= []).push(r.mood);
+  }
+  return out;
+}
+
+export async function getSelfCareCountsByDay(days: number): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return out;
+
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('selfcare_logs')
+    .select('logged_at')
+    .eq('user_id', user.id)
+    .gte('logged_at', start.toISOString()); 
+
+  if (!data || error) return out;
+
+  for (const r of data) {
+    const key = new Date(r.logged_at).toDateString();
+    out[key] = (out[key] ?? 0) + 1;
+  }
+  return out;
+}
