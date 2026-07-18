@@ -4,14 +4,17 @@
  * Shows Sunny's state + neutral observations + a forward-looking nudge.
 */
 
-import { View, Text, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
 import { BurnoutStatus } from '@/lib/burnout';
+import { Ionicons } from '@expo/vector-icons';
+import { StyleSheet, Text, View } from 'react-native';
 
 const FACTOR_DISPLAY: Record<string, { icon: string; text: string }> = {
-  'Heavy study load (8+ hrs)': { icon: 'time-outline', text: 'A very long study day' },
+  'Very heavy study load today': { icon: 'time-outline', text: 'A very long study day' },
   'Long study day': { icon: 'time-outline', text: 'Long study hours today' },
-  'Heavy days in a row': { icon: 'calendar-outline', text: 'Several heavy days in a row' },
+  'Heavy load building up all week': { icon: 'calendar-outline', text: 'Several heavy days in a row' },
+  'Load creeping up this week': { icon: 'calendar-outline', text: 'Study load creeping up' },
+  'Barely any breaks today': { icon: 'cafe-outline', text: 'Very few breaks today' },
+  'Low mood check-ins': { icon: 'battery-dead-outline', text: 'A draining day' },
 };
 
 function moodFactor(f: string): { icon: string; text: string } | null {
@@ -42,9 +45,9 @@ export default function WellnessNotice({
   if (!copy) return null;
 
   const shown = factors
-    .map(f => FACTOR_DISPLAY[f] ?? moodFactor(f))
+    .map(f => FACTOR_DISPLAY[f])
     .filter(Boolean)
-    .slice(0, 3) as { icon: string; text: string }[];
+    .slice(0, 3);
 
   return (
     <View style={styles.card}>
