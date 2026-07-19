@@ -7,9 +7,30 @@ import { supabase } from './supabase';
 export interface SelfCareCategory {
   id: string;
   label: string;
-  emoji: string;
+  icon: string;
   display_order: number;
 }
+
+export interface SelfCareLogEntry {
+  id: string;
+  category_id: string;
+  activity: string | null;
+  logged_at: string;
+}
+
+
+export const CATEGORY_CATALOG = [
+  { label: 'Sleep',    icon: 'moon-outline',          isDefault: true },
+  { label: 'Exercise', icon: 'barbell-outline',       isDefault: true },
+  { label: 'Connect',  icon: 'people-outline',        isDefault: true },
+  { label: 'Eat well', icon: 'restaurant-outline',    isDefault: true },
+  { label: 'Unwind',   icon: 'leaf-outline',          isDefault: true },
+  { label: 'Hobbies',  icon: 'color-palette-outline', isDefault: true },
+  { label: 'Outdoors', icon: 'sunny-outline',         isDefault: false },
+  { label: 'Hydrate',  icon: 'water-outline',         isDefault: false },
+  { label: 'Journal',  icon: 'book-outline',          isDefault: false },
+  { label: 'Breathe',  icon: 'pulse-outline',         isDefault: false },
+];
 
 // Get all active categories, ordered by display_order
 export async function getUserCategories(): Promise<SelfCareCategory[]> {
@@ -19,7 +40,7 @@ export async function getUserCategories(): Promise<SelfCareCategory[]> {
 
   const { data, error } = await supabase
     .from('selfcare_categories')
-    .select('id, label, emoji, display_order')
+    .select('id, label, icon, display_order')
     .eq('user_id', user.id)
     .eq('is_active', true)
     .order('display_order', { ascending: true });
@@ -29,7 +50,7 @@ export async function getUserCategories(): Promise<SelfCareCategory[]> {
   return data;
 }
 
-export async function addCategory(label: string, emoji: string) {
+export async function addCategory(label: string, icon: string) {
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) return { error: 'Not signed in' };
@@ -49,23 +70,9 @@ export async function addCategory(label: string, emoji: string) {
     .insert({
       user_id: user.id,
       label,
-      emoji,
+      icon,
       display_order: nextOrder,
     });
-
-  return result;
-}
-
-export async function updateCategory(id: string, label: string, emoji: string) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { error: 'Not signed in' };
-
-  const result = await supabase
-    .from('selfcare_categories')
-    .update({ label, emoji })
-    .eq('id', id)
-    .eq('user_id', user.id);
 
   return result;
 }
@@ -125,36 +132,23 @@ export async function getTodaySelfCareCounts() {
   }, {});
 }
 
-export async function getTodaySelfCareData() {
+export async function getTodayLogEntries(): Promise<SelfCareLogEntry[]> {
   const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return { counts: {}, recentActivities: {} };
+  
+  if (!user) return [];
 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
   const { data, error } = await supabase
     .from('selfcare_logs')
-    .select('category_id, activity, logged_at')
+    .select('id, category_id, activity, logged_at')
     .eq('user_id', user.id)
     .gte('logged_at', today.toISOString())
     .order('logged_at', { ascending: false });
 
-  if (!data || error) return { counts: {}, recentActivities: {} };
-
-  const counts = data.reduce<Record<string, number>>((acc, log) => {
-    acc[log.category_id] = (acc[log.category_id] || 0) + 1;
-    return acc;
-  }, {});
-
-  const recentActivities = data.reduce<Record<string, string>>((acc, log) => {
-    if (log.activity && !acc[log.category_id]) {
-      acc[log.category_id] = log.activity;
-    }
-    return acc;
-  }, {});
-
-  return { counts, recentActivities };
+  if (!data || error) return [];
+  return data;
 }
 
 export async function logMood(mood: string) {
@@ -169,25 +163,6 @@ export async function logMood(mood: string) {
     mood: mood
   });
 }
-
-// for burnout scores
-export async function getRecentMood(days: number = 7) {
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) return [];
-
-  const since = new Date();
-  since.setDate(since.getDate() - days);
-
-  const { data } = await supabase
-    .from('mood_logs')
-    .select('mood, logged_at')
-    .eq('user_id', user.id)
-    .gte('logged_at', since.toISOString())
-    .order('logged_at', { ascending: false });
-
-  return data || [];
-}  
 
 export async function getTodaysMood() {
   const { data: { user } } = await supabase.auth.getUser();
@@ -229,3 +204,72 @@ export async function hasLoggedMoodToday() {
   return data.length > 0; // check whether data exists && it's not an empty array
 }
   
+export async function getTodaysMoods(): Promise<string[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return [];
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('mood_logs')
+    .select('mood')
+    .eq('user_id', user.id)
+    .gte('logged_at', today.toISOString())
+    .order('logged_at', { ascending: false });
+
+  if (!data || error) return [];
+  return data.map(r => r.mood);
+}
+
+export async function getMoodsByDay(days: number): Promise<Record<string, string[]>> {
+  const out: Record<string, string[]> = {};
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return out;
+
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('mood_logs')
+    .select('mood, logged_at')
+    .eq('user_id', user.id)
+    .gte('logged_at', start.toISOString());
+
+  if (!data || error) return out;
+
+  for (const r of data) {
+    const key = new Date(r.logged_at).toDateString();
+    (out[key] ||= []).push(r.mood);
+  }
+  return out;
+}
+
+export async function getSelfCareCountsByDay(days: number): Promise<Record<string, number>> {
+  const out: Record<string, number> = {};
+
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) return out;
+
+  const start = new Date();
+  start.setDate(start.getDate() - (days - 1));
+  start.setHours(0, 0, 0, 0);
+
+  const { data, error } = await supabase
+    .from('selfcare_logs')
+    .select('logged_at')
+    .eq('user_id', user.id)
+    .gte('logged_at', start.toISOString()); 
+
+  if (!data || error) return out;
+
+  for (const r of data) {
+    const key = new Date(r.logged_at).toDateString();
+    out[key] = (out[key] ?? 0) + 1;
+  }
+  return out;
+}

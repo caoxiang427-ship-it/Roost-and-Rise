@@ -4,15 +4,7 @@
  * 2. Extended break trigger fires on the fourth session and resets afterwards.
 */
 
-function getCyclePosition(completedToday: number) {
-  const nextSession = completedToday + 1;
-  return ((nextSession - 1) % 4) + 1;
-}
-
-function isLongBreakNext(completedToday: number) {
-  const nextSession = completedToday + 1;
-  return nextSession % 4 == 0;
-}
+import { getCyclePosition, isLongBreakNext } from '../src/lib/timer';
 
 describe('Session cycle logic', () => {
   test('first session of the day is position 1 of 4', () => {

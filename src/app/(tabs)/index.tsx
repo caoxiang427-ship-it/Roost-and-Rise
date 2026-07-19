@@ -4,7 +4,6 @@
 */
 
 import { useEffect, useState, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
 import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator} from 'react-native';
 import { styles } from '../../styles/index_styles';
 import { ImageBackground } from 'expo-image';
@@ -14,7 +13,7 @@ import { Link } from 'expo-router';
 import { LinearGradient } from 'expo-linear-gradient';
 import Store from '@/components/home/Store';
 import Inventory from '@/components/home/Inventory';
-import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet';
+import BottomSheet from '@gorhom/bottom-sheet';
 import SpeechBubble from '@/components/home/SpeechBubble';
 import { GestureDetector, Gesture } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
@@ -87,9 +86,9 @@ export default function HomeScreen() {
     const hour = new Date().getHours();
 
     if (hour >= 6 && hour < 12) return 'Good\nMorning!';
-    else if (hour >= 6 && hour < 18) return 'Good\nAfternoon!';
-    else if (hour >= 6 && hour < 24) return 'Good\nEvening!';
-    return 'Time to rest 💤';
+    if (hour >= 12 && hour < 18) return 'Good\nAfternoon!';
+    if (hour >= 18 && hour < 24) return 'Good\nEvening!';
+    return 'Time to rest 💤';   // 0:00–5:59
   };
 
   const getDate = () => {

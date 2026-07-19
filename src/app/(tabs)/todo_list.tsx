@@ -169,7 +169,7 @@ export default function TodoScreen() {
                   allowShadow={false}
                   dayComponent={CalendarDay}
                   calendarHeight={50}
-                  style={{ backgroundColor: '#F4E6B0', height: 40}}
+                  style={{ backgroundColor: '#f2e7c0', height: 40}}
                   markedDates={{
                     [selectedDate]: { selected: true },
                   }}
