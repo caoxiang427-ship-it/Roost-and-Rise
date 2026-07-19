@@ -69,7 +69,7 @@ export default function BurnoutIndicator({
   // full version for care screen
   return (
     <View style={styles.fullRow}>
-      <Pressable style={styles.infoButton} onPress={() => setInfoVisible(true)} hitSlop={8}>
+      <Pressable testID="wellness-info" style={styles.infoButton} onPress={() => setInfoVisible(true)} hitSlop={8}>
         <Ionicons name="information-circle-outline" size={20} color="#6E7D67" />
       </Pressable>
 
@@ -85,6 +85,7 @@ export default function BurnoutIndicator({
             fill="none"
           />
           <Circle
+            testID="wellness-ring"
             cx={SIZE / 2}
             cy={SIZE / 2}
             r={RADIUS}
