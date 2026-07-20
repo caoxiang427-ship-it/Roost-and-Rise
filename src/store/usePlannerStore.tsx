@@ -1,23 +1,21 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
-import { Keyboard } from 'react-native';
 import { supabase } from '@/lib/supabase';
-import { TaskItem, NewSubtaskItem, SubtaskItem } from '@/types/todo';
 import { EventItem } from '@/types/event';
 import { DateOrDateTime } from '@howljs/calendar-kit';
 
 type PlannerState = {
     userID: string | null;
     eventItems: EventItem[];
-    isLoading: boolean;
+    eventsLoading: boolean;
     selectedDate: string;
 
     init: () => Promise<void>;
     fetchEvents: () => Promise<void>;
     addEvent: (
         title: string,
-        start: DateOrDateTime, 
-        end: DateOrDateTime,
+        start: Date, 
+        end: Date,
         color?: string, 
         subtitle? : string
     ) => Promise<void>;
@@ -26,7 +24,7 @@ type PlannerState = {
 export const usePlannerStore = create<PlannerState>((set, get) => ({
     userID: null,
     eventItems: [],
-    isLoading: false,
+    eventsLoading: false,
     selectedDate: new Date().toISOString().split('T')[0],
 
     init: async () => {
@@ -40,7 +38,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         const { userID, selectedDate } = get();
         if (!userID) return;
 
-        set({ isLoading: true});
+        set({ eventsLoading: true});
 
         const offset = 30; // days
         const from = new Date(get().selectedDate); from.setDate(from.getDate() - offset);
@@ -55,7 +53,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
 
         if (error) {
             console.log(error);
-            set({ isLoading: false });
+            set({ eventsLoading: false });
             return;
         }
 
@@ -68,7 +66,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
             color: event.color,
         }));
 
-        set({ eventItems: formattedEvents, isLoading: false });
+        set({ eventItems: formattedEvents, eventsLoading: false });
     },
 
     addEvent: async (title, start, end, color = '#ffff9c', subtitle = '') => {

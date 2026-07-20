@@ -5,6 +5,7 @@ import { useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ColorPicker, { Panel3, BrightnessSlider, Swatches, Preview } from 'reanimated-color-picker';
+import { usePlannerStore } from '@/store/usePlannerStore';
 
 type AddEventProps = {
     close: () => void;
@@ -14,8 +15,6 @@ type Ref = BottomSheetModal;
 
 type EventTabProps = {
     date: Date;
-    startTime: Date;
-    endTime: Date;
     isAllDay: boolean;
     color: string;
     setStartTime: (date: Date) => void;
@@ -23,21 +22,28 @@ type EventTabProps = {
     setIsAllDay: (value: boolean) => void;
     setColor: (color: string) => void;
     reformatDate: (date: Date) => string;
+    setDate: (date: Date) => void;
+    setEventTitle: (title: string) => void;
+    eventTitle: string;
+    setEventDescription: (description: string) => void;
+    eventDescription: string;
 };
 
 const EventTab = ({
-    date, startTime, endTime, isAllDay, color,
-    setStartTime, setEndTime, setIsAllDay, setColor, reformatDate,
+    date, isAllDay, color,
+    setStartTime, setEndTime, setIsAllDay, setColor, reformatDate, setDate, setEventTitle, eventTitle, setEventDescription, eventDescription
 }: EventTabProps) => {
     return (
         <View style={{paddingTop: 15}}>
-            <BottomSheetTextInput style={styles.textInput} placeholder='Event Title' placeholderTextColor={'#717171'}></BottomSheetTextInput>
-            <BottomSheetTextInput style={styles.textInput} placeholder='Event Description' placeholderTextColor={'#717171'}></BottomSheetTextInput>
+            <BottomSheetTextInput style={styles.textInput} placeholder='Event Title' placeholderTextColor={'#717171'}
+              onChangeText={(value) => setEventTitle(value)} value={eventTitle}></BottomSheetTextInput>
+            <BottomSheetTextInput style={styles.textInput} placeholder='Event Description' placeholderTextColor={'#717171'}
+              onChangeText={(value) => setEventDescription(value)} value={eventDescription}></BottomSheetTextInput>
             <View style={{alignItems: "center", paddingTop: 10}}>
                 <View>
                     <Text>Start time:</Text>
                     <DateTimePicker
-                        value={startTime}
+                        value={date}
                         mode={'time'}
                         is24Hour={true}
                         onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate)}
@@ -46,17 +52,25 @@ const EventTab = ({
                 <View>
                     <Text>End time: </Text>
                     <DateTimePicker
-                        value={endTime}
+                        value={date}
                         mode={'time'}
                         is24Hour={true}
                         onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate)}
                     />
                 </View>
 
-                <Text>Date: {reformatDate(date)}, all day?: {isAllDay.toString()}</Text>
-                <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} onPress={() => setIsAllDay(!isAllDay)}>
-                    <Text>All day</Text>
-                </TouchableOpacity>
+                <View style={{paddingTop: 20}}>
+                    <DateTimePicker
+                        value={date}
+                        mode={'date'}
+                        is24Hour={true}
+                        onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate)}
+                    />
+                    <Text>Date: {reformatDate(date)}, all day?: {isAllDay.toString()}</Text>
+                    <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} onPress={() => setIsAllDay(!isAllDay)}>
+                        <Text>All day</Text>
+                    </TouchableOpacity>
+                </View>
                 <View>
                     <View style={{ padding: 20, }}>
                         <ColorPicker
@@ -90,9 +104,13 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
     const renderBackdrop = useCallback(
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
         [])
-    
-    const [selectedTab, setSelectedTab] = useState<"event" | "task">("event");
+
+    const {addEvent} = usePlannerStore();
+
+    const [selectedTab, setSelectedTab] = useState<"event" | "task">('event');
     const [isAllDay, setIsAllDay] = useState<boolean>(false);
+    const [eventTitle, setEventTitle] = useState<string>('');
+    const [eventDescription, setEventDescription] = useState<string>('');
     const [startTime, setStartTime] = useState<Date>(new Date());
     const [endTime, setEndTime] = useState<Date>(new Date());
     const [date, setDate] = useState<Date>(new Date());
@@ -119,23 +137,29 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
             backgroundStyle={styles.container}
             backdropComponent={renderBackdrop}>
             <BottomSheetView>
-                <View style={styles.tabContainer}>
-                    <TouchableOpacity style={styles.tab} onPress={() => setSelectedTab('event')}>
-                        <Text>Event</Text>
+                <View style={{flexDirection: 'row', justifyContent: 'space-around'}}>
+                    <TouchableOpacity
+                    onPress={props.close}>
+                        <Ionicons name='close' size={30} color="#3f3f3f"/>
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.tab} onPress={() => setSelectedTab('task')}>
-                        <Text>Task</Text>
+                    
+                    <View style={styles.tabContainer}>
+                        <TouchableOpacity style={styles.tab} onPress={() => setSelectedTab('event')}>
+                            <Text>Event</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity style={styles.tab} onPress={() => setSelectedTab('task')}>
+                            <Text>Task</Text>
+                        </TouchableOpacity>
+                    </View>
+
+                    <TouchableOpacity style={styles.button}
+                      onPress={() => addEvent(eventTitle, startTime, endTime, color, eventDescription)}>
+                        <Text>Add Event</Text>
                     </TouchableOpacity>
+
                 </View>
-                <TouchableOpacity
-                  style={{position: 'absolute', left: 10}}
-                  onPress={props.close}>
-                    <Ionicons name='close' size={30} color="#3f3f3f"/>
-                </TouchableOpacity>
                 {selectedTab === "event" ? <EventTab
                     date={date}
-                    startTime={startTime}
-                    endTime={endTime}
                     isAllDay={isAllDay}
                     color={color}
                     setStartTime={setStartTime}
@@ -143,6 +167,11 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                     setIsAllDay={setIsAllDay}
                     setColor={setColor}
                     reformatDate={reformatDate}
+                    setDate={setDate}
+                    setEventTitle={setEventTitle}
+                    eventTitle={eventTitle}
+                    setEventDescription={setEventDescription}
+                    eventDescription={eventDescription}
                     /> : <TaskTab />}
             </BottomSheetView>
         </BottomSheetModal>

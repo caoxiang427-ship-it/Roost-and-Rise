@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useState, useRef, useEffect } from 'react';
 import { CalendarBody, CalendarContainer, CalendarHeader, useCalendar, CalendarKitHandle } from '@howljs/calendar-kit';
 import { CalendarProvider, WeekCalendar} from 'react-native-calendars';
@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { EventItem } from '@/types/event';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AddEvent from '@/components/planner/AddEvent';
+import { usePlannerStore } from '@/store/usePlannerStore';
 
 
 // future edit -> in weeekly calendar view, pressing on date will bring you to day view
@@ -46,8 +47,9 @@ function WeekStripHeader(
     );
   }
 
-
 export default function planner() {
+
+  const {eventItems, eventsLoading, init, addEvent} = usePlannerStore();
 
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
@@ -75,40 +77,28 @@ export default function planner() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
+
+
   useEffect(() => {
     calendarRef.current?.goToDate({ date: selectedDate, animatedDate: true });
   }, [selectedDate]);
 
-     const dummyEvents = [
-        {id: '1',
-        title: 'Meeting with Team',
-        start: { dateTime: '2026-07-19T10:00:00Z' },
-        end: { dateTime: '2026-07-19T11:00:00Z' },
-        color: '#4285F4',},
+  useEffect(() => {
+    init();
+  }, []);
 
-        {id: '2',
-        title: 'Meeting with Team',
-        start: { date: '2026-07-19' },
-        end: {  date: '2026-07-19' },
-        color: '#4285F4',},
-
-        {id: '3',
-        title: 'Meeting with Team',
-        start: { date: '2026-07-19' },
-        end: {  date: '2026-07-19' },
-        color: '#96e19e',},
-
-        {id: '4',
-        title: 'Meeting with Team',
-        start: { date: '2026-07-19' },
-        end: {  date: '2026-07-19' },
-        color: '#ebf57d',}
-    ]
-
+  if (eventsLoading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#5E90A1" />
+        </View>
+      )
+    }
+    
   return (
       <CalendarContainer
         ref={calendarRef}
-        events={dummyEvents}
+        events={eventItems}
         initialTimeIntervalHeight={90}
         numberOfDays={numberOfDays}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
@@ -153,6 +143,11 @@ export default function planner() {
 }
 
 const styles = StyleSheet.create({
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
