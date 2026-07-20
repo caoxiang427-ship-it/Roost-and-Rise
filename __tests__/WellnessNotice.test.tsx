@@ -1,5 +1,5 @@
 /*
- * Component tests for WellnessNotice.
+ * Component tests for WellnessNotice (the non-numerical one)
 */
 
 import WellnessNotice from '@/components/WellnessNotice';

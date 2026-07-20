@@ -1,6 +1,6 @@
 /*
  * Component tests for the Pomodoro timer screen.
- * Most of the tests pin down bugs where the timer saved the wrong duration to the database. 
+ * Some of the tests pin down bugs where the timer saved the wrong duration to the database. 
 */
 
 import TimerScreen from '@/app/(tabs)/pomodoro_timer';
