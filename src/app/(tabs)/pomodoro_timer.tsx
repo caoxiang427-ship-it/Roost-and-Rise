@@ -469,6 +469,7 @@ export default function TimerScreen() {
           <Svg width={210} height={210} viewBox="0 0 240 240">
             <Circle cx={120} cy={120} r={RADIUS} fill="#FFFFFF" stroke="#DCE8E3" strokeWidth={14} />
             <Circle
+              testID="timer-ring"
               cx={120}
               cy={120}
               r={RADIUS}
@@ -594,11 +595,11 @@ export default function TimerScreen() {
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Focus duration</Text>
                 <View style={styles.stepper}>
-                  <Pressable onPress={decreaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Pressable onPress={decreaseFocusTime} testID="focus-minus" style={[styles.stepBtn, styles.stepBtnGreen]}>
                     <Ionicons name="remove" size={15} color="#4A7A6E" />
                   </Pressable>
                   <Text style={styles.stepValue}>{`${focusDuration} min`}</Text>
-                  <Pressable onPress={increaseFocusTime} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Pressable onPress={increaseFocusTime} testID="focus-plus" style={[styles.stepBtn, styles.stepBtnGreen]}>
                     <Ionicons name="add" size={15} color="#4A7A6E" />
                   </Pressable>
                 </View>
@@ -607,11 +608,11 @@ export default function TimerScreen() {
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Break duration</Text>
                 <View style={styles.stepper}>
-                  <Pressable onPress={decreaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Pressable onPress={decreaseBreakTime} testID="break-minus" style={[styles.stepBtn, styles.stepBtnBlue]}>
                     <Ionicons name="remove" size={15} color="#4E7C9B" />
                   </Pressable>
                   <Text style={styles.stepValue}>{`${breakDuration} min`}</Text>
-                  <Pressable onPress={increaseBreakTime} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Pressable onPress={increaseBreakTime} testID="break-plus" style={[styles.stepBtn, styles.stepBtnBlue]}>
                     <Ionicons name="add" size={15} color="#4E7C9B" />
                   </Pressable>
                 </View>
@@ -698,11 +699,11 @@ export default function TimerScreen() {
                 {/* editable break length */}
                 <Text style={styles.modalMessage}>How long a breather?</Text>
                 <View style={styles.modalStepper}>
-                  <Pressable onPress={decreaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Pressable onPress={decreaseModalBreak} testID="modal-break-minus" style={[styles.stepBtn, styles.stepBtnBlue]}>
                     <Ionicons name="remove" size={16} color="#4E7C9B" />
                   </Pressable>
                   <Text style={styles.modalStepperValue}>{`${modalBreakMin} min`}</Text>
-                  <Pressable onPress={increaseModalBreak} style={[styles.stepBtn, styles.stepBtnBlue]}>
+                  <Pressable onPress={increaseModalBreak} testID="modal-break-plus" style={[styles.stepBtn, styles.stepBtnBlue]}>
                     <Ionicons name="add" size={16} color="#4E7C9B" />
                   </Pressable>
                 </View>
@@ -730,11 +731,11 @@ export default function TimerScreen() {
 
                 <Text style={styles.modalMessage}>How long to focus?</Text>
                 <View style={styles.modalStepper}>
-                  <Pressable onPress={decreaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Pressable onPress={decreaseModalFocus} testID="modal-focus-minus" style={[styles.stepBtn, styles.stepBtnGreen]}>
                     <Ionicons name="remove" size={16} color="#4A7A6E" />
                   </Pressable>
                   <Text style={styles.modalStepperValue}>{`${modalFocusMin} min`}</Text>
-                  <Pressable onPress={increaseModalFocus} style={[styles.stepBtn, styles.stepBtnGreen]}>
+                  <Pressable onPress={increaseModalFocus} testID="modal-focus-plus" style={[styles.stepBtn, styles.stepBtnGreen]}>
                     <Ionicons name="add" size={16} color="#4A7A6E" />
                   </Pressable>
                 </View>
