@@ -21,7 +21,6 @@ type EventTabProps = {
     setEndTime: (date: Date) => void;
     setIsAllDay: (value: boolean) => void;
     setColor: (color: string) => void;
-    reformatDate: (date: Date) => string;
     setDate: (date: Date) => void;
     setEventTitle: (title: string) => void;
     eventTitle: string;
@@ -31,7 +30,7 @@ type EventTabProps = {
 
 const EventTab = ({
     date, isAllDay, color,
-    setStartTime, setEndTime, setIsAllDay, setColor, reformatDate, setDate, setEventTitle, eventTitle, setEventDescription, eventDescription
+    setStartTime, setEndTime, setIsAllDay, setColor, setDate, setEventTitle, eventTitle, setEventDescription, eventDescription
 }: EventTabProps) => {
     return (
         <View style={{paddingTop: 15}}>
@@ -66,8 +65,17 @@ const EventTab = ({
                         is24Hour={true}
                         onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate)}
                     />
-                    <Text>Date: {reformatDate(date)}, all day?: {isAllDay.toString()}</Text>
-                    <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} onPress={() => setIsAllDay(!isAllDay)}>
+                    <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
+                    <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
+                        onPress={() => {
+                        const next = !isAllDay;
+                        setIsAllDay(next);
+                        if (next) {
+                        setStartTime(date);
+                        setEndTime(date);
+                        }
+                    }}
+                    >
                         <Text>All day</Text>
                     </TouchableOpacity>
                 </View>
@@ -114,19 +122,7 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
     const [startTime, setStartTime] = useState<Date>(new Date());
     const [endTime, setEndTime] = useState<Date>(new Date());
     const [date, setDate] = useState<Date>(new Date());
-    const [showStartTimePicker, setShowStartTimePicker] = useState(false);
-    const [showEndTimePicker, setShowEndTimePicker] = useState(false);
     const [color, setColor] = useState<string>('#ffff9c')
-
-    // reformat startTime/ endTime to dateTime: string format that eventItem takes in
-    const reformatDateTime = (date: Date) => {
-        return date.toISOString()
-    }
-
-    // for all day events, reformat date to date: string format that eventItem takes in
-    const reformatDate = (date: Date) => {
-        return date.toISOString().split('T')[0]
-    }
 
     return (
         <BottomSheetModal
@@ -153,7 +149,8 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                     </View>
 
                     <TouchableOpacity style={styles.button}
-                      onPress={() => addEvent(eventTitle, startTime, endTime, color, eventDescription)}>
+                      onPress={() => 
+                        addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription)}>
                         <Text>Add Event</Text>
                     </TouchableOpacity>
 
@@ -166,7 +163,6 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                     setEndTime={setEndTime}
                     setIsAllDay={setIsAllDay}
                     setColor={setColor}
-                    reformatDate={reformatDate}
                     setDate={setDate}
                     setEventTitle={setEventTitle}
                     eventTitle={eventTitle}

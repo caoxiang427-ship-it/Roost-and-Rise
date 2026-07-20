@@ -16,8 +16,9 @@ type PlannerState = {
         title: string,
         start: Date, 
         end: Date,
+        allDay: boolean,
         color?: string, 
-        subtitle? : string
+        subtitle? : string,
     ) => Promise<void>;
 };
 
@@ -57,19 +58,24 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
             return;
         }
 
+
         const formattedEvents: EventItem[] = data.map(event => ({
             id: event.id,
             title: event.title,
             subtitle: event.subtitle ?? undefined,
-            start: { dateTime: event.start_time },
-            end: { dateTime: event.end_time },
+            start: event.all_day
+                ? { date: event.start_time.split('T')[0] }
+                : { dateTime: event.start_time },
+            end: event.all_day
+                ? { date: event.end_time.split('T')[0] }
+                : { dateTime: event.end_time },
             color: event.color,
         }));
 
         set({ eventItems: formattedEvents, eventsLoading: false });
     },
 
-    addEvent: async (title, start, end, color = '#ffff9c', subtitle = '') => {
+    addEvent: async (title, start, end, allDay = false, color = '#ffff9c', subtitle = '') => {
         const { userID, fetchEvents } = get();
         if (!title.trim() || !userID) return;
 
@@ -82,6 +88,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
                 start_time: start,
                 end_time: end,
                 color,
+                all_day: allDay
             });
 
         if (error) {
