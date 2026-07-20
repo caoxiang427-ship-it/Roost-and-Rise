@@ -21,7 +21,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
         [])
 
-    const {addEvent} = usePlannerStore();
+    const {updateEvent, deleteEvent} = usePlannerStore();
     
     // props.event.start/end isn't a plain string — it's a union type { dateTime: string; timeZone?: string } | { date: string }
     // this function converts it into a string so it can be stored into the state
@@ -49,6 +49,20 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
     );
     const [color, setColor] = useState<string>(props.event?.color ?? '#ffff9c')
 
+    useEffect(() => {
+        if (!props.event) return;
+        setEventTitle(props.event.title ?? '');
+        setEventDescription(props.event.eventDesc ?? ''); // see note below
+        setIsAllDay(props.event.allDay ?? false);
+        setColor(props.event.color ?? '#ffff9c');
+
+        const start = getDateTimeString(props.event.start) ?? new Date().toISOString();
+        const end = getDateTimeString(props.event.end) ?? new Date().toISOString();
+        setStartTime(start);
+        setEndTime(end);
+        setDate(start.split('T')[0] + 'T00:00:00');
+    }, [props.event?.id]); // everytime selected event changes, refire
+
     // event tab
     const renderEventTab = () => (
         <View style={{paddingTop: 15}}>
@@ -60,7 +74,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                 <View>
                     <Text>Start time:</Text>
                     <DateTimePicker
-                        value={new Date(date)}
+                        value={new Date(startTime)}
                         mode={'time'}
                         is24Hour={true}
                         onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate.toISOString())}
@@ -69,7 +83,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                 <View>
                     <Text>End time: </Text>
                     <DateTimePicker
-                        value={new Date(date)}
+                        value={new Date(endTime)}
                         mode={'time'}
                         is24Hour={true}
                         onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate.toISOString())}
@@ -148,12 +162,19 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                     </View>
 
                     <TouchableOpacity style={styles.button}
-                      onPress={() => 
-                        addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription)}>
+                      onPress={async () => {
+                        await updateEvent(props.event?.id, eventTitle, startTime, endTime, isAllDay, color, eventDescription);
+                        props.close();
+                      }}>
                         <Text>Update Event</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={styles.button}
-                      onPress={() => console.log('delete event')}>
+                      onPress={() => {
+                        Alert.alert("Delete task", "Are you sure you want to delete this task?", [
+                            { text: 'Yes', onPress: () => {deleteEvent(props.event?.id); props.close()} },
+                            { text: 'No', style: 'cancel' }
+                        ])
+                      }}>
                         <Text>Delete</Text>
                     </TouchableOpacity>
 

@@ -79,6 +79,15 @@ export default function planner() {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
+  const goToEventHour = (startTime: string) => {
+      calendarRef.current?.goToDate({
+          date: startTime,
+          animatedDate: true,
+          hourScroll: true,
+          animatedHour: true,
+      });
+  };
+
 
 
   useEffect(() => {
@@ -127,7 +136,7 @@ export default function planner() {
           <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <AddEvent ref={addEventRef} close={closeAddEventSheet} selectedDate={selectedDate}></AddEvent>
+        <AddEvent ref={addEventRef} close={closeAddEventSheet} selectedDate={selectedDate} goToEventHour={(startTime) => goToEventHour}></AddEvent>
         <EditEvent
           ref={editEventRef}
           close={closeEditEventSheet}

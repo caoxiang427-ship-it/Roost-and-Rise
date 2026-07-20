@@ -10,6 +10,7 @@ import { usePlannerStore } from '@/store/usePlannerStore';
 type AddEventProps = {
     close: () => void;
     selectedDate: string;
+    goToEventHour: (startTime: string) => void;
 };
 
 type Ref = BottomSheetModal;
@@ -46,7 +47,7 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                 <View>
                     <Text>Start time:</Text>
                     <DateTimePicker
-                        value={new Date(date)}
+                        value={new Date(startTime)}
                         mode={'time'}
                         is24Hour={true}
                         onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate.toISOString())}
@@ -55,7 +56,7 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                 <View>
                     <Text>End time: </Text>
                     <DateTimePicker
-                        value={new Date(date)}
+                        value={new Date(endTime)}
                         mode={'time'}
                         is24Hour={true}
                         onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate.toISOString())}
@@ -137,6 +138,7 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                       onPress={                      
                         async () => {
                             await addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription);
+                            if (!isAllDay) props.goToEventHour?.(startTime);
                             props.close();
                             setEventTitle('');
                             setEventDescription('');

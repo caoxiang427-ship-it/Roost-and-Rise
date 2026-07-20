@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
+import { Keyboard } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { EventItem } from '@/types/event';
 
@@ -19,6 +20,16 @@ type PlannerState = {
         color?: string, 
         subtitle? : string,
     ) => Promise<void>;
+    deleteEvent: (id: string) => Promise<void>;
+    updateEvent: (
+        id: string,
+        title: string,
+        start: string, 
+        end: string,
+        allDay: boolean,
+        color?: string, 
+        subtitle? : string,
+    ) => Promise<void>,
 };
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -61,7 +72,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         const formattedEvents: EventItem[] = data.map(event => ({
             id: event.id,
             title: event.title,
-            subtitle: event.subtitle ?? undefined,
+            eventDesc: event.subtitle ?? undefined,
             start: event.all_day
                 ? { date: event.start_time.split('T')[0] }
                 : { dateTime: event.start_time },
@@ -97,4 +108,39 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
         }
 
         fetchEvents();
-    },}))
+    },
+
+    deleteEvent: async (id) => {
+        const { error } = await supabase.from('events').delete().eq('id', id);
+        if (error) {
+            console.log(error);
+            return;
+        }
+        get().fetchEvents();
+    },
+
+    updateEvent: async (id, title, start, end, allDay = false, color = '#ffff9c', subtitle = '') => {
+            Keyboard.dismiss();
+            if (!title.trim()) return;
+    
+            const { error } = await supabase
+                .from('events')
+                .update({
+                    title: title.trim(),
+                    subtitle: subtitle.trim() || null,
+                    start_time: start,
+                    end_time: end,
+                    color,
+                    all_day: allDay
+                })
+                .eq('id', id);
+    
+            if (error) {
+                console.log(error);
+                return;
+            }
+
+            get().fetchEvents();
+        },
+
+}))
