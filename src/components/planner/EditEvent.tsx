@@ -6,10 +6,11 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ColorPicker, { Panel3, BrightnessSlider, Swatches, Preview } from 'reanimated-color-picker';
 import { usePlannerStore } from '@/store/usePlannerStore';
+import { EventItem } from '@/types/event';
 
 type EditEventProps = {
     close: () => void;
-    selectedDate: string;
+    event: EventItem;
 };
 
 type Ref = BottomSheetModal;
@@ -21,96 +22,106 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
         [])
 
     const {addEvent} = usePlannerStore();
+    
+    // props.event.start/end isn't a plain string — it's a union type { dateTime: string; timeZone?: string } | { date: string }
+    // this function converts it into a string so it can be stored into the state
+    const getDateTimeString = (
+        eventDate?: { dateTime: string; timeZone?: string } | { date: string }
+        ): string | undefined => {
+            if (!eventDate) return undefined;
+            // check time in eventDate, if dateTime return dateTime, if date return date
+            if ('dateTime' in eventDate) {
+                return eventDate.dateTime;
+                } else {
+                return eventDate.date;
+            }
+        }
 
     const [selectedTab, setSelectedTab] = useState<"event" | "task">('event');
-    const [isAllDay, setIsAllDay] = useState<boolean>(false);
-    const [eventTitle, setEventTitle] = useState<string>('');
-    const [eventDescription, setEventDescription] = useState<string>('');
-    const [startTime, setStartTime] = useState<Date>(new Date());
-    const [endTime, setEndTime] = useState<Date>(new Date());
-    const [date, setDate] = useState<Date>(new Date(props.selectedDate + 'T00:00:00')); //convert date string to Date object and add 'T00:00:00' to prevent timezone discrepancy
-    const [color, setColor] = useState<string>('#ffff9c')
-
-    useEffect(() => {
-        setDate(new Date(props.selectedDate + 'T00:00:00'));
-    }, [props.selectedDate]); //everytime selectedDate changes in planner, AddEvent date will update to match
+    const [isAllDay, setIsAllDay] = useState<boolean>(props.event?.allDay ?? false);
+    const [eventTitle, setEventTitle] = useState<string>(props.event?.title ?? '');
+    const [eventDescription, setEventDescription] = useState<string>(props.event?.eventDesc ?? '');
+    const [startTime, setStartTime] = useState<string>(getDateTimeString(props.event?.start) ?? new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
+    const [endTime, setEndTime] = useState<string>(getDateTimeString(props.event?.end) ?? new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
+    const [date, setDate] = useState<string>(
+          (getDateTimeString(props.event?.start)?.split('T')[0] ?? new Date().toISOString().split('T')[0]) // get YYYY-MM-DD
+            + 'T00:00:00' //then add this to the end to resolve any time zone conflicts
+    );
+    const [color, setColor] = useState<string>(props.event?.color ?? '#ffff9c')
 
     // event tab
-    const EventTab = () => {
-        return (
-            <View style={{paddingTop: 15}}>
-                <BottomSheetTextInput style={styles.textInput} placeholder='Event Title' placeholderTextColor={'#717171'}
-                onChangeText={(value) => setEventTitle(value)} value={eventTitle}></BottomSheetTextInput>
-                <BottomSheetTextInput style={styles.textInput} placeholder='Event Description' placeholderTextColor={'#717171'}
-                onChangeText={(value) => setEventDescription(value)} value={eventDescription}></BottomSheetTextInput>
-                <View style={{alignItems: "center", paddingTop: 10}}>
-                    <View>
-                        <Text>Start time:</Text>
-                        <DateTimePicker
-                            value={date}
-                            mode={'time'}
-                            is24Hour={true}
-                            onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate)}
-                        />
-                    </View>
-                    <View>
-                        <Text>End time: </Text>
-                        <DateTimePicker
-                            value={date}
-                            mode={'time'}
-                            is24Hour={true}
-                            onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate)}
-                        />
-                    </View>
+    const renderEventTab = () => (
+        <View style={{paddingTop: 15}}>
+            <BottomSheetTextInput style={styles.textInput} placeholder='Event Title' placeholderTextColor={'#717171'}
+            onChangeText={(value) => setEventTitle(value)} value={eventTitle}></BottomSheetTextInput>
+            <BottomSheetTextInput style={styles.textInput} placeholder='Event Description' placeholderTextColor={'#717171'}
+            onChangeText={(value) => setEventDescription(value)} value={eventDescription}></BottomSheetTextInput>
+            <View style={{alignItems: "center", paddingTop: 10}}>
+                <View>
+                    <Text>Start time:</Text>
+                    <DateTimePicker
+                        value={new Date(date)}
+                        mode={'time'}
+                        is24Hour={true}
+                        onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate.toISOString())}
+                    />
+                </View>
+                <View>
+                    <Text>End time: </Text>
+                    <DateTimePicker
+                        value={new Date(date)}
+                        mode={'time'}
+                        is24Hour={true}
+                        onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate.toISOString())}
+                    />
+                </View>
 
-                    <View style={{paddingTop: 20}}>
-                        <DateTimePicker
-                            value={date}
-                            mode={'date'}
-                            is24Hour={true}
-                            onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate)}
-                        />
-                        <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
-                        <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
-                            onPress={() => {
-                            const next = !isAllDay;
-                            setIsAllDay(next);
-                            if (next) {
-                            setStartTime(date);
-                            setEndTime(date);
-                            }
-                        }}
+                <View style={{paddingTop: 20}}>
+                    <DateTimePicker
+                        value={new Date(date)}
+                        mode={'date'}
+                        is24Hour={true}
+                        onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate.toISOString())}
+                    />
+                    <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
+                    <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
+                        onPress={() => {
+                        const next = !isAllDay;
+                        setIsAllDay(next);
+                        if (next) {
+                        setStartTime(date);
+                        setEndTime(date);
+                        }
+                    }}
+                    >
+                        <Text>All day</Text>
+                    </TouchableOpacity>
+                </View>
+                <View>
+                    <View style={{ padding: 20, }}>
+                        <ColorPicker
+                            style={{ width: '100%' }}
+                            value={color}
+                            onCompleteJS={({ hex }) => setColor(hex)}
                         >
-                            <Text>All day</Text>
-                        </TouchableOpacity>
-                    </View>
-                    <View>
-                        <View style={{ padding: 20, }}>
-                            <ColorPicker
-                                style={{ width: '100%' }}
-                                value={color}
-                                onCompleteJS={({ hex }) => setColor(hex)}
-                            >
-                                <Preview />
-                                <Panel3 />
-                                <BrightnessSlider />
-                                <Swatches colors={['#ffff9c', '#ff7272', '#72c6ff', '#8cff72', '#c672ff']} />
-                            </ColorPicker>
-                        </View>
+                            <Preview />
+                            <Panel3 />
+                            <BrightnessSlider />
+                            <Swatches colors={['#ffff9c', '#ff7272', '#72c6ff', '#8cff72', '#c672ff']} />
+                        </ColorPicker>
                     </View>
                 </View>
             </View>
-        )
-    };
+        </View>
 
-    const TaskTab = () => {
-        return (
-            <View style={{paddingTop: 15}}>
-                <BottomSheetTextInput style={styles.textInput} placeholder='Task title' placeholderTextColor={'#717171'}></BottomSheetTextInput>
-                <BottomSheetTextInput style={styles.textInput} placeholder='Task Description' placeholderTextColor={'#717171'}></BottomSheetTextInput>
-            </View>
-        )
-    };
+    );
+
+    const renderTaskTab = () => (
+        <View style={{paddingTop: 15}}>
+            <BottomSheetTextInput style={styles.textInput} placeholder='Task title' placeholderTextColor={'#717171'}></BottomSheetTextInput>
+            <BottomSheetTextInput style={styles.textInput} placeholder='Task Description' placeholderTextColor={'#717171'}></BottomSheetTextInput>
+        </View>
+    );
 
     return (
         <BottomSheetModal
@@ -139,11 +150,15 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                     <TouchableOpacity style={styles.button}
                       onPress={() => 
                         addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription)}>
-                        <Text>Add Event</Text>
+                        <Text>Update Event</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.button}
+                      onPress={() => console.log('delete event')}>
+                        <Text>Delete</Text>
                     </TouchableOpacity>
 
                 </View>
-                {selectedTab === "event" ? <EventTab/> : <TaskTab />}
+                {selectedTab === "event" ? renderEventTab() : renderTaskTab()}
             </BottomSheetView>
         </BottomSheetModal>
     

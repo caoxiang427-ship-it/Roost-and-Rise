@@ -26,13 +26,13 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
     const [isAllDay, setIsAllDay] = useState<boolean>(false);
     const [eventTitle, setEventTitle] = useState<string>('');
     const [eventDescription, setEventDescription] = useState<string>('');
-    const [startTime, setStartTime] = useState<Date>(new Date());
-    const [endTime, setEndTime] = useState<Date>(new Date());
-    const [date, setDate] = useState<Date>(new Date(props.selectedDate + 'T00:00:00')); //convert date string to Date object and add 'T00:00:00' to prevent timezone discrepancy
+    const [startTime, setStartTime] = useState<string>(new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
+    const [endTime, setEndTime] = useState<string>(new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
+    const [date, setDate] = useState<string>(props.selectedDate + 'T00:00:00'); // add 'T00:00:00' to prevent timezone discrepancy
     const [color, setColor] = useState<string>('#ffff9c')
 
     useEffect(() => {
-        setDate(new Date(props.selectedDate + 'T00:00:00'));
+        setDate(props.selectedDate + 'T00:00:00');
     }, [props.selectedDate]); //everytime selectedDate changes in planner, AddEvent date will update to match
 
     // event tab
@@ -46,28 +46,29 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                 <View>
                     <Text>Start time:</Text>
                     <DateTimePicker
-                        value={date}
+                        value={new Date(date)}
                         mode={'time'}
                         is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate)}
+                        onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate.toISOString())}
                     />
                 </View>
                 <View>
                     <Text>End time: </Text>
                     <DateTimePicker
-                        value={date}
+                        value={new Date(date)}
                         mode={'time'}
                         is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate)}
+                        onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate.toISOString())}
                     />
                 </View>
 
+                {/* maybe edit this to allow for multiday events */}
                 <View style={{paddingTop: 20}}>
                     <DateTimePicker
-                        value={date}
+                        value={new Date(date)}
                         mode={'date'}
                         is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate)}
+                        onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate.toISOString())}
                     />
                     <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
                     <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
@@ -133,8 +134,15 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                     </View>
 
                     <TouchableOpacity style={styles.button}
-                      onPress={() => 
-                        addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription)}>
+                      onPress={                      
+                        async () => {
+                            await addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription);
+                            props.close();
+                            setEventTitle('');
+                            setEventDescription('');
+                            setIsAllDay(false);
+                            setColor('#ffff9c');}
+                        }>
                         <Text>Add Event</Text>
                     </TouchableOpacity>
 

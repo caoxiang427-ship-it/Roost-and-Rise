@@ -13,8 +13,8 @@ type PlannerState = {
     fetchEvents: () => Promise<void>;
     addEvent: (
         title: string,
-        start: Date, 
-        end: Date,
+        start: string, 
+        end: string,
         allDay: boolean,
         color?: string, 
         subtitle? : string,
@@ -69,6 +69,7 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
                 ? { date: event.end_time.split('T')[0] }
                 : { dateTime: event.end_time },
             color: event.color,
+            allDay: event.all_day,
         }));
 
         set({ eventItems: formattedEvents, eventsLoading: false });

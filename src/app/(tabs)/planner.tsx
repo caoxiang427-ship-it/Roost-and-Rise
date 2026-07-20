@@ -7,6 +7,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { EventItem } from '@/types/event';
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AddEvent from '@/components/planner/AddEvent';
+import EditEvent from '@/components/planner/EditEvent';
 import { usePlannerStore } from '@/store/usePlannerStore';
 
 
@@ -49,7 +50,7 @@ function WeekStripHeader(
 
 export default function planner() {
 
-  const {eventItems, eventsLoading, init, addEvent} = usePlannerStore();
+  const {eventItems, eventsLoading, init} = usePlannerStore();
 
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); //react-native-calendars take in dates in YYYY-MM-DD format
@@ -57,7 +58,8 @@ export default function planner() {
     weekday: 'long',
   });
   const formattedSelectedDate = new Date(selectedDate).toLocaleDateString('en-GB');
-  const [events, setEvents] = useState<EventItem[]>([]);
+  const [events, setEvents] = useState<EventItem[]>(eventItems);
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null); // upon pressing on event -> event becomes selected and open editEventSheet
 
   const calendarRef = useRef<CalendarKitHandle>(null);
   // bottom sheet references
@@ -86,31 +88,19 @@ export default function planner() {
   useEffect(() => {
     init();
   }, []);
-
-  if (eventsLoading) {
-      return (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color="#5E90A1" />
-        </View>
-      )
-    }
     
   return (
       <CalendarContainer
         ref={calendarRef}
         events={eventItems}
+        isLoading={eventsLoading}
         initialTimeIntervalHeight={90}
         numberOfDays={numberOfDays}
+        onPressEvent={(event) => {openEditEventSheet(); setSelectedEvent(event)}}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
         allowDragToCreate
         defaultDuration={30} // default event 30 mins if they tap instead of dragging
-        onDragCreateEventEnd={(newEvent) => {
-        // newEvent already has the dragged { start, end } as dateTime/timeZone
-        setEvents((prev) => [
-          ...prev,
-          { ...newEvent, id: String(Date.now()), title: 'New Event', color: '#4285F4' },
-          ]);
-        }}
+        onDragCreateEventEnd={(newEvent) => {}}
         spaceFromBottom={100}
       >
         <View style={styles.header}>
@@ -138,6 +128,11 @@ export default function planner() {
         </TouchableOpacity>
 
         <AddEvent ref={addEventRef} close={closeAddEventSheet} selectedDate={selectedDate}></AddEvent>
+        <EditEvent
+          ref={editEventRef}
+          close={closeEditEventSheet}
+          event={selectedEvent!}
+        />
       </CalendarContainer>
   );
 }
