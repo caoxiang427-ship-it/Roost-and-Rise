@@ -2,7 +2,6 @@ import { create } from 'zustand';
 import { useShallow } from 'zustand/react/shallow';
 import { supabase } from '@/lib/supabase';
 import { EventItem } from '@/types/event';
-import { DateOrDateTime } from '@howljs/calendar-kit';
 
 type PlannerState = {
     userID: string | null;

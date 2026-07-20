@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import { BottomSheetModal, BottomSheetBackdrop, BottomSheetView, BottomSheetTextInput } from '@gorhom/bottom-sheet';
 import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useState, forwardRef, useCallback } from 'react';
+import { useEffect, useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ColorPicker, { Panel3, BrightnessSlider, Swatches, Preview } from 'reanimated-color-picker';
@@ -9,35 +9,39 @@ import { usePlannerStore } from '@/store/usePlannerStore';
 
 type AddEventProps = {
     close: () => void;
+    selectedDate: string;
 };
 
 type Ref = BottomSheetModal;
 
-type EventTabProps = {
-    date: Date;
-    isAllDay: boolean;
-    color: string;
-    setStartTime: (date: Date) => void;
-    setEndTime: (date: Date) => void;
-    setIsAllDay: (value: boolean) => void;
-    setColor: (color: string) => void;
-    setDate: (date: Date) => void;
-    setEventTitle: (title: string) => void;
-    eventTitle: string;
-    setEventDescription: (description: string) => void;
-    eventDescription: string;
-};
+const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
+    
+    const renderBackdrop = useCallback(
+        (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
+        [])
 
-const EventTab = ({
-    date, isAllDay, color,
-    setStartTime, setEndTime, setIsAllDay, setColor, setDate, setEventTitle, eventTitle, setEventDescription, eventDescription
-}: EventTabProps) => {
-    return (
+    const {addEvent} = usePlannerStore();
+
+    const [selectedTab, setSelectedTab] = useState<"event" | "task">('event');
+    const [isAllDay, setIsAllDay] = useState<boolean>(false);
+    const [eventTitle, setEventTitle] = useState<string>('');
+    const [eventDescription, setEventDescription] = useState<string>('');
+    const [startTime, setStartTime] = useState<Date>(new Date());
+    const [endTime, setEndTime] = useState<Date>(new Date());
+    const [date, setDate] = useState<Date>(new Date(props.selectedDate + 'T00:00:00')); //convert date string to Date object and add 'T00:00:00' to prevent timezone discrepancy
+    const [color, setColor] = useState<string>('#ffff9c')
+
+    useEffect(() => {
+        setDate(new Date(props.selectedDate + 'T00:00:00'));
+    }, [props.selectedDate]); //everytime selectedDate changes in planner, AddEvent date will update to match
+
+    // event tab
+    const renderEventTab = () => (
         <View style={{paddingTop: 15}}>
             <BottomSheetTextInput style={styles.textInput} placeholder='Event Title' placeholderTextColor={'#717171'}
-              onChangeText={(value) => setEventTitle(value)} value={eventTitle}></BottomSheetTextInput>
+            onChangeText={(value) => setEventTitle(value)} value={eventTitle}></BottomSheetTextInput>
             <BottomSheetTextInput style={styles.textInput} placeholder='Event Description' placeholderTextColor={'#717171'}
-              onChangeText={(value) => setEventDescription(value)} value={eventDescription}></BottomSheetTextInput>
+            onChangeText={(value) => setEventDescription(value)} value={eventDescription}></BottomSheetTextInput>
             <View style={{alignItems: "center", paddingTop: 10}}>
                 <View>
                     <Text>Start time:</Text>
@@ -95,34 +99,14 @@ const EventTab = ({
                 </View>
             </View>
         </View>
-    )
-};
+    );
 
-const TaskTab = () => {
-    return (
+    const renderTaskTab = () => (
         <View style={{paddingTop: 15}}>
             <BottomSheetTextInput style={styles.textInput} placeholder='Task title' placeholderTextColor={'#717171'}></BottomSheetTextInput>
             <BottomSheetTextInput style={styles.textInput} placeholder='Task Description' placeholderTextColor={'#717171'}></BottomSheetTextInput>
         </View>
-    )
-};
-
-const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
-    
-    const renderBackdrop = useCallback(
-        (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
-        [])
-
-    const {addEvent} = usePlannerStore();
-
-    const [selectedTab, setSelectedTab] = useState<"event" | "task">('event');
-    const [isAllDay, setIsAllDay] = useState<boolean>(false);
-    const [eventTitle, setEventTitle] = useState<string>('');
-    const [eventDescription, setEventDescription] = useState<string>('');
-    const [startTime, setStartTime] = useState<Date>(new Date());
-    const [endTime, setEndTime] = useState<Date>(new Date());
-    const [date, setDate] = useState<Date>(new Date());
-    const [color, setColor] = useState<string>('#ffff9c')
+    );
 
     return (
         <BottomSheetModal
@@ -155,20 +139,7 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                     </TouchableOpacity>
 
                 </View>
-                {selectedTab === "event" ? <EventTab
-                    date={date}
-                    isAllDay={isAllDay}
-                    color={color}
-                    setStartTime={setStartTime}
-                    setEndTime={setEndTime}
-                    setIsAllDay={setIsAllDay}
-                    setColor={setColor}
-                    setDate={setDate}
-                    setEventTitle={setEventTitle}
-                    eventTitle={eventTitle}
-                    setEventDescription={setEventDescription}
-                    eventDescription={eventDescription}
-                    /> : <TaskTab />}
+                {selectedTab === "event" ? renderEventTab() : renderTaskTab()}
             </BottomSheetView>
         </BottomSheetModal>
     

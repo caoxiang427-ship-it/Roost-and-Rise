@@ -52,7 +52,7 @@ export default function planner() {
   const {eventItems, eventsLoading, init, addEvent} = usePlannerStore();
 
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
-  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); //react-native-calendars take in dates in YYYY-MM-DD format
   const selectedDayName = new Date(selectedDate).toLocaleDateString('en-US', {
     weekday: 'long',
   });
@@ -137,7 +137,7 @@ export default function planner() {
           <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
 
-        <AddEvent ref={addEventRef} close={closeAddEventSheet}></AddEvent>
+        <AddEvent ref={addEventRef} close={closeAddEventSheet} selectedDate={selectedDate}></AddEvent>
       </CalendarContainer>
   );
 }
