@@ -5,9 +5,11 @@ import { CalendarProvider, WeekCalendar} from 'react-native-calendars';
 import CalendarDayWeekly from '@/components/planner/CalendarDayWeekly';
 import { Ionicons } from "@expo/vector-icons";
 import { EventItem } from '@/types/event';
-import BottomSheet from '@gorhom/bottom-sheet';
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import AddEvent from '@/components/planner/AddEvent';
 
+
+// future edit -> in weeekly calendar view, pressing on date will bring you to day view
 function WeekStripHeader(
   {
   selectedDate,
@@ -30,7 +32,7 @@ function WeekStripHeader(
             <WeekCalendar
               firstDay={1}
               allowShadow={false}
-              dayComponent={(props) => <CalendarDayWeekly {...props} columnWidth={columnWidth} />}
+              dayComponent={(props) => <CalendarDayWeekly {...props} columnWidth={columnWidth}/>}
               hideDayNames
               calendarHeight={70}
               calendarWidth={weekStripWidth}
@@ -57,14 +59,14 @@ export default function planner() {
 
   const calendarRef = useRef<CalendarKitHandle>(null);
   // bottom sheet references
-  const addEventRef = useRef<BottomSheet>(null);
-  const editEventRef = useRef<BottomSheet>(null);
+  const addEventRef = useRef<BottomSheetModal>(null);
+  const editEventRef = useRef<BottomSheetModal>(null);
 
-  const openAddEventSheet = () => addEventRef.current?.expand();
-  const openEditEventSheet = () => editEventRef.current?.expand();
+  const openAddEventSheet = () => addEventRef.current?.present();
+  const openEditEventSheet = () => editEventRef.current?.present();
 
-  const closeAddEventSheet = () => addEventRef.current?.close();
-  const closeEditEventSheet = () => editEventRef.current?.close();
+  const closeAddEventSheet = () => addEventRef.current?.dismiss();
+  const closeEditEventSheet = () => editEventRef.current?.dismiss();
 
   // to standardise date format between the 2 different calendar libraries
   // umm honestly it probably would be easier to just build my own weekly calendar instead of using the library but i alr did it so :(
@@ -77,10 +79,36 @@ export default function planner() {
     calendarRef.current?.goToDate({ date: selectedDate, animatedDate: true });
   }, [selectedDate]);
 
+     const dummyEvents = [
+        {id: '1',
+        title: 'Meeting with Team',
+        start: { dateTime: '2026-07-19T10:00:00Z' },
+        end: { dateTime: '2026-07-19T11:00:00Z' },
+        color: '#4285F4',},
+
+        {id: '2',
+        title: 'Meeting with Team',
+        start: { date: '2026-07-19' },
+        end: {  date: '2026-07-19' },
+        color: '#4285F4',},
+
+        {id: '3',
+        title: 'Meeting with Team',
+        start: { date: '2026-07-19' },
+        end: {  date: '2026-07-19' },
+        color: '#96e19e',},
+
+        {id: '4',
+        title: 'Meeting with Team',
+        start: { date: '2026-07-19' },
+        end: {  date: '2026-07-19' },
+        color: '#ebf57d',}
+    ]
+
   return (
       <CalendarContainer
         ref={calendarRef}
-        events={events}
+        events={dummyEvents}
         initialTimeIntervalHeight={90}
         numberOfDays={numberOfDays}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
@@ -109,7 +137,8 @@ export default function planner() {
             </TouchableOpacity>
           </View>
         </View>
-        <WeekStripHeader selectedDate={selectedDate} setSelectedDate={setSelectedDate} />
+        <WeekStripHeader selectedDate={selectedDate} setSelectedDate={setSelectedDate}/>
+        <CalendarHeader dayBarHeight={0} renderDayItem={() => null}/>
         <CalendarBody />
 
         <TouchableOpacity 
@@ -119,7 +148,6 @@ export default function planner() {
         </TouchableOpacity>
 
         <AddEvent ref={addEventRef} close={closeAddEventSheet}></AddEvent>
-
       </CalendarContainer>
   );
 }

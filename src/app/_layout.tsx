@@ -17,6 +17,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -94,12 +95,14 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <Stack screenOptions={{ headerShown: false }}>
-          <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
-          <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
-          <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
-          <Stack.Screen name='profile' options={{ animation: 'slide_from_right' }}/>
-        </Stack>
+        <BottomSheetModalProvider>
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
+            <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
+            <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
+            <Stack.Screen name='profile' options={{ animation: 'slide_from_right' }}/>
+          </Stack>
+        </BottomSheetModalProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

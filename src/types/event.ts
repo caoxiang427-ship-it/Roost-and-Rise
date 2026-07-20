@@ -3,5 +3,6 @@ export type EventItem = {
     start: { dateTime: string; timeZone?: string } | { date: string }; // date-only = all-day event
     end: { dateTime: string; timeZone?: string } | { date: string };
     title?: string;
+    eventDesc?: string;
     color?: string;
 };

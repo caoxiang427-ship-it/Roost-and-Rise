@@ -40,7 +40,9 @@ function CalendarDayWeekly({
 
   return (
     <TouchableOpacity
-      onPress={() => onPress?.(date)}
+      onPress={() => {
+        onPress?.(date);
+      }}
       style={[dayStyles.wrapper, { width: columnWidth }]}>
       <Text style={dayStyles.dayName}>{dayName}</Text>
       <View style={[dayStyles.circle, isSelected && dayStyles.circleSelected]}>
