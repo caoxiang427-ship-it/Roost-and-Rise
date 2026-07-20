@@ -4,6 +4,7 @@ import { Keyboard } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { TaskItem, NewSubtaskItem, SubtaskItem } from '@/types/todo';
 import { EventItem } from '@/types/event';
+import { DateOrDateTime } from '@howljs/calendar-kit';
 
 type PlannerState = {
     userID: string | null;
@@ -13,6 +14,13 @@ type PlannerState = {
 
     init: () => Promise<void>;
     fetchEvents: () => Promise<void>;
+    addEvent: (
+        title: string,
+        start: DateOrDateTime, 
+        end: DateOrDateTime,
+        color?: string, 
+        subtitle? : string
+    ) => Promise<void>;
 };
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -62,4 +70,26 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
 
         set({ eventItems: formattedEvents, isLoading: false });
     },
-}))
+
+    addEvent: async (title, start, end, color = '#ffff9c', subtitle = '') => {
+        const { userID, fetchEvents } = get();
+        if (!title.trim() || !userID) return;
+
+        const { error } = await supabase
+            .from('events')
+            .insert({
+                user_id: userID,
+                title: title.trim(),
+                subtitle: subtitle.trim() || null,
+                start_time: start,
+                end_time: end,
+                color,
+            });
+
+        if (error) {
+            console.log(error);
+            return;
+        }
+
+        fetchEvents();
+    },}))
