@@ -30,6 +30,7 @@ type PlannerState = {
         color?: string, 
         subtitle? : string,
     ) => Promise<void>,
+    rescheduleEvent: (updatedEvent: Pick<EventItem, 'id' | 'start' | 'end'>) => Promise<void>,
 };
 
 export const usePlannerStore = create<PlannerState>((set, get) => ({
@@ -142,5 +143,45 @@ export const usePlannerStore = create<PlannerState>((set, get) => ({
 
             get().fetchEvents();
         },
+    
+        rescheduleEvent: async (updatedEvent) => {
+            console.log('updatedEvent.start:', updatedEvent.start);
+            const { error } = await supabase
+                .from('events')
+                .update({
+                    start_time: getDateTimeString(updatedEvent.start),
+                    end_time: getDateTimeString(updatedEvent.end),
+                })
+                .eq('id', updatedEvent.id);
+    
+            if (error) {
+                console.log(error);
+                return;
+            }
+
+            get().fetchEvents();
+        },
 
 }))
+
+    // to convert date object into YYYY-MM-DD (for all day events)
+export const toLocalDateString = (d: Date): string => {
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}T00:00:00`;
+};
+
+// EventItem start/end isn't a plain string — it's a union type { dateTime: string; timeZone?: string } | { date: string }
+// this function converts it into a string so it can be stored into the state
+export const getDateTimeString = (
+    eventDate?: { dateTime: string; timeZone?: string } | { date: string }
+    ): string | undefined => {
+        if (!eventDate) return undefined;
+        // check time in eventDate, if dateTime return dateTime, if date return date
+        if ('dateTime' in eventDate) {
+            return eventDate.dateTime;
+            } else {
+            return eventDate.date;
+        }
+}

@@ -5,12 +5,14 @@ import { useEffect, useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ColorPicker, { Panel3, BrightnessSlider, Swatches, Preview } from 'reanimated-color-picker';
-import { usePlannerStore } from '@/store/usePlannerStore';
+import { usePlannerStore, toLocalDateString } from '@/store/usePlannerStore';
 
 type AddEventProps = {
     close: () => void;
     selectedDate: string;
     goToEventHour: (startTime: string) => void;
+    draggedStartTime?: { dateTime: string; timeZone?: string };
+    draggedEndTime?: { dateTime: string; timeZone?: string };
 };
 
 type Ref = BottomSheetModal;
@@ -27,14 +29,20 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
     const [isAllDay, setIsAllDay] = useState<boolean>(false);
     const [eventTitle, setEventTitle] = useState<string>('');
     const [eventDescription, setEventDescription] = useState<string>('');
-    const [startTime, setStartTime] = useState<string>(new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
-    const [endTime, setEndTime] = useState<string>(new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
+    const [startTime, setStartTime] = useState<string>(props.draggedStartTime?.dateTime ?? new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
+    const [endTime, setEndTime] = useState<string>(props.draggedEndTime?.dateTime ?? new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
     const [date, setDate] = useState<string>(props.selectedDate + 'T00:00:00'); // add 'T00:00:00' to prevent timezone discrepancy
     const [color, setColor] = useState<string>('#ffff9c')
-
+    
     useEffect(() => {
         setDate(props.selectedDate + 'T00:00:00');
     }, [props.selectedDate]); //everytime selectedDate changes in planner, AddEvent date will update to match
+
+    // everytime draggedStartTime and draggedEndTIme changes in planner, values in AddEvent will update to match
+    useEffect(() => {
+        if (props.draggedStartTime) setStartTime(props.draggedStartTime.dateTime);
+        if (props.draggedEndTime) setEndTime(props.draggedEndTime.dateTime);
+    }, [props.draggedStartTime, props.draggedEndTime]);
 
     // event tab
     const renderEventTab = () => (
@@ -69,7 +77,7 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                         value={new Date(date)}
                         mode={'date'}
                         is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate.toISOString())}
+                        onValueChange={(event, selectedDate) => selectedDate && setDate(toLocalDateString(selectedDate))}
                     />
                     <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
                     <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
@@ -137,13 +145,21 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                     <TouchableOpacity style={styles.button}
                       onPress={                      
                         async () => {
+                            if (!eventTitle.trim()) {
+                                return Alert.alert("Input a title", "Please input an event title", [{text: "Ok", style: 'cancel'}])
+                            }
+                            if (!isAllDay && startTime === endTime) {
+                                return Alert.alert("Timing error", "Start time and End time cannot be the same", [{text: 'Ok', style: 'cancel'}])
+                            }
                             await addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription);
                             if (!isAllDay) props.goToEventHour?.(startTime);
                             props.close();
                             setEventTitle('');
                             setEventDescription('');
                             setIsAllDay(false);
-                            setColor('#ffff9c');}
+                            setColor('#ffff9c');
+                            setStartTime(new Date().toISOString());
+                            setEndTime(new Date().toISOString())}
                         }>
                         <Text>Add Event</Text>
                     </TouchableOpacity>

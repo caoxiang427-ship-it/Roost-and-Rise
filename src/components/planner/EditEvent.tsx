@@ -5,7 +5,7 @@ import { useEffect, useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ColorPicker, { Panel3, BrightnessSlider, Swatches, Preview } from 'reanimated-color-picker';
-import { usePlannerStore } from '@/store/usePlannerStore';
+import { usePlannerStore, getDateTimeString } from '@/store/usePlannerStore';
 import { EventItem } from '@/types/event';
 
 type EditEventProps = {
@@ -23,19 +23,6 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
 
     const {updateEvent, deleteEvent} = usePlannerStore();
     
-    // props.event.start/end isn't a plain string — it's a union type { dateTime: string; timeZone?: string } | { date: string }
-    // this function converts it into a string so it can be stored into the state
-    const getDateTimeString = (
-        eventDate?: { dateTime: string; timeZone?: string } | { date: string }
-        ): string | undefined => {
-            if (!eventDate) return undefined;
-            // check time in eventDate, if dateTime return dateTime, if date return date
-            if ('dateTime' in eventDate) {
-                return eventDate.dateTime;
-                } else {
-                return eventDate.date;
-            }
-        }
 
     const [selectedTab, setSelectedTab] = useState<"event" | "task">('event');
     const [isAllDay, setIsAllDay] = useState<boolean>(props.event?.allDay ?? false);

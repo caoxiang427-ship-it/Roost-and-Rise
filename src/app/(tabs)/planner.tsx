@@ -50,7 +50,7 @@ function WeekStripHeader(
 
 export default function planner() {
 
-  const {eventItems, eventsLoading, init} = usePlannerStore();
+  const {eventItems, eventsLoading, init, rescheduleEvent} = usePlannerStore();
 
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); //react-native-calendars take in dates in YYYY-MM-DD format
@@ -59,7 +59,12 @@ export default function planner() {
   });
   const formattedSelectedDate = new Date(selectedDate).toLocaleDateString('en-GB');
   const [events, setEvents] = useState<EventItem[]>(eventItems);
-  const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null); // upon pressing on event -> event becomes selected and open editEventSheet
+  const [selectedEvent, setSelectedEvent] = useState<EventItem | undefined>(undefined); // upon pressing on event -> event becomes selected and open editEventSheet
+  const [rescheduledEvent, setRescheduledEvent] = useState<EventItem | undefined>(undefined); //upon long press, select "reschedule event" so you can drag to reschedule
+
+  // for the drag to create event
+  const [draggedStart, setDraggedStart] = useState<{ dateTime: string; timeZone?: string } | null>(null);
+  const [draggedEnd, setDraggedEnd] = useState<{ dateTime: string; timeZone?: string } | null>(null);
 
   const calendarRef = useRef<CalendarKitHandle>(null);
   // bottom sheet references
@@ -88,8 +93,6 @@ export default function planner() {
       });
   };
 
-
-
   useEffect(() => {
     calendarRef.current?.goToDate({ date: selectedDate, animatedDate: true });
   }, [selectedDate]);
@@ -106,10 +109,26 @@ export default function planner() {
         initialTimeIntervalHeight={90}
         numberOfDays={numberOfDays}
         onPressEvent={(event) => {openEditEventSheet(); setSelectedEvent(event)}}
+        onLongPressEvent={(event) => setRescheduledEvent(event)}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
         allowDragToCreate
         defaultDuration={30} // default event 30 mins if they tap instead of dragging
-        onDragCreateEventEnd={(newEvent) => {}}
+        onDragCreateEventEnd={(newEvent) => {
+          setDraggedStart(newEvent.start);
+          setDraggedEnd(newEvent.end);
+          openAddEventSheet();
+        }}
+        allowDragToEdit={true}
+        selectedEvent={rescheduledEvent ?? undefined}
+        onDragSelectedEventEnd={(event: any) => {
+          rescheduleEvent({
+            id: event.id,
+            start: event.start,
+            end: event.end,
+         })
+         setRescheduledEvent(undefined);
+        }
+        }
         spaceFromBottom={100}
       >
         <View style={styles.header}>
@@ -135,8 +154,16 @@ export default function planner() {
           onPress={openAddEventSheet}>
           <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
-
-        <AddEvent ref={addEventRef} close={closeAddEventSheet} selectedDate={selectedDate} goToEventHour={(startTime) => goToEventHour}></AddEvent>
+        
+        <AddEvent
+          ref={addEventRef}
+          close={closeAddEventSheet}
+          selectedDate={selectedDate}
+          goToEventHour={(startTime) => goToEventHour(startTime)}
+          draggedStartTime={draggedStart ?? undefined}
+          draggedEndTime={draggedEnd ?? undefined}
+        />
+        
         <EditEvent
           ref={editEventRef}
           close={closeEditEventSheet}
