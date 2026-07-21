@@ -5,7 +5,7 @@ import { useEffect, useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ColorPicker, { Panel3, BrightnessSlider, Swatches, Preview } from 'reanimated-color-picker';
-import { usePlannerStore, toLocalDateString } from '@/store/usePlannerStore';
+import { usePlannerStore, formatDatetoString } from '@/store/usePlannerStore';
 
 type AddEventProps = {
     close: () => void;
@@ -23,26 +23,46 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
         [])
 
+    // helper function for rescheduling event to different date
+    const combineDateAndTime = (dateStr: string, timeStr: string) => {
+        const d = new Date(dateStr); // dateStr example: "2026-07-21T00:00:00" (midnight safe date string)
+        const t = new Date(timeStr); //timeStr example: "2026-07-21T14:30:00.000Z" (full ISO string)
+        d.setHours(t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds());
+        return d.toISOString();
+    };
+
     const {addEvent} = usePlannerStore();
 
     const [selectedTab, setSelectedTab] = useState<"event" | "task">('event');
     const [isAllDay, setIsAllDay] = useState<boolean>(false);
     const [eventTitle, setEventTitle] = useState<string>('');
     const [eventDescription, setEventDescription] = useState<string>('');
-    const [startTime, setStartTime] = useState<string>(props.draggedStartTime?.dateTime ?? new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
-    const [endTime, setEndTime] = useState<string>(props.draggedEndTime?.dateTime ?? new Date().toISOString()); //dateTime -> full ISO string "2026-07-20T14:30:00.000Z", if allDay date -> YYYY-MM-DD
+    const [startTime, setStartTime] = useState<string>(
+        props.draggedStartTime?.dateTime
+            ?? combineDateAndTime(props.selectedDate + 'T00:00:00', new Date().toISOString()) // default is selected date + time currently
+    );
+    const [endTime, setEndTime] = useState<string>(
+        props.draggedEndTime?.dateTime
+            ?? combineDateAndTime(props.selectedDate + 'T00:00:00', new Date().toISOString())
+    );
     const [date, setDate] = useState<string>(props.selectedDate + 'T00:00:00'); // add 'T00:00:00' to prevent timezone discrepancy
     const [color, setColor] = useState<string>('#ffff9c')
-    
+
+    //everytime selectedDate changes in planner, AddEvent date, startTime and endTime will update to match
     useEffect(() => {
-        setDate(props.selectedDate + 'T00:00:00');
-    }, [props.selectedDate]); //everytime selectedDate changes in planner, AddEvent date will update to match
+        const newDate = props.selectedDate + 'T00:00:00';
+        setDate(newDate);
+        setStartTime(prev => combineDateAndTime(newDate, prev));
+        setEndTime(prev => combineDateAndTime(newDate, prev));
+    }, [props.selectedDate]);
 
     // everytime draggedStartTime and draggedEndTIme changes in planner, values in AddEvent will update to match
     useEffect(() => {
         if (props.draggedStartTime) setStartTime(props.draggedStartTime.dateTime);
         if (props.draggedEndTime) setEndTime(props.draggedEndTime.dateTime);
     }, [props.draggedStartTime, props.draggedEndTime]);
+
+
 
     // event tab
     const renderEventTab = () => (
@@ -77,14 +97,21 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                         value={new Date(date)}
                         mode={'date'}
                         is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setDate(toLocalDateString(selectedDate))}
+                        onValueChange={(event, selectedDate) => {
+                            // if date changes, update startTime and endTime to match
+                            if (!selectedDate) return;
+                                const newDate = formatDatetoString(selectedDate);
+                                setDate(newDate);
+                                setStartTime(prev => combineDateAndTime(newDate, prev)); 
+                                setEndTime(prev => combineDateAndTime(newDate, prev));
+                        }}
                     />
                     <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
                     <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
                         onPress={() => {
-                        const next = !isAllDay;
-                        setIsAllDay(next);
-                        if (next) {
+                        const nextState = !isAllDay;
+                        setIsAllDay(nextState);
+                        if (nextState) {
                         setStartTime(date);
                         setEndTime(date);
                         }
@@ -152,15 +179,19 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                                 return Alert.alert("Timing error", "Start time and End time cannot be the same", [{text: 'Ok', style: 'cancel'}])
                             }
                             await addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription);
-                            if (!isAllDay) props.goToEventHour?.(startTime);
+                            if (!isAllDay) {props.goToEventHour?.(startTime)};
                             props.close();
+                            // reset state
                             setEventTitle('');
                             setEventDescription('');
                             setIsAllDay(false);
                             setColor('#ffff9c');
-                            setStartTime(new Date().toISOString());
-                            setEndTime(new Date().toISOString())}
-                        }>
+                            const formattedSelectedDate = props.selectedDate + 'T00:00:00';
+                            setDate(formattedSelectedDate);
+                            setStartTime(combineDateAndTime(formattedSelectedDate, new Date().toISOString()));
+                            setEndTime(combineDateAndTime(formattedSelectedDate, new Date().toISOString()));
+                                                
+                      }}>
                         <Text>Add Event</Text>
                     </TouchableOpacity>
 

@@ -108,6 +108,7 @@ export default function planner() {
         isLoading={eventsLoading}
         initialTimeIntervalHeight={90}
         numberOfDays={numberOfDays}
+        allowPinchToZoom={true}
         onPressEvent={(event) => {openEditEventSheet(); setSelectedEvent(event)}}
         onLongPressEvent={(event) => setRescheduledEvent(event)}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
