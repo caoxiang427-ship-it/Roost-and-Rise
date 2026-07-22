@@ -80,8 +80,8 @@ export default function SignUpScreen() {
 
           <View style={styles.cardBody}>
             <View style={styles.welcomeBlock}>
-              <Text style={styles.title}>Welcome back</Text>
-              <Text style={styles.subtitle}>Sunny has been waiting for you</Text>
+              <Text style={styles.title}>Join Us</Text>
+              <Text style={styles.subtitle}>Roost and Rise, one day at a time</Text>
             </View>
             <Text style={styles.label}>Username</Text>
             <View style={styles.inputRow}>

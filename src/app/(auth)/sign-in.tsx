@@ -77,8 +77,8 @@ export default function SignInScreen() {
 
           <View style={styles.cardBody}>
             <View style={styles.welcomeBlock}>
-              <Text style={styles.title}>Join Us</Text>
-              <Text style={styles.subtitle}>Roost and Rise, one day at a time</Text>
+              <Text style={styles.title}>Welcome Back</Text>
+              <Text style={styles.subtitle}>Sunny has been waiting for you</Text>
             </View>
             <Text style={styles.label}>Email</Text>
             <View style={styles.inputRow}>
