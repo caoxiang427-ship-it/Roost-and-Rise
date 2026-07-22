@@ -4,11 +4,12 @@
  * If users successfully logged into their account, they are redirected to home screen.
 */
 
-import { useState } from 'react';
-import { Link, router } from 'expo-router';
 import { signIn } from '@/lib/auth';
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
-import { signInWithGoogle } from '@/lib/auth';
+import { styles } from '@/styles/auth_styles';
+import { Ionicons } from '@expo/vector-icons';
+import { Link, router } from 'expo-router';
+import { useState } from 'react';
+import { Alert, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 
 export default function SignInScreen() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function SignInScreen() {
   async function handleSignIn() {
     const isValid = checkInputs();
 
-    if (!isValid) return;    
+    if (!isValid) return;
 
     setLoading(true);
 
@@ -42,11 +43,10 @@ export default function SignInScreen() {
       }
       return;
     }
-    // go to home screen
+
     router.replace('/');
   }
 
-  // Does not work
   async function handleGoogleSignIn() {
     setLoading(true);
 
@@ -55,191 +55,91 @@ export default function SignInScreen() {
     setLoading(false);
 
     if (result.error) {
-      Alert.alert('Google sign-in failed', result.error);
+      const errorMessage =
+        typeof result.error === 'string' ? result.error : result.error?.message ?? 'Something went wrong';
+      Alert.alert('Google sign-in failed', errorMessage);
       return;
     }
 
     router.replace('/');
   }
+  
 
   return (
-    <View style={styles.container}>
-      <View style={styles.formWrapper}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Welcome! 🐔</Text>
-          <Text style={styles.subtitle}>Log in to your account</Text>
+    <View style={styles.screen}>
+      <ScrollView contentContainerStyle={styles.scrollBody} keyboardShouldPersistTaps="handled">
+        <View style={styles.card}>
+          <Image
+            source={require('@/assets/images/auth/header.png')}
+            style={styles.headerImg}
+            resizeMode="cover"
+          />
+
+          <View style={styles.cardBody}>
+            <View style={styles.welcomeBlock}>
+              <Text style={styles.title}>Join Us</Text>
+              <Text style={styles.subtitle}>Roost and Rise, one day at a time</Text>
+            </View>
+            <Text style={styles.label}>Email</Text>
+            <View style={styles.inputRow}>
+              <Ionicons name="mail-outline" size={17} color="#B08C3E" />
+              <TextInput
+                style={styles.inputFlex}
+                onChangeText={setEmail}
+                value={email}
+                placeholder="name@email.com"
+                placeholderTextColor="#C4B58E"
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+
+            <Text style={styles.label}>Password</Text>
+            <View style={styles.inputRow}>
+              <Ionicons name="lock-closed-outline" size={17} color="#B08C3E" />
+              <TextInput
+                style={styles.inputFlex}
+                onChangeText={setPassword}
+                value={password}
+                placeholder="Password"
+                placeholderTextColor="#C4B58E"
+                secureTextEntry
+              />
+            </View>
+
+            <View style={ { height : 20 } } />
+
+            <Pressable
+              style={[styles.button, isLoading && styles.buttonDisabled]}
+              onPress={handleSignIn}
+              disabled={isLoading}
+            >
+              <Text style={styles.buttonText}>
+                {isLoading ? 'Coming home 🪺...' : 'Sign in'}
+              </Text>
+            </Pressable>
+
+            <View style={styles.dividerRow}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or</Text>
+              <View style={styles.dividerLine} />
+            </View>
+
+            <Pressable style={styles.googleButton} onPress={handleGoogleSignIn}>
+              <Ionicons name="logo-google" size={17} color="#3D2914" />
+              <Text style={styles.googleButtonText}>Sign in with Google</Text>
+            </Pressable>
+
+            <Text style={styles.footerText}>
+              No account?{' '}
+              <Link href="/(auth)/sign-up" style={styles.footerLink}>
+                Create one now
+              </Link>
+            </Text>
+
+          </View>
         </View>
-
-        <Text style={styles.label}>Email</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={setEmail}
-          value={email}
-          placeholder="Email"
-          autoCapitalize="none"
-          keyboardType="email-address"
-        />
-
-        <Text style={styles.label}>Password</Text>
-        <TextInput
-          style={styles.input}
-          onChangeText={setPassword}
-          value={password}
-          placeholder="Password"
-          secureTextEntry
-        />
-
-        <Link href="/(auth)/forgot_password" style={styles.forgotLink}>
-          Forgot password?
-        </Link>
-
-        <Pressable
-          style={[styles.button, isLoading && styles.buttonDisabled]} 
-          onPress={handleSignIn} 
-          disabled={isLoading}
-        >
-          <Text style={styles.buttonText}>
-            {isLoading ? 'Coming home 🪺...' : 'Sign In'}
-          </Text>
-        </Pressable>
-
-        <View style={styles.dividerRow}>
-          <View style={styles.dividerLine} />
-          <Text style={styles.dividerText}>or</Text>
-          <View style={styles.dividerLine} />
-        </View>
-
-        <Pressable 
-          style={styles.googleButton} 
-          onPress={handleGoogleSignIn}
-        >
-          <Text style={styles.googleIcon}>G</Text>
-          <Text style={styles.googleButtonText}>Sign in with Google</Text>
-        </Pressable>
-
-        <Text style={styles.footerText}>
-          No account?{' '}
-          <Link href="/(auth)/sign-up" style={styles.footerLink}>
-            Create one now
-          </Link>
-        </Text>
-      </View>
+      </ScrollView>
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFE8B8',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  formWrapper: {
-    gap: 8,
-  },
-  header: {
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 26,
-    fontWeight: 'bold',
-    color: '#3D2914',
-  },
-  subtitle: {
-    fontSize: 13,
-    color: '#8B6F3F',
-    marginTop: 2,
-  },
-  label: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#3D2914',
-    marginTop: 4,
-    marginBottom: 2,
-  },
-  input: {
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E0D4A8',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 10,
-    fontSize: 15,
-    color: '#3D2914',
-  },
-  forgotLink: {
-    fontSize: 13,
-    color: '#A67C2E',
-    textAlign: 'right',
-    marginTop: 4,
-    marginBottom: 4,
-  },
-  button: {
-    backgroundColor: '#E8A33D',
-    padding: 12,
-    borderRadius: 8,
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 4,
-    gap: 12,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#E0D4A8',
-  },
-  dividerText: {
-    fontSize: 13,
-    color: '#8B6F3F',
-    fontWeight: '600',
-  },
-  googleButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#FFFFFF',
-    borderColor: '#E0D4A8',
-    borderWidth: 1,
-    padding: 10,
-    borderRadius: 8,
-    gap: 10,
-  },
-  googleIcon: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#3D2914',
-    width: 24,
-    height: 24,
-    textAlign: 'center',
-    lineHeight: 24,
-    backgroundColor: '#FFF9E6',
-    borderRadius: 12,
-  },
-  googleButtonText: {
-    color: '#3D2914',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  footerText: {
-    fontSize: 14,
-    color: '#8B6F3F',
-    textAlign: 'center',
-    marginTop: 10,
-  },
-  footerLink: {
-    color: '#A67C2E',
-    fontWeight: 'bold',
-  },
-});
