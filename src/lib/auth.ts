@@ -1,22 +1,29 @@
-/*
- * Authentication helper function.
- * All Supabase login/signup/logout logic is here.
- * Add password reset.
- * Add lockout for failed attempts.
-*/
-
 import * as AuthSession from 'expo-auth-session';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as WebBrowser from 'expo-web-browser';
 import { supabase } from './supabase';
+
+WebBrowser.maybeCompleteAuthSession();
+
+const isExpoGo =
+  Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
+const BASE_MIN_LOCKOUT = 5;
+const MAX_ATTEMPTS_BEFORE_LOCKOUT = 5;
+
+function makeRedirect(path: string) {
+  return AuthSession.makeRedirectUri(
+    isExpoGo ? { path } : { scheme: 'roostandrise', path }
+  );
+}
 
 export async function signUp(email: string, password: string, name: string) {
   const { data, error } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      // Pass display name as metadata into auth.users table
-      // Database trigger reads this to auto-create the user's row in profiles table
       data: { display_name: name },
+      emailRedirectTo: makeRedirect('sign-in'),
     },
   });
   return { data, error };
@@ -41,23 +48,15 @@ export async function signIn(email: string, password: string) {
     await failedLoginRecorder(email);
     return { error: error.message, locked: false };
   }
-  
+
   await resetFailedLogins(email);
 
   return { data, error: null };
 }
 
-// It doesn't work. Cannot open the google sign-in page (invalid address sth)
-WebBrowser.maybeCompleteAuthSession();
-
 export async function signInWithGoogle() {
-  // Builds the url that google will send the user back after they authenticate
-  const redirectTo = AuthSession.makeRedirectUri({
-    scheme: 'roostandrise',
-    path: 'sign-in',
-  });
+  const redirectTo = makeRedirect('sign-in');
 
-  // Prepare the google sign-in page
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
@@ -70,10 +69,7 @@ export async function signInWithGoogle() {
 
   if (!data?.url) return { error: 'No OAuth URL returned' };
 
-  const result = await WebBrowser.openAuthSessionAsync(
-    data.url,
-    redirectTo
-  );
+  const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
 
   if (result.type === 'success' && result.url) {
     const authUrl = new URL(result.url);
@@ -83,10 +79,10 @@ export async function signInWithGoogle() {
     const refreshToken = params.get('refresh_token');
 
     if (accessToken && refreshToken) {
-      const { data: sessionData, error: sessionError } = 
-        await supabase.auth.setSession({ 
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.setSession({
           access_token: accessToken,
-          refresh_token: refreshToken 
+          refresh_token: refreshToken,
         });
       return { data: sessionData, error: sessionError };
     }
@@ -100,13 +96,18 @@ export async function signOut() {
   return { error };
 }
 
-// Also doesn't work, cannot open the link
 export async function resetPasswordRequest(email: string) {
-  const { error } = await supabase.auth.resetPasswordForEmail(
-    email,
-    { redirectTo: 'roostandrise://reset_password'}
-  );
+  const { error } = await supabase.auth.resetPasswordForEmail(email);
   return { error };
+}
+
+export async function verifyResetCode(email: string, token: string) {
+  const { data, error } = await supabase.auth.verifyOtp({
+    email,
+    token,
+    type: 'recovery',
+  });
+  return { data, error };
 }
 
 export async function updatePassword(newPassword: string) {
@@ -115,11 +116,6 @@ export async function updatePassword(newPassword: string) {
   return { error };
 }
 
-
-const BASE_MIN_LOCKOUT = 5;
-const MAX_ATTEMPTS_BEFORE_LOCKOUT = 5;
-
-// Check before the user attempts signing in
 export async function checkLockout(email: string) {
   const { data } = await supabase
     .from('login_attempts')
@@ -158,17 +154,17 @@ export async function failedLoginRecorder(email: string) {
 
   let lockedUntil: string | null = null;
   if (newCount >= MAX_ATTEMPTS_BEFORE_LOCKOUT) {
-    const lockoutTier = newCount - MAX_ATTEMPTS_BEFORE_LOCKOUT + 1; // amt of lockout time increases for every failed attempt
+    const lockoutTier = newCount - MAX_ATTEMPTS_BEFORE_LOCKOUT + 1;
     const lockoutMinutes = BASE_MIN_LOCKOUT * Math.pow(2, lockoutTier - 1);
-    
+
     const untilTime = new Date();
-    untilTime.setMinutes(untilTime.getMinutes() + lockoutMinutes); 
+    untilTime.setMinutes(untilTime.getMinutes() + lockoutMinutes);
     lockedUntil = untilTime.toISOString();
   }
 
   const result = await supabase
     .from('login_attempts')
-    .upsert({ // insert OR update
+    .upsert({
       email,
       count_fail_times: newCount,
       locked_until: lockedUntil,
@@ -178,7 +174,6 @@ export async function failedLoginRecorder(email: string) {
   return result;
 }
 
-// if the user successfully logged in
 export async function resetFailedLogins(email: string) {
   const result = await supabase
     .from('login_attempts')

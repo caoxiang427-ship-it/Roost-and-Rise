@@ -4,7 +4,7 @@
  * If users successfully logged into their account, they are redirected to home screen.
 */
 
-import { signIn, signInWithGoogle } from '@/lib/auth';
+import { signIn } from '@/lib/auth';
 import { styles } from '@/styles/auth_styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
@@ -63,6 +63,7 @@ export default function SignInScreen() {
 
     router.replace('/');
   }
+  
 
   return (
     <View style={styles.screen}>
@@ -106,9 +107,7 @@ export default function SignInScreen() {
               />
             </View>
 
-            <Link href="/(auth)/forgot_password" style={styles.forgotLink}>
-              Forgot password?
-            </Link>
+            <View style={ { height : 20 } } />
 
             <Pressable
               style={[styles.button, isLoading && styles.buttonDisabled]}
