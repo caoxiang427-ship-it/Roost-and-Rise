@@ -108,7 +108,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                             <Preview />
                             <Panel3 />
                             <BrightnessSlider />
-                            <Swatches colors={['#ffff9c', '#ff7272', '#72c6ff', '#8cff72', '#c672ff']} />
+                            <Swatches colors={['#FF7F82', '#F38958', '#ffc955', '#5EE7B7', '#75C0C5', '#b1a1ff', '#F49FD2']} />
                         </ColorPicker>
                     </View>
                 </View>

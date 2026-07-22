@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // for difficulty colour mapping
 const DIFFICULTY_COLOR: Record<string, string> = {
-  easy: '#00BC22', moderate: '#EE8F00', difficult: '#BC0000', '': '#937254',
+  easy: '#00931b', moderate: '#d78100', difficult: '#BC0000', '': '#937254',
 }; 
 
 // to standardise date format between the 2 different calendar libraries
@@ -93,7 +93,10 @@ export default function planner() {
     setDummyTasks(prev => prev.map(t => (t.id === taskId ? { ...t, completed: !t.completed } : t)));
 
   // merge real events + mapped tasks. Later: replace dummyTasks with taskItems from useTodoStore.
-  const calendarEvents = [...eventItems, ...dummyTasks.map(taskToCalendarEvent)];
+  const calendarEvents = [
+    // change default color to 'transparent' to allow for horizontal margins for event blocks
+    ...eventItems.map(e => ({ ...e, backgroundColor: e.color, color: 'transparent' })), 
+    ...dummyTasks.map(taskToCalendarEvent)];
 
   // for taskItem -> guards the checkbox-vs-onPressEvent conflict 
   const checkboxPressedAt = useRef(0);
@@ -138,33 +141,133 @@ export default function planner() {
   const renderEvent = (event: any) => {
     // plain calendar event
     if (!event.isTask) {
+      // daily view
+      if (numberOfDays === 1) {
+        return (
+          <View style={{ paddingHorizontal: 10, flex: 1}}>
+            <View style={[styles.eventBlock, { backgroundColor: event.backgroundColor, padding: 10}]}>
+              <Text style={[styles.eventTitle, { fontSize: 13, marginBottom: 5 }]}>{event.title}</Text>
+              {event.eventDesc ? (
+                <Text style={styles.eventDesc}>{event.eventDesc}</Text>
+              ) : null}
+            </View>
+          </View>
+        );
+      }
+      // weekly view
+      else {
+        return (
+          <View style={[styles.eventBlock, { backgroundColor: event.backgroundColor, padding: 5 }]}>
+            <Text style={[styles.eventTitle, { fontSize: 8 }]}>{event.title}</Text>
+          </View>
+        );
+      }
+    }
+  
+    // task event (distinct look + tickable checkbox)
+    
+    if (numberOfDays === 1) {
       return (
-        <View style={[styles.eventBlock, { backgroundColor: event.color ?? '#ffff9c' }]}>
-          <Text numberOfLines={1} style={styles.eventTitle}>{event.title}</Text>
-          {event.eventDesc ? (
-            <Text numberOfLines={1} style={styles.eventDesc}>{event.eventDesc}</Text>
-          ) : null}
+        <View style={{ paddingHorizontal: 10, flex: 1}}>
+          <View style={[styles.taskBlock, {padding: 10, gap: 6}, event.completed && styles.taskBlockDone]}>
+            <TouchableOpacity
+              hitSlop={8}
+              onPress={() => {
+                checkboxPressedAt.current = Date.now();
+                toggleDummyTaskComplete(event.taskId);
+              }}>
+              <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={DIFFICULTY_COLOR[event.difficulty]} />
+            </TouchableOpacity>
+            <Text numberOfLines={2} style={[styles.taskTitle, { fontSize: 13 }, event.completed && styles.taskTitleDone]}>
+              {event.title}
+            </Text>
+          </View>
         </View>
       );
     }
-    // task event (distinct look + tickable checkbox)
-    const accent = DIFFICULTY_COLOR[event.difficulty] ?? '#937254';
-    return (
-      <View style={[styles.taskBlock, { borderLeftColor: accent }, event.completed && styles.taskBlockDone]}>
-        <TouchableOpacity
-          hitSlop={8}
-          onPress={() => {
-            checkboxPressedAt.current = Date.now();
-            toggleDummyTaskComplete(event.taskId);
-          }}>
-          <Ionicons name={event.completed ? 'checkbox' : 'square-outline'} size={18} color={accent} />
-        </TouchableOpacity>
-        <Text numberOfLines={2} style={[styles.taskTitle, event.completed && styles.taskTitleDone]}>
-          {event.title}
-        </Text>
-      </View>
-    );
+    else {
+      return (
+      <View style={[styles.taskBlock, { paddingHorizontal: 2, paddingVertical: 5, gap: 2}, event.completed && styles.taskBlockDone]}>
+          <TouchableOpacity
+            hitSlop={8}
+            onPress={() => {
+              checkboxPressedAt.current = Date.now();
+              toggleDummyTaskComplete(event.taskId);
+            }}>
+            <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={8} color={DIFFICULTY_COLOR[event.difficulty]} />
+          </TouchableOpacity>
+          <Text style={[styles.taskTitle, { fontSize: 8 }, event.completed && styles.taskTitleDone]}>
+            {event.title}
+          </Text>
+        </View>
+      );
+    }
   };
+
+  // custom all day event render, update with useCallback later
+  const renderAlldayEvent = (event: any) => {
+    // plain calendar event
+    if (!event.isTask) {
+      // daily view
+      if (numberOfDays === 1) {
+        return (
+          <View style={{ paddingHorizontal: 10, flex: 1, paddingBottom: 2}}>
+            <View style={[styles.eventBlock, { backgroundColor: event.backgroundColor, paddingVertical: 5, paddingHorizontal: 10}]}>
+              <Text style={[styles.eventTitle, { fontSize: 13}]}>{event.title}</Text>
+            </View>
+          </View>
+        );
+      }
+      // weekly view
+      else {
+        return (
+          <View style={[styles.eventBlock, { flex: 0, backgroundColor: event.backgroundColor, paddingVertical: 3, paddingHorizontal: 5}]}>
+            <Text numberOfLines={1} style={[styles.eventTitle, { fontSize: 8 }]}>{event.title}</Text>
+          </View>
+        );
+      }
+    }
+  
+    // task event (distinct look + tickable checkbox)
+    
+    if (numberOfDays === 1) {
+      return (
+        <View style={{ paddingHorizontal: 10, flex: 1, paddingBottom: 2}}>
+          <View style={[styles.taskBlock, {paddingVertical: 5, paddingHorizontal: 10, gap: 6}, event.completed && styles.taskBlockDone]}>
+            <TouchableOpacity
+              hitSlop={8}
+              onPress={() => {
+                checkboxPressedAt.current = Date.now();
+                toggleDummyTaskComplete(event.taskId);
+              }}>
+              <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={15} color={DIFFICULTY_COLOR[event.difficulty]} />
+            </TouchableOpacity>
+            <Text numberOfLines={1} style={[styles.taskTitle, { fontSize: 13 }, event.completed && styles.taskTitleDone]}>
+              {event.title}
+            </Text>
+          </View>
+        </View>
+      );
+    }
+    else {
+      return (
+      <View style={[styles.taskBlock, { flex: 0, paddingHorizontal: 2, paddingVertical: 5, gap: 2}, event.completed && styles.taskBlockDone]}>
+          <TouchableOpacity
+            hitSlop={8}
+            onPress={() => {
+              checkboxPressedAt.current = Date.now();
+              toggleDummyTaskComplete(event.taskId);
+            }}>
+            <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={8} color={DIFFICULTY_COLOR[event.difficulty]} />
+          </TouchableOpacity>
+          <Text numberOfLines={1} style={[styles.taskTitle, { fontSize: 8 }, event.completed && styles.taskTitleDone]}>
+            {event.title}
+          </Text>
+        </View>
+      );
+    }
+  };
+
     
   return (
       <CalendarContainer
@@ -202,7 +305,15 @@ export default function planner() {
           hourBorderColor: '#917F6E',
           singleDayBorderColor: '#917F6E',
           nowIndicatorColor: '#db4346',
+          colors: {
+            border: '#d1d0d0'
+          },
+          countText: {
+            fontFamily: 'InterSemiBold',
+            color: '#7e6751'
+          }
         }}
+        overlapEventsSpacing={0}
       >
         <ImageBackground 
           source={require("../../../assets/images/planner/planner_header.png")} 
@@ -241,7 +352,7 @@ export default function planner() {
         </ImageBackground>
 
         <WeeklyCalendar selectedDate={selectedDate} setSelectedDate={setSelectedDate}/>
-        <CalendarHeader dayBarHeight={0} renderDayItem={() => null}/>
+        <CalendarHeader renderEvent={renderAlldayEvent} dayBarHeight={0} renderDayItem={() => null}/>
         <CalendarBody renderEvent={renderEvent} renderHour={renderHour}/>
 
         <TouchableOpacity 

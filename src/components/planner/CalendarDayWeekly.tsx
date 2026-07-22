@@ -80,7 +80,7 @@ const dayStyles = StyleSheet.create({
     justifyContent: 'center',
     borderWidth: 1.5,
     borderColor: '#937254',
-    backgroundColor: '#FCF4D2',
+    backgroundColor: '#FFFBE8',
   },
   circleSelected: { backgroundColor: '#937254', borderColor: '#5E4833' },
   text: { fontFamily: 'InterBold', fontSize: 16, color: '#937254' },

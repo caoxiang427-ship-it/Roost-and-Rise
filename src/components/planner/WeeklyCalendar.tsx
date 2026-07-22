@@ -31,7 +31,7 @@ const WeeklyCalendar = (props: WeeklyCalendarProps) => {
             hideDayNames
             calendarHeight={70}
             calendarWidth={weekStripWidth}
-            style={{ backgroundColor: '#F4E6B0', paddingLeft: 0, paddingRight: 0, marginTop: 0, marginBottom: 0, paddingVertical: 9}}
+            style={{ backgroundColor: '#F7EDD3', paddingLeft: 0, paddingRight: 0, marginTop: 0, marginBottom: 0, paddingVertical: 9}}
             markedDates={{
                 [props.selectedDate]: { selected: true },
             }}
@@ -44,13 +44,12 @@ const WeeklyCalendar = (props: WeeklyCalendarProps) => {
 const styles = StyleSheet.create({
     calendar: {
     flexDirection: 'row',
-    backgroundColor: 'red',
     },
     calendarLeft: {
     justifyContent: 'center',
     alignItems: 'center',
     borderRightWidth: 1,
-    backgroundColor: '#bb9e84',
+    backgroundColor: '#D1B69E',
     borderColor: "#917F6E"
     },
     text: {fontFamily: "InterBold", color: '#FFF', fontSize: 15}

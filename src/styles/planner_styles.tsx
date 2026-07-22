@@ -85,18 +85,41 @@ export const styles = StyleSheet.create({
     fontSize: 11,
   },
   // calendar event look
-  eventBlock: { flex: 1, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 4, justifyContent: 'center' },
-  eventTitle: { fontFamily: 'InterSemiBold', fontSize: 12, color: '#3f3f3f' },
-  eventDesc: { fontSize: 10, color: '#5f5f5f' },
+  eventBlock: { 
+    flex: 1, 
+    borderRadius: 10, 
+    },
+  eventTitle: { 
+    fontFamily: 'InterBold',
+    color: '#FFF',
+    },
+  eventDesc: {
+    fontFamily: 'InterBold',
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.7)' 
+    },
 
   // task event look — deliberately different: white card, difficulty accent bar, checkbox
   taskBlock: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#FFF', borderRadius: 6, borderLeftWidth: 5,
-    paddingHorizontal: 6, paddingVertical: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2,
+    flex: 1, 
+    flexDirection: 'row', 
+    backgroundColor: '#FFF', 
+    borderWidth: 1,
+    borderColor: '#AAAAAA',
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 4 }, 
+    shadowOpacity: 0.55, 
+    shadowRadius: 2, 
+    elevation: 7,
+    borderRadius: 10,
   },
-  taskBlockDone: { backgroundColor: '#F0F0F0', opacity: 0.85 },
-  taskTitle: { flex: 1, fontFamily: 'InterSemiBold', fontSize: 12, color: '#5E4833' },
-  taskTitleDone: { color: 'rgba(94,72,51,0.6)', textDecorationLine: 'line-through' },
+  taskBlockDone: { 
+    backgroundColor: '#f0f0f0', 
+    opacity: 0.65 
+  },
+  taskTitle: { 
+    flex: 1, 
+    fontFamily: 'InterBold', 
+    color: '#7D7D7D' },
+  taskTitleDone: { textDecorationLine: 'line-through' },
 });
