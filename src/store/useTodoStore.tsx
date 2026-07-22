@@ -92,7 +92,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             completed: task.completed,
             dread: task.dread,
             difficulty: task.difficulty,
-            taskDesc: task.task_desc,
+            taskDesc: task.task_desc ?? '',
             subtasks: task.subtasks ?? [],
             scheduledDate: task.scheduled_date,
             xpAwarded: task.xp_awarded,

@@ -10,6 +10,47 @@ import EditEvent from '@/components/planner/EditEvent';
 import { usePlannerStore } from '@/store/usePlannerStore';
 import { TaskItem } from '@/types/todo';
 
+// for difficulty colour mapping
+const DIFFICULTY_COLOR: Record<string, string> = {
+  easy: '#00BC22', moderate: '#EE8F00', difficult: '#BC0000', '': '#937254',
+}; 
+
+// to standardise date format between the 2 different calendar libraries
+// umm honestly it probably would be easier to just build my own weekly calendar instead of using the library but i alr did it so :(
+const standardiseDateFormat = (dateInput: string) => {
+  const d = new Date(dateInput);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+}
+
+// helper function to convert TaskItem to EventItem
+const addMinutes = (iso: string, m: number) =>
+  new Date(new Date(iso).getTime() + m * 60000).toISOString();
+
+// function to convert taskItem into new object that's structurally compatible with what library calendar kit requires (it's eventItem with more properties)
+const taskToCalendarEvent = (t: TaskItem) => {
+  // !! converts datatype to boolean, if start.time is present, timed = true
+  const timed = !!t.startTime;
+  return {
+    id: `task-${t.id}`, // 'task' prefix to distinguish it from regular calendar events
+    title: t.text,
+    isTask: true as const,
+    taskId: t.id,
+    completed: t.completed,
+    difficulty: t.difficulty,
+    color: 'transparent', // we fully custom-render tasks, so base color is unused
+    ...(timed
+      ? {
+          allDay: false,
+          start: { dateTime: t.startTime! },
+          end: { dateTime: t.endTime ?? addMinutes(t.startTime!, 30) }, // default 30 min
+        }
+      : {
+          allDay: true,
+          start: { date: t.scheduledDate },
+          end: { date: t.scheduledDate },
+        }),
+  };
+};
 
 export default function planner() {
 
@@ -26,8 +67,33 @@ export default function planner() {
   const [draggedStart, setDraggedStart] = useState<{ dateTime: string; timeZone?: string } | null>(null);
   const [draggedEnd, setDraggedEnd] = useState<{ dateTime: string; timeZone?: string } | null>(null);
 
+    // dummy tasks (for testing first)
+  const now = new Date();
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const at = (h: number, m: number) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString(); };
+
+  const [dummyTasks, setDummyTasks] = useState<TaskItem[]>([
+    { id: 9001, text: 'Finish planner integration', completed: false, dread: false,
+      difficulty: 'difficult', taskDesc: 'wire tasks into calendar', subtasks: [],
+      scheduledDate: todayStr, xpAwarded: 0, startTime: at(10, 0), endTime: at(10, 30) },
+    { id: 9002, text: 'Reply to emails', taskDesc: '', completed: false, dread: false,
+      difficulty: 'easy', subtasks: [], scheduledDate: todayStr, xpAwarded: 0,
+      startTime: at(14, 0), endTime: at(15, 0) },
+    { id: 9003, text: 'Buy groceries (no time set)', taskDesc: '', completed: false, dread: false,
+      difficulty: 'moderate', subtasks: [], scheduledDate: todayStr, xpAwarded: 0,
+      startTime: null, endTime: null }, // -> all-day
+  ]);
+
+  const toggleDummyTaskComplete = (taskId: number) =>
+    setDummyTasks(prev => prev.map(t => (t.id === taskId ? { ...t, completed: !t.completed } : t)));
+
+  // merge real events + mapped tasks. Later: replace dummyTasks with taskItems from useTodoStore.
+  const calendarEvents = [...eventItems, ...dummyTasks.map(taskToCalendarEvent)];
+
+  // for taskItem -> guards the checkbox-vs-onPressEvent conflict 
+  const checkboxPressedAt = useRef(0);
+
   const calendarRef = useRef<CalendarKitHandle>(null);
-  // bottom sheet references
   const addEventRef = useRef<BottomSheetModal>(null);
   const editEventRef = useRef<BottomSheetModal>(null);
 
@@ -36,47 +102,6 @@ export default function planner() {
 
   const closeAddEventSheet = () => addEventRef.current?.dismiss();
   const closeEditEventSheet = () => editEventRef.current?.dismiss();
-
-  // for difficulty colour mapping
-  const DIFFICULTY_COLOR: Record<string, string> = {
-    easy: '#00BC22', moderate: '#EE8F00', difficult: '#BC0000', '': '#937254',
-  };
-  // helper function to convert TaskItem to EventItem
-  const addMinutes = (iso: string, m: number) =>
-    new Date(new Date(iso).getTime() + m * 60000).toISOString();
-
-  // function to convert taskItem into new object that's structurally compatible with what library calendar kit requires (it's eventItem with more properties)
-  const taskToCalendarEvent = (t: TaskItem) => {
-    // !! converts datatype to boolean, if start.time is present, timed = true
-    const timed = !!t.startTime;
-    return {
-      id: `task-${t.id}`, // 'task' prefix to distinguish it from regular calendar events
-      title: t.text,
-      isTask: true as const,
-      taskId: t.id,
-      completed: t.completed,
-      difficulty: t.difficulty,
-      color: 'transparent', // we fully custom-render tasks, so base color is unused
-      ...(timed
-        ? {
-            allDay: false,
-            start: { dateTime: t.startTime! },
-            end: { dateTime: t.endTime ?? addMinutes(t.startTime!, 30) }, // default 30 min
-          }
-        : {
-            allDay: true,
-            start: { date: t.scheduledDate },
-            end: { date: t.scheduledDate },
-          }),
-    };
-  };
-
-  // to standardise date format between the 2 different calendar libraries
-  // umm honestly it probably would be easier to just build my own weekly calendar instead of using the library but i alr did it so :(
-  const standardiseDateFormat = (dateInput: string) => {
-    const d = new Date(dateInput);
-    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
 
   const goToEventHour = (startTime: string) => {
       calendarRef.current?.goToDate({
@@ -94,17 +119,49 @@ export default function planner() {
   useEffect(() => {
     init();
   }, []);
+
+  // custom event render
+  const renderEvent = (event: any) => {
+    // plain calendar event
+    if (!event.isTask) {
+      return (
+        <View style={[styles.eventBlock, { backgroundColor: event.color ?? '#ffff9c' }]}>
+          <Text numberOfLines={1} style={styles.eventTitle}>{event.title}</Text>
+          {event.eventDesc ? (
+            <Text numberOfLines={1} style={styles.eventDesc}>{event.eventDesc}</Text>
+          ) : null}
+        </View>
+      );
+    }
+    // task event (distinct look + tickable checkbox)
+    const accent = DIFFICULTY_COLOR[event.difficulty] ?? '#937254';
+    return (
+      <View style={[styles.taskBlock, { borderLeftColor: accent }, event.completed && styles.taskBlockDone]}>
+        <TouchableOpacity
+          hitSlop={8}
+          onPress={() => {
+            checkboxPressedAt.current = Date.now();
+            toggleDummyTaskComplete(event.taskId);
+          }}>
+          <Ionicons name={event.completed ? 'checkbox' : 'square-outline'} size={18} color={accent} />
+        </TouchableOpacity>
+        <Text numberOfLines={2} style={[styles.taskTitle, event.completed && styles.taskTitleDone]}>
+          {event.title}
+        </Text>
+      </View>
+    );
+  };
     
   return (
       <CalendarContainer
         ref={calendarRef}
-        events={eventItems}
+        events={calendarEvents}
         isLoading={eventsLoading}
         initialTimeIntervalHeight={90}
         numberOfDays={numberOfDays}
         allowPinchToZoom={true}
         onPressEvent={(event) => {openEditEventSheet(); setSelectedEvent(event)}}
-        onLongPressEvent={(event) => setRescheduledEvent(event)}
+        onLongPressEvent={(event: any) => { if (!event.isTask) setRescheduledEvent(event); }}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
         allowDragToCreate
         defaultDuration={30} // default event 30 mins if they tap instead of dragging
@@ -149,7 +206,7 @@ export default function planner() {
         </View>
         <WeeklyCalendar selectedDate={selectedDate} setSelectedDate={setSelectedDate}/>
         <CalendarHeader dayBarHeight={0} renderDayItem={() => null}/>
-        <CalendarBody />
+        <CalendarBody renderEvent={renderEvent}/>
 
         <TouchableOpacity 
           style={styles.addBtn}
@@ -207,4 +264,19 @@ const styles = StyleSheet.create({
     bottom: 85,
     right: 25,
   },
+  // calendar event look
+  eventBlock: { flex: 1, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 4, justifyContent: 'center' },
+  eventTitle: { fontFamily: 'InterSemiBold', fontSize: 12, color: '#3f3f3f' },
+  eventDesc: { fontSize: 10, color: '#5f5f5f' },
+
+  // task event look — deliberately different: white card, difficulty accent bar, checkbox
+  taskBlock: {
+    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6,
+    backgroundColor: '#FFF', borderRadius: 6, borderLeftWidth: 5,
+    paddingHorizontal: 6, paddingVertical: 4,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2,
+  },
+  taskBlockDone: { backgroundColor: '#F0F0F0', opacity: 0.85 },
+  taskTitle: { flex: 1, fontFamily: 'InterSemiBold', fontSize: 12, color: '#5E4833' },
+  taskTitleDone: { color: 'rgba(94,72,51,0.6)', textDecorationLine: 'line-through' },
 });
