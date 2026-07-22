@@ -1,14 +1,18 @@
-import { Alert, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { useState, useRef, useEffect } from 'react';
-import { CalendarBody, CalendarContainer, CalendarHeader, CalendarKitHandle } from '@howljs/calendar-kit';
-import { Ionicons } from "@expo/vector-icons";
-import { EventItem } from '@/types/event';
-import { BottomSheetModal } from '@gorhom/bottom-sheet';
-import WeeklyCalendar from '@/components/planner/WeeklyCalendar';
 import AddEvent from '@/components/planner/AddEvent';
 import EditEvent from '@/components/planner/EditEvent';
+import WeeklyCalendar from '@/components/planner/WeeklyCalendar';
 import { usePlannerStore } from '@/store/usePlannerStore';
+import { useTodoStore } from '@/store/useTodoStore';
+import { EventItem } from '@/types/event';
 import { TaskItem } from '@/types/todo';
+import { Ionicons } from "@expo/vector-icons";
+import { BottomSheetModal } from '@gorhom/bottom-sheet';
+import { CalendarBody, CalendarContainer, CalendarHeader, CalendarKitHandle } from '@howljs/calendar-kit';
+import { useEffect, useRef, useState } from 'react';
+import { Alert, Text, TouchableOpacity, View, Image } from 'react-native';
+import { styles } from '@/styles/planner_styles';
+import { ImageBackground } from 'expo-image';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 // for difficulty colour mapping
 const DIFFICULTY_COLOR: Record<string, string> = {
@@ -54,6 +58,7 @@ const taskToCalendarEvent = (t: TaskItem) => {
 
 export default function planner() {
 
+  const insets = useSafeAreaInsets();
   const {eventItems, eventsLoading, init, rescheduleEvent} = usePlannerStore();
 
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
@@ -67,20 +72,20 @@ export default function planner() {
   const [draggedStart, setDraggedStart] = useState<{ dateTime: string; timeZone?: string } | null>(null);
   const [draggedEnd, setDraggedEnd] = useState<{ dateTime: string; timeZone?: string } | null>(null);
 
-    // dummy tasks (for testing first)
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const at = (h: number, m: number) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString(); };
-
+    
+  // dummy tasks (for testing first)
   const [dummyTasks, setDummyTasks] = useState<TaskItem[]>([
     { id: 9001, text: 'Finish planner integration', completed: false, dread: false,
       difficulty: 'difficult', taskDesc: 'wire tasks into calendar', subtasks: [],
-      scheduledDate: todayStr, xpAwarded: 0, startTime: at(10, 0), endTime: at(10, 30) },
+      scheduledDate: todayDate, xpAwarded: 0, startTime: at(10, 0), endTime: at(10, 30) },
     { id: 9002, text: 'Reply to emails', taskDesc: '', completed: false, dread: false,
-      difficulty: 'easy', subtasks: [], scheduledDate: todayStr, xpAwarded: 0,
+      difficulty: 'easy', subtasks: [], scheduledDate: todayDate, xpAwarded: 0,
       startTime: at(14, 0), endTime: at(15, 0) },
     { id: 9003, text: 'Buy groceries (no time set)', taskDesc: '', completed: false, dread: false,
-      difficulty: 'moderate', subtasks: [], scheduledDate: todayStr, xpAwarded: 0,
+      difficulty: 'moderate', subtasks: [], scheduledDate: todayDate, xpAwarded: 0,
       startTime: null, endTime: null }, // -> all-day
   ]);
 
@@ -183,27 +188,42 @@ export default function planner() {
         }
         spaceFromBottom={100}
       >
-        <View style={styles.header}>
-          <View>
-            <Text>{selectedDayName}</Text>
-            <Text>{formattedSelectedDate}</Text>
+        <ImageBackground 
+          source={require("../../../assets/images/planner/planner_header.png")} 
+          style={[styles.header, {marginTop: insets.top + 10, marginHorizontal: insets.left + 30}]}>
+
+          <View style={styles.headerLeft}>
+            <Text style={styles.dayName}>{selectedDate === todayDate ? 'Today' : selectedDayName}</Text>
+            <Text style={styles.date}>{formattedSelectedDate}</Text>
           </View>
-          <View style={{flexDirection: 'row'}}>
-            <TouchableOpacity
-              style={{marginRight: 15}}
-              onPress={() => {
-                Alert.alert('Google Calendar Sync', 'Do you want to import google calendar events here?', [{text: 'Ok'}, {text: 'Cancel', style: 'cancel'}])
-                console.log('sync with google calendar')}}>
-              <Ionicons name="sync-outline" size={25} color="#171a5d"/>
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                calendarRef.current?.setVisibleDate(selectedDate);
-                numberOfDays === 1 ? setNumberOfDays(7) : setNumberOfDays(1)}}>
-              <Ionicons name="calendar-outline" size={25} color="#171a5d"/>
+
+          <View style={styles.headerRight}>
+            <View style={styles.btnRow}>
+              <TouchableOpacity
+                style={{marginRight: 10}}
+                onPress={() => {
+                  Alert.alert('Google Calendar Sync', 'Do you want to import google calendar events here?', [{text: 'Ok'}, {text: 'Cancel', style: 'cancel'}])
+                  console.log('sync with google calendar')}}>
+                <Ionicons name="sync-outline" size={20} color="#ffffff"/>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={() => {
+                  calendarRef.current?.setVisibleDate(selectedDate);
+                  numberOfDays === 1 ? setNumberOfDays(7) : setNumberOfDays(1)}}>
+                <Ionicons name="calendar-outline" size={20} color="#ffffff"/>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity style={styles.askAiBtn}>
+              <View style={{flexDirection: 'row'}}>
+                <Image source={require("../../../assets/images/planner/gemini_logo.png")} style={styles.geminiImg}></Image>
+                <Text style={styles.aiBtnTxt}>Ask AI</Text>
+              </View>
             </TouchableOpacity>
           </View>
-        </View>
+        </ImageBackground>
+
         <WeeklyCalendar selectedDate={selectedDate} setSelectedDate={setSelectedDate}/>
         <CalendarHeader dayBarHeight={0} renderDayItem={() => null}/>
         <CalendarBody renderEvent={renderEvent}/>
@@ -231,52 +251,3 @@ export default function planner() {
       </CalendarContainer>
   );
 }
-
-const styles = StyleSheet.create({
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginTop: 100,
-    marginHorizontal: 30,
-  },
-  calendar: {
-    flexDirection: 'row',
-  },
-  calendarLeft: {
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRightWidth: 1,
-    borderColor: "#cecece"
-  },
-  addBtn: {
-    position: "absolute",
-    backgroundColor: "rgba(59, 153, 185, 0.8)",
-    borderRadius: 50,
-    height: 50,
-    width: 50,
-    justifyContent: "center",
-    alignItems: "center",
-    bottom: 85,
-    right: 25,
-  },
-  // calendar event look
-  eventBlock: { flex: 1, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 4, justifyContent: 'center' },
-  eventTitle: { fontFamily: 'InterSemiBold', fontSize: 12, color: '#3f3f3f' },
-  eventDesc: { fontSize: 10, color: '#5f5f5f' },
-
-  // task event look — deliberately different: white card, difficulty accent bar, checkbox
-  taskBlock: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', gap: 6,
-    backgroundColor: '#FFF', borderRadius: 6, borderLeftWidth: 5,
-    paddingHorizontal: 6, paddingVertical: 4,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.15, shadowRadius: 2, elevation: 2,
-  },
-  taskBlockDone: { backgroundColor: '#F0F0F0', opacity: 0.85 },
-  taskTitle: { flex: 1, fontFamily: 'InterSemiBold', fontSize: 12, color: '#5E4833' },
-  taskTitleDone: { color: 'rgba(94,72,51,0.6)', textDecorationLine: 'line-through' },
-});
