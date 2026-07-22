@@ -20,22 +20,23 @@ const WeeklyCalendar = (props: WeeklyCalendarProps) => {
     return (
       <View style={styles.calendar}>
         <View style={[styles.calendarLeft, {width: hourWidth}]}>
-          <Text>Time</Text>
+          <Text style={styles.text}>Time</Text>
         </View>
-          <CalendarProvider date={props.selectedDate} onDateChanged={props.setSelectedDate} >
+
+        <CalendarProvider date={props.selectedDate} onDateChanged={props.setSelectedDate} >
             <WeekCalendar
-              firstDay={1}
-              allowShadow={false}
-              dayComponent={(props) => <CalendarDayWeekly {...props} columnWidth={columnWidth}/>}
-              hideDayNames
-              calendarHeight={70}
-              calendarWidth={weekStripWidth}
-              style={{ backgroundColor: '#FFF', paddingLeft: 0, paddingRight: 0}}
-              markedDates={{
+            firstDay={1}
+            allowShadow={false}
+            dayComponent={(props) => <CalendarDayWeekly {...props} columnWidth={columnWidth}/>}
+            hideDayNames
+            calendarHeight={70}
+            calendarWidth={weekStripWidth}
+            style={{ backgroundColor: '#F4E6B0', paddingLeft: 0, paddingRight: 0, marginTop: 0, marginBottom: 0, paddingVertical: 9}}
+            markedDates={{
                 [props.selectedDate]: { selected: true },
-              }}
+            }}
             />
-          </CalendarProvider>
+        </CalendarProvider>
       </View>
     );
   }
@@ -43,13 +44,16 @@ const WeeklyCalendar = (props: WeeklyCalendarProps) => {
 const styles = StyleSheet.create({
     calendar: {
     flexDirection: 'row',
+    backgroundColor: 'red',
     },
     calendarLeft: {
     justifyContent: 'center',
     alignItems: 'center',
     borderRightWidth: 1,
-    borderColor: "#cecece"
+    backgroundColor: '#bb9e84',
+    borderColor: "#917F6E"
     },
+    text: {fontFamily: "InterBold", color: '#FFF', fontSize: 15}
 })
 
 export default WeeklyCalendar;

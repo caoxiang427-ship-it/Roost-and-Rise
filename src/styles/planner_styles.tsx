@@ -72,6 +72,18 @@ export const styles = StyleSheet.create({
     bottom: 85,
     right: 25,
   },
+  hourContainer: {
+    borderRadius: 10,
+    backgroundColor: '#F7EFD4',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 2,
+  },
+  hourText: {
+    fontFamily: 'InterSemiBold',
+    color: '#7e6751',
+    fontSize: 11,
+  },
   // calendar event look
   eventBlock: { flex: 1, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 4, justifyContent: 'center' },
   eventTitle: { fontFamily: 'InterSemiBold', fontSize: 12, color: '#3f3f3f' },

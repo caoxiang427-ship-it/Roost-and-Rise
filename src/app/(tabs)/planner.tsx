@@ -8,7 +8,7 @@ import { TaskItem } from '@/types/todo';
 import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { CalendarBody, CalendarContainer, CalendarHeader, CalendarKitHandle } from '@howljs/calendar-kit';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { Alert, Text, TouchableOpacity, View, Image } from 'react-native';
 import { styles } from '@/styles/planner_styles';
 import { ImageBackground } from 'expo-image';
@@ -125,7 +125,16 @@ export default function planner() {
     init();
   }, []);
 
-  // custom event render
+  // custom hour renderer (for styling purposes)
+  const renderHour = useCallback((hour: any) => {
+    return (
+      <View style={[styles.hourContainer, {marginLeft: insets.left + 5}]}>
+        <Text style={styles.hourText}>{hour.hourStr}</Text>
+      </View>
+    );
+  }, []);
+
+  // custom event render, update with useCallback later
   const renderEvent = (event: any) => {
     // plain calendar event
     if (!event.isTask) {
@@ -187,6 +196,13 @@ export default function planner() {
         }
         }
         spaceFromBottom={100}
+        theme={{
+          headerBorderColor: '#917F6E',
+          dayBarBorderColor: '#917F6E',
+          hourBorderColor: '#917F6E',
+          singleDayBorderColor: '#917F6E',
+          nowIndicatorColor: '#db4346',
+        }}
       >
         <ImageBackground 
           source={require("../../../assets/images/planner/planner_header.png")} 
@@ -226,7 +242,7 @@ export default function planner() {
 
         <WeeklyCalendar selectedDate={selectedDate} setSelectedDate={setSelectedDate}/>
         <CalendarHeader dayBarHeight={0} renderDayItem={() => null}/>
-        <CalendarBody renderEvent={renderEvent}/>
+        <CalendarBody renderEvent={renderEvent} renderHour={renderHour}/>
 
         <TouchableOpacity 
           style={styles.addBtn}
