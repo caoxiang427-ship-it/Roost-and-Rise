@@ -82,7 +82,7 @@ export const styles = StyleSheet.create({
   hourText: {
     fontFamily: 'InterSemiBold',
     color: '#7e6751',
-    fontSize: 11,
+    fontSize: 10,
   },
   // calendar event look
   eventBlock: { 

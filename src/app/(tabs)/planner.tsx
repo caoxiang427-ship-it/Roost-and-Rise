@@ -311,6 +311,9 @@ export default function planner() {
           countText: {
             fontFamily: 'InterSemiBold',
             color: '#7e6751'
+          },
+          headerContainer: {
+            paddingTop: 5,
           }
         }}
         overlapEventsSpacing={0}
