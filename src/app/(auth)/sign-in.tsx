@@ -4,7 +4,7 @@
  * If users successfully logged into their account, they are redirected to home screen.
 */
 
-import { signIn } from '@/lib/auth';
+import { signIn, signInWithGoogle } from '@/lib/auth';
 import { styles } from '@/styles/auth_styles';
 import { Ionicons } from '@expo/vector-icons';
 import { Link, router } from 'expo-router';
