@@ -25,6 +25,8 @@ type TodoState = {
         scheduledDate: string,
         taskDesc?: string,
         subtasks?: NewSubtaskItem[],
+        startTime?: string | null,
+        endTime?: string | null
     ) => Promise<void>;
     deleteTask: (id: number) => Promise<void>;
     handleEditTask: (
@@ -38,6 +40,7 @@ type TodoState = {
         subtasks?: SubtaskItem[],
         deletedSubtaskIds?: number[],
     ) => Promise<void>;
+    rescheduleTaskTime: (id: number, startTime: string, endTime: string) => Promise<void>;
     rescheduleTask: (id: number, scheduledDate: string) => Promise<void>;
     toggleCompletion: (id: number, completed: boolean, subtasks: SubtaskItem[]) => Promise<void>;
     toggleDread: (id: number, dread: boolean) => Promise<void>;
@@ -96,12 +99,14 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             subtasks: task.subtasks ?? [],
             scheduledDate: task.scheduled_date,
             xpAwarded: task.xp_awarded,
+            startTime: task.start_time ?? null,
+            endTime: task.end_time ?? null,
         }));
 
         set({ taskItems: formattedTasks, tasksLoading: false });
     },
 
-    handleAddTask: async (text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = []) => {
+    handleAddTask: async (text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], startTime = null, endTime = null) => {
         Keyboard.dismiss();
 
         const { userID, fetchTasks } = get();
@@ -117,6 +122,8 @@ export const useTodoStore = create<TodoState>((set, get) => ({
                 difficulty,
                 task_desc: taskDesc ?? '',
                 scheduled_date: scheduledDate,
+                start_time: startTime,
+                end_time: endTime,
             })
             .select()
             .single();
@@ -199,6 +206,16 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             if (insertError) console.log(insertError);
         }
 
+        get().fetchTasks();
+    },
+
+    rescheduleTaskTime: async (id, startTime, endTime) => {
+        const scheduledDate = startTime.split('T')[0]; // keep the day field in sync
+        const { error } = await supabase
+            .from('tasks')
+            .update({ start_time: startTime, end_time: endTime, scheduled_date: scheduledDate })
+            .eq('id', id);
+        if (error) return console.log(error);
         get().fetchTasks();
     },
 
@@ -309,4 +326,8 @@ export function formatDate(date: string): string {
     month: 'long',
     year: 'numeric'
   });
+}
+
+export function addMinutes(iso: string, m: number) {
+  return new Date(new Date(iso).getTime() + m * 60000).toISOString();
 }

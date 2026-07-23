@@ -5,8 +5,9 @@ import { useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { NewSubtaskItem } from '@/types/todo';
 import Subtask from './Subtask';
-import Animated, { SlideInLeft, SlideOutLeft, Easing } from 'react-native-reanimated';
+import Animated, { SlideInLeft, SlideOutLeft, FadeIn, FadeOut, LinearTransition, Easing } from 'react-native-reanimated';
 import { useTodoStore } from '@/store/useTodoStore';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 type AddTaskProps = {
     close: () => void;
@@ -34,6 +35,9 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     const [difficulty, setDifficulty] = useState<'easy'|'moderate'|'difficult'|''>('');
     // for expandable difficulty button
     const [expanded, setExpanded] = useState<boolean>(false);
+    const [expandedTime, setExpandedTime] = useState<boolean>(false);
+    const [startTime, setStartTime] = useState<string | undefined>(undefined);
+    const [endTime, setEndTime] = useState<string | undefined>(undefined); ;
 
     const difficultyStyles = {
         easy: { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E' },
@@ -46,6 +50,44 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
         moderate: 'Moderate 🙂',
         difficult: 'Difficult 😥',
     };
+
+    // coombines selected date with current time into a dateString
+    const combineDateAndTime = (dateStr: string, timeStr: string) => {
+        const d = new Date(dateStr); // dateStr example: "2026-07-21T00:00:00" (midnight safe date string)
+        const t = new Date(timeStr); //timeStr example: "2026-07-21T14:30:00.000Z" (full ISO string)
+        d.setHours(t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds());
+        return d.toISOString();
+    };
+
+    const renderScheduleTime = () => (
+        <Animated.View
+          style={{paddingHorizontal: 65, paddingBottom: 10}}
+          entering={FadeIn.duration(200)}
+          exiting={FadeOut.duration(200)}
+          layout={LinearTransition.duration(500).easing(Easing.inOut(Easing.quad))}
+      >
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.timeTxt}>Start Time: </Text>
+
+                <DateTimePicker
+                    value={new Date(startTime ?? combineDateAndTime(selectedDate + 'T00:00:00', new Date().toISOString()))}
+                    mode={'time'}
+                    is24Hour={true}
+                    onValueChange={(event, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
+                />
+            </View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.timeTxt}>End Time:   </Text>
+
+                <DateTimePicker
+                    value={new Date(endTime ?? combineDateAndTime(selectedDate + 'T00:00:00', new Date().toISOString()))} // if endTime, show endTime, if not defaults to selected date + time currently
+                    mode={'time'}
+                    is24Hour={true}
+                    onValueChange={(event, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
+                />
+            </View>
+        </Animated.View>
+    );
 
     const handleAddSubtask = () => {
         if (!subtaskInput.trim()) return;
@@ -82,7 +124,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
             return;
         };
 
-        await handleAddTask(task, dread, isComplete, difficulty, selectedDate, taskDesc, newSubtasks);
+        await handleAddTask(task, dread, isComplete, difficulty, selectedDate, taskDesc, newSubtasks, startTime, endTime);
         // Reset local state after submit
         setTask('');
         setTaskDesc('');
@@ -92,6 +134,8 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
         setSubtaskInput('');
         setExpanded(false);
         setDifficulty('');
+        setStartTime(undefined);
+        setEndTime(undefined);
         props.close();
     };
     
@@ -179,6 +223,18 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                         value={subtaskInput}>
                     </BottomSheetTextInput>
                 </View>
+                
+                <Animated.View layout={LinearTransition.duration(500)}>
+                    <View style={{paddingLeft: 40, paddingBottom: 10}}>
+                        <TouchableOpacity
+                            style={{flexDirection: 'row'}}
+                            onPress={() => setExpandedTime(!expandedTime)}>
+                            <Ionicons name={expandedTime ? "chevron-down" : "chevron-forward"} size={20} color="#937254"/>
+                            <Text style={styles.scheduleTimeTxt}> Schedule time </Text>
+                        </TouchableOpacity>
+                    </View>
+                    {expandedTime && renderScheduleTime() }
+                </Animated.View>
 
                 <View style={styles.footer}>
 
@@ -349,6 +405,15 @@ const styles = StyleSheet.create({
         color: 'rgb(94, 72, 51, 0.7)',
         textDecorationLine: 'line-through',
     },
+    scheduleTimeTxt: {
+        fontFamily: "InterBold",
+        color: '#937254',
+        fontSize: 15
+    },
+    timeTxt: {
+        fontFamily: 'InterSemiBold',
+        color: '#5E4833'
+    }
 
 });
 

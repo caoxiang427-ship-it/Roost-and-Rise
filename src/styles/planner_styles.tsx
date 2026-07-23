@@ -87,7 +87,12 @@ export const styles = StyleSheet.create({
   // calendar event look
   eventBlock: { 
     flex: 1, 
-    borderRadius: 10, 
+    borderRadius: 10,
+    shadowColor: '#000', 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.45, 
+    shadowRadius: 2, 
+    elevation: 4,
     },
   eventTitle: { 
     fontFamily: 'InterBold',
@@ -107,10 +112,10 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#AAAAAA',
     shadowColor: '#000', 
-    shadowOffset: { width: 0, height: 4 }, 
-    shadowOpacity: 0.55, 
+    shadowOffset: { width: 0, height: 2 }, 
+    shadowOpacity: 0.45, 
     shadowRadius: 2, 
-    elevation: 7,
+    elevation: 4,
     borderRadius: 10,
   },
   taskBlockDone: { 

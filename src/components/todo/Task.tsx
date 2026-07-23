@@ -20,6 +20,8 @@ type TaskProps = {
     taskDesc?: string;
     subtasks?: SubtaskItem[];
     onPress?: () => void;
+    startTime?: string;
+    endTime?: string
 }
 
 const Task = (props: TaskProps) => {
@@ -117,6 +119,13 @@ const Task = (props: TaskProps) => {
                         <Text style={[styles.taskText, props.completed && styles.completedText]}>
                             {props.text}
                         </Text>
+                        {(props.startTime && props.endTime) && 
+                             <Text>
+                                Scheduled Time: {new Date(props.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                {' - '}
+                                {new Date(props.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </Text>
+                        }
 
                         {taskDescSection}
 

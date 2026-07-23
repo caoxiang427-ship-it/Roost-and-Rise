@@ -2,7 +2,7 @@ import AddEvent from '@/components/planner/AddEvent';
 import EditEvent from '@/components/planner/EditEvent';
 import WeeklyCalendar from '@/components/planner/WeeklyCalendar';
 import { usePlannerStore } from '@/store/usePlannerStore';
-import { useTodoStore } from '@/store/useTodoStore';
+import { useTodoStore, addMinutes } from '@/store/useTodoStore';
 import { EventItem } from '@/types/event';
 import { TaskItem } from '@/types/todo';
 import { Ionicons } from "@expo/vector-icons";
@@ -25,10 +25,6 @@ const standardiseDateFormat = (dateInput: string) => {
   const d = new Date(dateInput);
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 }
-
-// helper function to convert TaskItem to EventItem
-const addMinutes = (iso: string, m: number) =>
-  new Date(new Date(iso).getTime() + m * 60000).toISOString();
 
 // function to convert taskItem into new object that's structurally compatible with what library calendar kit requires (it's eventItem with more properties)
 const taskToCalendarEvent = (t: TaskItem) => {
@@ -60,6 +56,7 @@ export default function planner() {
 
   const insets = useSafeAreaInsets();
   const {eventItems, eventsLoading, init, rescheduleEvent} = usePlannerStore();
+  const { taskItems, init: initTasks, setSelectedTask, rescheduleTaskTime, toggleCompletion } = useTodoStore();
 
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); //react-native-calendars take in dates in YYYY-MM-DD format
@@ -75,28 +72,12 @@ export default function planner() {
   const now = new Date();
   const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const at = (h: number, m: number) => { const d = new Date(); d.setHours(h, m, 0, 0); return d.toISOString(); };
-    
-  // dummy tasks (for testing first)
-  const [dummyTasks, setDummyTasks] = useState<TaskItem[]>([
-    { id: 9001, text: 'Finish planner integration', completed: false, dread: false,
-      difficulty: 'difficult', taskDesc: 'wire tasks into calendar', subtasks: [],
-      scheduledDate: todayDate, xpAwarded: 0, startTime: at(10, 0), endTime: at(10, 30) },
-    { id: 9002, text: 'Reply to emails', taskDesc: '', completed: false, dread: false,
-      difficulty: 'easy', subtasks: [], scheduledDate: todayDate, xpAwarded: 0,
-      startTime: at(14, 0), endTime: at(15, 0) },
-    { id: 9003, text: 'Buy groceries (no time set)', taskDesc: '', completed: false, dread: false,
-      difficulty: 'moderate', subtasks: [], scheduledDate: todayDate, xpAwarded: 0,
-      startTime: null, endTime: null }, // -> all-day
-  ]);
-
-  const toggleDummyTaskComplete = (taskId: number) =>
-    setDummyTasks(prev => prev.map(t => (t.id === taskId ? { ...t, completed: !t.completed } : t)));
 
   // merge real events + mapped tasks. Later: replace dummyTasks with taskItems from useTodoStore.
   const calendarEvents = [
     // change default color to 'transparent' to allow for horizontal margins for event blocks
     ...eventItems.map(e => ({ ...e, backgroundColor: e.color, color: 'transparent' })), 
-    ...dummyTasks.map(taskToCalendarEvent)];
+    ...taskItems.map(taskToCalendarEvent)];
 
   // for taskItem -> guards the checkbox-vs-onPressEvent conflict 
   const checkboxPressedAt = useRef(0);
@@ -119,6 +100,8 @@ export default function planner() {
           animatedHour: true,
       });
   };
+
+  useEffect(() => { init(); initTasks(); }, []);
 
   useEffect(() => {
     calendarRef.current?.goToDate({ date: selectedDate, animatedDate: true });
@@ -174,7 +157,8 @@ export default function planner() {
               hitSlop={8}
               onPress={() => {
                 checkboxPressedAt.current = Date.now();
-                toggleDummyTaskComplete(event.taskId);
+                const task = taskItems.find(t => t.id === event.taskId);
+                if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
               }}>
               <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={DIFFICULTY_COLOR[event.difficulty]} />
             </TouchableOpacity>
@@ -192,7 +176,8 @@ export default function planner() {
             hitSlop={8}
             onPress={() => {
               checkboxPressedAt.current = Date.now();
-              toggleDummyTaskComplete(event.taskId);
+              const task = taskItems.find(t => t.id === event.taskId);
+              if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
             }}>
             <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={8} color={DIFFICULTY_COLOR[event.difficulty]} />
           </TouchableOpacity>
@@ -238,7 +223,8 @@ export default function planner() {
               hitSlop={8}
               onPress={() => {
                 checkboxPressedAt.current = Date.now();
-                toggleDummyTaskComplete(event.taskId);
+                const task = taskItems.find(t => t.id === event.taskId);
+                if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
               }}>
               <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={15} color={DIFFICULTY_COLOR[event.difficulty]} />
             </TouchableOpacity>
@@ -256,7 +242,8 @@ export default function planner() {
             hitSlop={8}
             onPress={() => {
               checkboxPressedAt.current = Date.now();
-              toggleDummyTaskComplete(event.taskId);
+              const task = taskItems.find(t => t.id === event.taskId);
+              if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
             }}>
             <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={8} color={DIFFICULTY_COLOR[event.difficulty]} />
           </TouchableOpacity>
@@ -278,7 +265,13 @@ export default function planner() {
         numberOfDays={numberOfDays}
         allowPinchToZoom={true}
         onPressEvent={(event) => {openEditEventSheet(); setSelectedEvent(event)}}
-        onLongPressEvent={(event: any) => { if (!event.isTask) setRescheduledEvent(event); }}
+        onLongPressEvent={(event: any) => { 
+          if (!event.isTask) {
+            setRescheduledEvent(event);
+          } else {
+            const task = taskItems.find(t => t.id === event.taskId);
+            setSelectedTask(task ?? null)} 
+          }}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
         allowDragToCreate
         defaultDuration={30} // default event 30 mins if they tap instead of dragging
@@ -290,12 +283,12 @@ export default function planner() {
         allowDragToEdit={true}
         selectedEvent={rescheduledEvent ?? undefined}
         onDragSelectedEventEnd={(event: any) => {
-          rescheduleEvent({
-            id: event.id,
-            start: event.start,
-            end: event.end,
-         })
-         setRescheduledEvent(undefined);
+          if (event.isTask) {
+            rescheduleTaskTime(event.taskId, event.start, event.end);
+          } else {
+            rescheduleEvent({ id: event.id, start: event.start, end: event.end });
+          }
+    setRescheduledEvent(undefined);
         }
         }
         spaceFromBottom={100}
