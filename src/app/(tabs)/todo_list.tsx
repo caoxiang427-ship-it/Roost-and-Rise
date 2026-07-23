@@ -204,6 +204,8 @@ export default function TodoScreen() {
                 onTriggerReward={triggerReward}
                 taskDesc={item.taskDesc}
                 subtasks={item.subtasks}
+                startTime={item.startTime}
+                endTime={item.endTime}
                 onPress={() => {setSelectedTask(item); openEditTaskSheet();
                 }}
                 />

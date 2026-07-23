@@ -1,12 +1,12 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch } from 'react-native';
 import { useState, forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { NewSubtaskItem } from '@/types/todo';
 import Subtask from './Subtask';
 import Animated, { SlideInLeft, SlideOutLeft, FadeIn, FadeOut, LinearTransition, Easing } from 'react-native-reanimated';
-import { useTodoStore } from '@/store/useTodoStore';
+import { useTodoStore, addMinutes } from '@/store/useTodoStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 type AddTaskProps = {
@@ -35,6 +35,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     const [difficulty, setDifficulty] = useState<'easy'|'moderate'|'difficult'|''>('');
     // for expandable difficulty button
     const [expanded, setExpanded] = useState<boolean>(false);
+    // for expandable schedule time thing
     const [expandedTime, setExpandedTime] = useState<boolean>(false);
     const [startTime, setStartTime] = useState<string | undefined>(undefined);
     const [endTime, setEndTime] = useState<string | undefined>(undefined); ;
@@ -124,7 +125,10 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
             return;
         };
 
-        await handleAddTask(task, dread, isComplete, difficulty, selectedDate, taskDesc, newSubtasks, startTime, endTime);
+        const start = startTime ?? null;
+        const end = start ? (endTime ?? addMinutes(start, 30)) : null;
+
+        await handleAddTask(task, dread, isComplete, difficulty, selectedDate, taskDesc, newSubtasks, start, end);
         // Reset local state after submit
         setTask('');
         setTaskDesc('');
@@ -225,13 +229,25 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                 </View>
                 
                 <Animated.View layout={LinearTransition.duration(500)}>
-                    <View style={{paddingLeft: 40, paddingBottom: 10}}>
-                        <TouchableOpacity
-                            style={{flexDirection: 'row'}}
-                            onPress={() => setExpandedTime(!expandedTime)}>
-                            <Ionicons name={expandedTime ? "chevron-down" : "chevron-forward"} size={20} color="#937254"/>
-                            <Text style={styles.scheduleTimeTxt}> Schedule time </Text>
-                        </TouchableOpacity>
+                    <View style={{paddingHorizontal: 40, paddingBottom: 10}}>
+                        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                            <View style={{flexDirection: 'row'}}>
+                                <Ionicons name={expandedTime ? "chevron-down" : "chevron-forward"} size={20} color="#937254"/>
+                                <Text style={styles.scheduleTimeTxt}> Schedule time </Text>
+                            </View>
+                            <Switch
+                              value={expandedTime}
+                              onValueChange={(value) => {
+                                setExpandedTime(value);
+                                if (value && !startTime) {
+                                    const start = combineDateAndTime(selectedDate + 'T00:00:00', new Date().toISOString());
+                                    setStartTime(start);
+                                    setEndTime(addMinutes(start, 30));
+                                }
+                                if (!value) { setStartTime(undefined); setEndTime(undefined);
+                                }}
+                              }/>
+                        </View>
                     </View>
                     {expandedTime && renderScheduleTime() }
                 </Animated.View>
@@ -413,8 +429,7 @@ const styles = StyleSheet.create({
     timeTxt: {
         fontFamily: 'InterSemiBold',
         color: '#5E4833'
-    }
-
+    },
 });
 
 export default AddTask;

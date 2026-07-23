@@ -20,8 +20,8 @@ type TaskProps = {
     taskDesc?: string;
     subtasks?: SubtaskItem[];
     onPress?: () => void;
-    startTime?: string;
-    endTime?: string
+    startTime?: string | null;
+    endTime?: string | null;
 }
 
 const Task = (props: TaskProps) => {
@@ -116,16 +116,17 @@ const Task = (props: TaskProps) => {
                     </TouchableOpacity>
 
                     <View style={styles.textContainer}>
-                        <Text style={[styles.taskText, props.completed && styles.completedText]}>
-                            {props.text}
-                        </Text>
                         {(props.startTime && props.endTime) && 
-                             <Text>
-                                Scheduled Time: {new Date(props.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                             <Text style={{fontFamily: "InterRegular", color: '#a02828', fontSize: 11, marginVertical: 2}}>
+                                Scheduled for: {new Date(props.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 {' - '}
                                 {new Date(props.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                             </Text>
                         }
+
+                        <Text style={[styles.taskText, props.completed && styles.completedText]}>
+                            {props.text}
+                        </Text>
 
                         {taskDescSection}
 

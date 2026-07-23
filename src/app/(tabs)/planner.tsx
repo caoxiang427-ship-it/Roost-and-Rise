@@ -1,7 +1,7 @@
 import AddEvent from '@/components/planner/AddEvent';
 import EditEvent from '@/components/planner/EditEvent';
 import WeeklyCalendar from '@/components/planner/WeeklyCalendar';
-import { usePlannerStore } from '@/store/usePlannerStore';
+import { usePlannerStore, getDateTimeString } from '@/store/usePlannerStore';
 import { useTodoStore, addMinutes } from '@/store/useTodoStore';
 import { EventItem } from '@/types/event';
 import { TaskItem } from '@/types/todo';
@@ -80,7 +80,6 @@ export default function planner() {
     ...taskItems.map(taskToCalendarEvent)];
 
   // for taskItem -> guards the checkbox-vs-onPressEvent conflict 
-  const checkboxPressedAt = useRef(0);
 
   const calendarRef = useRef<CalendarKitHandle>(null);
   const addEventRef = useRef<BottomSheetModal>(null);
@@ -101,15 +100,12 @@ export default function planner() {
       });
   };
 
-  useEffect(() => { init(); initTasks(); }, []);
-
   useEffect(() => {
     calendarRef.current?.goToDate({ date: selectedDate, animatedDate: true });
   }, [selectedDate]);
 
-  useEffect(() => {
-    init();
-  }, []);
+  useEffect(() => { init(); initTasks(); }, []);
+
 
   // custom hour renderer (for styling purposes)
   const renderHour = useCallback((hour: any) => {
@@ -156,7 +152,6 @@ export default function planner() {
             <TouchableOpacity
               hitSlop={8}
               onPress={() => {
-                checkboxPressedAt.current = Date.now();
                 const task = taskItems.find(t => t.id === event.taskId);
                 if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
               }}>
@@ -175,7 +170,6 @@ export default function planner() {
           <TouchableOpacity
             hitSlop={8}
             onPress={() => {
-              checkboxPressedAt.current = Date.now();
               const task = taskItems.find(t => t.id === event.taskId);
               if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
             }}>
@@ -222,7 +216,6 @@ export default function planner() {
             <TouchableOpacity
               hitSlop={8}
               onPress={() => {
-                checkboxPressedAt.current = Date.now();
                 const task = taskItems.find(t => t.id === event.taskId);
                 if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
               }}>
@@ -241,7 +234,6 @@ export default function planner() {
           <TouchableOpacity
             hitSlop={8}
             onPress={() => {
-              checkboxPressedAt.current = Date.now();
               const task = taskItems.find(t => t.id === event.taskId);
               if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
             }}>
@@ -264,7 +256,11 @@ export default function planner() {
         initialTimeIntervalHeight={90}
         numberOfDays={numberOfDays}
         allowPinchToZoom={true}
-        onPressEvent={(event) => {openEditEventSheet(); setSelectedEvent(event)}}
+        onPressEvent={(event) => {
+          // use original eventItem instead of the mapped one from earlier
+          const original = eventItems.find(e => e.id === event.id);
+          openEditEventSheet(); 
+          setSelectedEvent(original)}}
         onLongPressEvent={(event: any) => { 
           if (!event.isTask) {
             setRescheduledEvent(event);
@@ -284,11 +280,11 @@ export default function planner() {
         selectedEvent={rescheduledEvent ?? undefined}
         onDragSelectedEventEnd={(event: any) => {
           if (event.isTask) {
-            rescheduleTaskTime(event.taskId, event.start, event.end);
+            rescheduleTaskTime(event.taskId, getDateTimeString(event.start)!, getDateTimeString(event.end)!);
           } else {
             rescheduleEvent({ id: event.id, start: event.start, end: event.end });
           }
-    setRescheduledEvent(undefined);
+          setRescheduledEvent(undefined);
         }
         }
         spaceFromBottom={100}

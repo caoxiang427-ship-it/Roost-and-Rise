@@ -39,6 +39,8 @@ type TodoState = {
         taskDesc?: string,
         subtasks?: SubtaskItem[],
         deletedSubtaskIds?: number[],
+        startTime?: string | null,
+        endTime?: string | null
     ) => Promise<void>;
     rescheduleTaskTime: (id: number, startTime: string, endTime: string) => Promise<void>;
     rescheduleTask: (id: number, scheduledDate: string) => Promise<void>;
@@ -106,7 +108,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
         set({ taskItems: formattedTasks, tasksLoading: false });
     },
 
-    handleAddTask: async (text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], startTime = null, endTime = null) => {
+    handleAddTask: async (text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], startTime, endTime) => {
         Keyboard.dismiss();
 
         const { userID, fetchTasks } = get();
@@ -156,7 +158,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
         get().fetchTasks();
     },
 
-    handleEditTask: async (id, text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], deletedSubtaskIds = []) => {
+    handleEditTask: async (id, text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], deletedSubtaskIds = [], startTime, endTime) => {
         Keyboard.dismiss();
         if (!text.trim()) return;
 
@@ -169,6 +171,8 @@ export const useTodoStore = create<TodoState>((set, get) => ({
                 difficulty,
                 task_desc: taskDesc ?? '',
                 scheduled_date: scheduledDate,
+                start_time: startTime,
+                end_time: endTime
             })
             .eq('id', id);
 
@@ -220,10 +224,16 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     },
 
     rescheduleTask: async (id, scheduledDate) => {
+        const task = get().taskItems.find(t => t.id === id);
+        const start = task?.startTime ? moveToDate(task.startTime, scheduledDate) : null;
+        const end = start ? (task?.endTime ? moveToDate(task.endTime, scheduledDate) : addMinutes(start, 30)) : null;
+
         const { error } = await supabase
             .from('tasks')
             .update({
                 scheduled_date: scheduledDate,
+                start_time: start,
+                end_time: end,
             })
             .eq('id', id);
 
@@ -330,4 +340,10 @@ export function formatDate(date: string): string {
 
 export function addMinutes(iso: string, m: number) {
   return new Date(new Date(iso).getTime() + m * 60000).toISOString();
+}
+
+export function moveToDate(iso: string, dateStr: string) {
+    const t = new Date(iso);
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d, t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds()).toISOString();
 }
