@@ -1,7 +1,6 @@
 /* 
  * Sign-in screen.
  * Allows an existing user to log in the account with email and password.
- * If users successfully logged into their account, they are redirected to home screen.
 */
 
 import { signIn, signInWithGoogle } from '@/lib/auth';

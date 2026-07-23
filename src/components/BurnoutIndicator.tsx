@@ -116,9 +116,9 @@ export default function BurnoutIndicator({
       {/* Tiers info modal */}
       <Modal visible={infoVisible} transparent animationType="fade" onRequestClose={() => setInfoVisible(false)}>
         <Pressable style={styles.modalBackdrop} onPress={() => setInfoVisible(false)}>
-          <Pressable style={styles.modalCard} onPress={() => {}}>
+          <View style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>What do the tiers mean?</Text>
+              <Text style={styles.modalTitle}>Your wellness score</Text>
               <Pressable onPress={() => setInfoVisible(false)} hitSlop={8}>
                 <Ionicons name="close" size={20} color="#6E7D67" />
               </Pressable>
@@ -135,7 +135,22 @@ export default function BurnoutIndicator({
                 </View>
               </View>
             ))}
-          </Pressable>
+
+            <View style={styles.divider} />
+
+            <Text style={styles.bodyText}>
+              Everyone starts at 65 (Balanced). Long study hours and low moods pull your score down. 
+              While breaks, self-care and positive mood check-ins bring it back up. 
+            </Text>
+            <Text style={styles.bodyText}>
+              It&apos;s recalculated from everything you&apos;ve logged today, not added up log by log, 
+              so for example, your mood check-ins are averaged rather than replaced by the latest one.
+            </Text>
+            <Text style={styles.bodyText}>
+              It offers a simple snapshot of your recent wellbeing. A lower score does not come 
+              with any penalties. Simply a reminder to SLOW DOWN and TAKE CARE of YOURSELF!
+            </Text>
+          </View>
         </Pressable>
       </Modal>
     </View>
@@ -208,5 +223,17 @@ const styles = StyleSheet.create({
     top: 0,
     right: 0,
     zIndex: 1,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: '#EDF1E8',
+    marginTop: 4,
+    marginBottom: 14,
+  },
+  bodyText: {
+    fontSize: 13,
+    color: '#6B7A64',
+    lineHeight: 19,
+    marginBottom: 10,
   },
 });

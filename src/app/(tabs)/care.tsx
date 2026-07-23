@@ -259,7 +259,7 @@ export default function SelfCareScreen() {
           </Pressable>
         </ImageBackground>
 
-        {/* Hero card = wellness ring (BurnoutIndicator) */}
+        {/* BurnoutIndicator */}
         <View style={styles.heroCard}>
           <BurnoutIndicator result={burnout} />
         </View>
