@@ -261,13 +261,7 @@ export default function planner() {
           const original = eventItems.find(e => e.id === event.id);
           openEditEventSheet(); 
           setSelectedEvent(original)}}
-        onLongPressEvent={(event: any) => { 
-          if (!event.isTask) {
-            setRescheduledEvent(event);
-          } else {
-            const task = taskItems.find(t => t.id === event.taskId);
-            setSelectedTask(task ?? null)} 
-          }}
+        onLongPressEvent={(event: any) => { setRescheduledEvent(event);}}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
         allowDragToCreate
         defaultDuration={30} // default event 30 mins if they tap instead of dragging
