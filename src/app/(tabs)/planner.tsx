@@ -1,6 +1,7 @@
 import AddEvent from '@/components/planner/AddEvent';
 import EditEvent from '@/components/planner/EditEvent';
 import WeeklyCalendar from '@/components/planner/WeeklyCalendar';
+import AskAiModal from '@/components/planner/AskAiModal';
 import { usePlannerStore, getDateTimeString } from '@/store/usePlannerStore';
 import { useTodoStore, addMinutes } from '@/store/useTodoStore';
 import { EventItem } from '@/types/event';
@@ -68,6 +69,8 @@ export default function planner() {
   // for the drag to create event
   const [draggedStart, setDraggedStart] = useState<{ dateTime: string; timeZone?: string } | null>(null);
   const [draggedEnd, setDraggedEnd] = useState<{ dateTime: string; timeZone?: string } | null>(null);
+
+  const [isModalVisible, setisModalVisible] = useState<boolean>(false);
 
   const now = new Date();
   const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
@@ -328,7 +331,7 @@ export default function planner() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.askAiBtn}>
+            <TouchableOpacity style={styles.askAiBtn} onPress={() => setisModalVisible(true)}>
               <View style={{flexDirection: 'row'}}>
                 <Image source={require("../../../assets/images/planner/gemini_logo.png")} style={styles.geminiImg}></Image>
                 <Text style={styles.aiBtnTxt}>Ask AI</Text>
@@ -360,6 +363,11 @@ export default function planner() {
           ref={editEventRef}
           close={closeEditEventSheet}
           event={selectedEvent!}
+        />
+
+        <AskAiModal
+          visible={isModalVisible}
+          setVisibility={setisModalVisible}
         />
       </CalendarContainer>
   );
