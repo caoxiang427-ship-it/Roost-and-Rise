@@ -1,6 +1,7 @@
-import { Modal, View, TouchableOpacity, StyleSheet, Text } from 'react-native';
+import { Modal, View, TouchableOpacity, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
 import { GiftedChat, IMessage } from 'react-native-gifted-chat'
 import { useState, useEffect, useCallback } from 'react';
+import { } from 'react-native-gifted-chat';
 
 
 type AskAiModalProps = {
@@ -20,7 +21,7 @@ const AskAiModal = (props: AskAiModalProps) => {
             user: {
             _id: 2,
             name: 'John Doe',
-            avatar: 'https://placeimg.com/140/140/any',
+            avatar: require('../../../assets/images/planner/ai_profile_pic.png'),
             },
         },
         ])
@@ -39,19 +40,22 @@ const AskAiModal = (props: AskAiModalProps) => {
        animationType="fade" 
        onRequestClose={() => props.setVisibility(false)} // for android (upopn pressing android back button, modal will close)
     >
-      <View style={styles.backdrop}>
-        <View style={styles.chatContainer}>
-            <TouchableOpacity onPress={() => props.setVisibility(false)} style={styles.closeBtn}>
-                <Text>Close</Text>
-            </TouchableOpacity>
-            <GiftedChat
-                messages={messages}
-                onSend={messages => onSend(messages)}
-                user={{
-                    _id: 1,
-                }}
-            />
-            </View>
+        <View style={styles.backdrop}>
+            <KeyboardAvoidingView
+              behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+              style={styles.chatContainer}
+            >
+                <TouchableOpacity onPress={() => props.setVisibility(false)} style={styles.closeBtn}>
+                    <Text>Close</Text>
+                </TouchableOpacity>
+                <GiftedChat
+                    messages={messages}
+                    onSend={messages => onSend(messages)}
+                    user={{
+                        _id: 1,
+                    }}
+                />
+            </KeyboardAvoidingView>
         </View>
     </Modal>
   );
