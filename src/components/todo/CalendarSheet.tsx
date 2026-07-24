@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetScrollView, BottomSheetView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
-import { forwardRef, useCallback, useState } from 'react';
+import BottomSheet, { BottomSheetBackdrop, BottomSheetView } from '@gorhom/bottom-sheet';
+import { View, TouchableOpacity, StyleSheet, Dimensions } from 'react-native';
+import { forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { CalendarList } from 'react-native-calendars';
 import { useTodoStore } from '@/store/useTodoStore';

@@ -1,5 +1,6 @@
 import AddEvent from '@/components/planner/AddEvent';
 import EditEvent from '@/components/planner/EditEvent';
+import EditTask from '@/components/planner/EditTask';
 import WeeklyCalendar from '@/components/planner/WeeklyCalendar';
 import AskAiModal from '@/components/planner/AskAiModal';
 import { usePlannerStore, getDateTimeString } from '@/store/usePlannerStore';
@@ -57,7 +58,7 @@ export default function planner() {
 
   const insets = useSafeAreaInsets();
   const {eventItems, eventsLoading, init, rescheduleEvent} = usePlannerStore();
-  const { taskItems, init: initTasks, setSelectedTask, rescheduleTaskTime, toggleCompletion } = useTodoStore();
+  const { taskItems, init: initTasks, selectedTask, setSelectedTask, rescheduleTaskTime, toggleCompletion } = useTodoStore();
 
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); //react-native-calendars take in dates in YYYY-MM-DD format
@@ -87,12 +88,15 @@ export default function planner() {
   const calendarRef = useRef<CalendarKitHandle>(null);
   const addEventRef = useRef<BottomSheetModal>(null);
   const editEventRef = useRef<BottomSheetModal>(null);
+  const editTaskRef= useRef<BottomSheetModal>(null);
 
   const openAddEventSheet = () => addEventRef.current?.present();
   const openEditEventSheet = () => editEventRef.current?.present();
+  const openEditTaskSheet = () => editTaskRef.current?.present();
 
   const closeAddEventSheet = () => addEventRef.current?.dismiss();
   const closeEditEventSheet = () => editEventRef.current?.dismiss();
+  const closeEditTaskSheet = () => editTaskRef.current?.dismiss();
 
   const goToEventHour = (startTime: string) => {
       calendarRef.current?.goToDate({
@@ -260,10 +264,19 @@ export default function planner() {
         numberOfDays={numberOfDays}
         allowPinchToZoom={true}
         onPressEvent={(event) => {
-          // use original eventItem instead of the mapped one from earlier
-          const original = eventItems.find(e => e.id === event.id);
-          openEditEventSheet(); 
-          setSelectedEvent(original)}}
+          if (!event.isTask) {
+            // use original eventItem instead of the mapped one from earlier
+            const original = eventItems.find(e => e.id === event.id);
+            openEditEventSheet(); 
+            setSelectedEvent(original)
+          } else {
+            const task = taskItems.find(t => t.id === event.taskId);
+            if (task) {
+              openEditTaskSheet();
+              setSelectedTask(task);
+            }
+          }
+        }}
         onLongPressEvent={(event: any) => { setRescheduledEvent(event);}}
         onDateChanged={(date) => setSelectedDate(standardiseDateFormat(date))}
         allowDragToCreate
@@ -363,6 +376,12 @@ export default function planner() {
           ref={editEventRef}
           close={closeEditEventSheet}
           event={selectedEvent!}
+        />
+
+        <EditTask
+          ref={editTaskRef}
+          close={closeEditTaskSheet}
+          task={selectedTask}
         />
 
         <AskAiModal

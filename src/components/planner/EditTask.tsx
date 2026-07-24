@@ -1,0 +1,485 @@
+import 'react-native-gesture-handler';
+import { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView, BottomSheetModal } from '@gorhom/bottom-sheet';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch} from 'react-native';
+import { useState, forwardRef, useCallback, useEffect } from 'react';
+import { Ionicons } from "@expo/vector-icons";
+import { SubtaskItem, TaskItem } from '@/types/todo';
+import Subtask from '../todo/Subtask';
+import Animated, { SlideInLeft, SlideOutLeft, FadeIn, FadeOut, LinearTransition, Easing } from 'react-native-reanimated';
+import { useTodoStore, addMinutes } from '@/store/useTodoStore';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { formatDatetoString } from '@/store/usePlannerStore';
+
+// exactly the same as EditTask in todo/components right now, but converted to bottomSheetModal and i want to change up the UI later
+
+type EditTaskProps = {
+    close: () => void;
+    task: TaskItem | null;
+}
+
+type Ref = BottomSheetModal;
+
+const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
+
+    const { handleEditTask, selectedDate } = useTodoStore();
+    
+    const renderBackdrop = useCallback(
+        (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
+        []
+
+    );
+
+    const [task, setTask] = useState<string>(props.task?.text ?? '');
+    const [taskDesc, setTaskDesc] = useState<string>(props.task?.taskDesc ?? '');
+    const [dread, setDread] = useState<boolean>(props.task?.dread ?? false);
+    const [isComplete, setIsComplete] = useState<boolean>(props.task?.completed ?? false);
+    const [subtasks, setSubtasks] = useState<SubtaskItem[]>(props.task?.subtasks ?? [])
+    const [subtaskInput, setSubtaskInput] = useState<string>('');
+    const [deletedSubtaskIds, setDeletedSubtaskIds] = useState<number[]>([]);
+    const [difficulty, setDifficulty] = useState<'easy'|'moderate'|'difficult'|''>(props.task?.difficulty ?? '');
+    // for expandable difficulty button
+    const [expanded, setExpanded] = useState<boolean>(false);
+    // for expandable schedule time thing
+    const [expandedTime, setExpandedTime] = useState<boolean>(false);
+    const [date, setDate] = useState<string>((props.task?.scheduledDate ?? new Date().toISOString().split('T')[0]) + 'T00:00:00'); // add 'T00:00:00' to prevent timezone discrepancy
+    const [startTime, setStartTime] = useState<string | undefined>(props.task?.startTime ?? undefined);
+    const [endTime, setEndTime] = useState<string | undefined>(props.task?.endTime ?? undefined);
+
+    const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+
+    const difficultyStyles = {
+        easy: { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E' },
+        moderate: { backgroundColor: '#EE8F00', borderLeftColor: '#BB7102' },
+        difficult: { backgroundColor: '#BC0000', borderLeftColor: '#810303' },
+    };
+
+    const difficultyLabels = {
+        easy: 'Easy 😌',
+        moderate: 'Moderate 🙂',
+        difficult: 'Difficult 😥',
+    };
+
+    const resetFromTask = () => {
+        if (props.task) {
+            setTask(props.task.text);
+            setTaskDesc(props.task.taskDesc ?? '');
+            setDread(props.task.dread);
+            setIsComplete(props.task.completed);
+            setSubtasks(props.task.subtasks ?? []);
+            setDifficulty(props.task.difficulty ?? '');
+            setStartTime(props.task.startTime ?? undefined);
+            setEndTime(props.task.endTime ?? undefined);
+            setExpandedTime(!!props.task.startTime);
+            setDate(props.task.scheduledDate + 'T00:00:00');
+        }
+        setDeletedSubtaskIds([]);
+    };
+
+    useEffect(() => {
+        resetFromTask();
+    }, [props.task]);
+
+    const handleClose = () => {
+        resetFromTask();
+        props.close();
+    };
+
+    const handleSubmit = async () => {
+        if (task.trim() === '') {
+            Alert.alert(
+                "Task Required",          
+                "Please input your task before submitting.", 
+                [{ text: "OK" }]                
+            );
+            return;
+        };
+
+        if (difficulty === '') {
+            Alert.alert(
+                "Difficulty Required",          
+                "Please select a difficulty level before adding the task.", 
+                [{ text: "OK" }]                
+            );
+            return;
+        };
+
+        if (!props.task) return;
+
+        const start = startTime ?? null;
+        const end = start ? (endTime ?? addMinutes(start, 30)) : null;
+        await handleEditTask(props.task.id, task, dread, isComplete, difficulty, date, taskDesc, subtasks, deletedSubtaskIds, start, end);
+        props.close();
+    };
+
+    const handleAddSubtask = () => {
+        if (!subtaskInput.trim()) return;
+        // id: Date.now() for newly added subtasks is a temp local id, handleEditTask will filter out existing and new subtasks and replace the Date.now() id with supabase assigned ones
+        setSubtasks(prev => [...prev, { id: Date.now(), text: subtaskInput.trim(), completed: false }]);
+        setSubtaskInput('');
+    };
+
+    // remove subtasks locally, then pass onto handleEdit function in todo_list.tsx to delete from supabase
+    const removeSubtask = (index: number) => {
+
+        setSubtasks(prev => prev.filter((_, i) => i !== index));
+
+        const subtask = subtasks[index];
+    
+        // only delete from database if it's an existing subtask (not a temp Date.now() id)
+        if (subtask.id < 1e12) {
+            setDeletedSubtaskIds(prev => [...prev, subtask.id]);
+        }
+    };
+
+    const toggleNewSubtaskCompletion = (index: number) => {
+        setSubtasks(prev => prev.map((subtask, i) => 
+            i === index ? { ...subtask, completed: !subtask.completed } : subtask
+        ));
+    }
+
+    // coombines selected date with current time into a dateString
+    const combineDateAndTime = (dateStr: string, timeStr: string) => {
+        const d = new Date(dateStr); // dateStr example: "2026-07-21T00:00:00" (midnight safe date string)
+        const t = new Date(timeStr); //timeStr example: "2026-07-21T14:30:00.000Z" (full ISO string)
+        d.setHours(t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds());
+        return d.toISOString();
+    };
+
+    const renderScheduleTime = () => (
+        <Animated.View
+            style={{paddingHorizontal: 65, paddingBottom: 10}}
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            layout={LinearTransition.duration(500).easing(Easing.inOut(Easing.quad))}
+        >
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.timeTxt}>Start Time: </Text>
+
+                <DateTimePicker
+                    value={new Date(startTime ?? combineDateAndTime(date + 'T00:00:00', new Date().toISOString()))}
+                    mode={'time'}
+                    is24Hour={true}
+                    onValueChange={(event, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
+                />
+            </View>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
+                <Text style={styles.timeTxt}>End Time:   </Text>
+
+                <DateTimePicker
+                    value={new Date(endTime ?? combineDateAndTime(date + 'T00:00:00', new Date().toISOString()))} // if endTime, show endTime, if not defaults to selected date + time currently
+                    mode={'time'}
+                    is24Hour={true}
+                    onValueChange={(event, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
+                />
+            </View>
+        </Animated.View>
+    );
+
+    const openDateTimePicker = () => (
+        <View>
+            <DateTimePicker
+                value={new Date(date)}
+                mode={'date'}
+                is24Hour={true}
+                onValueChange={(event, selectedDate) => {
+                    // if date changes, update startTime and endTime to match
+                    if (!selectedDate) return;
+                        const newDate = formatDatetoString(selectedDate);
+                        setDate(newDate);
+                        setStartTime(prev => (prev ? combineDateAndTime(newDate, prev) : prev));
+                        setEndTime(prev => (prev ? combineDateAndTime(newDate, prev) : prev));
+                }}
+            />
+        </View>
+    )
+
+    return (
+        <BottomSheetModal 
+            ref={ref} 
+            enableDynamicSizing={true}
+            maxDynamicContentSize={700} 
+            enablePanDownToClose={true}
+            backgroundStyle={styles.container}
+            handleIndicatorStyle={{backgroundColor: '#5E4833'}}
+            backdropComponent={renderBackdrop}>
+            <BottomSheetScrollView style={styles.innerContainer} keyboardShouldPersistTaps='handled'>
+                <View style={styles.header}>
+                    <TouchableOpacity
+                        onPress={handleClose}>
+                            <Ionicons name='close' size={30} color="#937254"/>
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                        style={styles.updateTaskBtn}
+                        onPress={handleSubmit}>
+                            <Text style={styles.addTaskTxt}>Update Task </Text>
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.addTaskTitle}>
+                    <TouchableOpacity
+                      onPress={() => setIsComplete(!isComplete)}>
+                        <Ionicons name={isComplete ? "checkbox-outline" : "square-outline"} size={30} color="#5E4833"/>
+                    </TouchableOpacity>
+
+                    <BottomSheetTextInput 
+                      multiline 
+                      style={[styles.taskInput, isComplete && styles.completedText]}
+                      value={task} 
+                      placeholder='Write your task here! *'
+                      placeholderTextColor={'#AF947B'}
+                      onChangeText={text => setTask(text)} >
+                    </BottomSheetTextInput>
+
+                    <TouchableOpacity
+                      onPress={() => setDread(!dread)}>
+                        <View style={[styles.flagContainer, dread && styles.flagDread]}>
+                            <Ionicons name={dread ? "flag" : "flag-outline"} size={18} color={dread ? "#FFF" : "#937254"}/>
+                        </View>
+                    </TouchableOpacity>
+                </View>
+
+                <BottomSheetTextInput
+                  multiline
+                  style={styles.taskDescInput}
+                  value={taskDesc}
+                  placeholder='Task description...'
+                  placeholderTextColor={'#AF947B'}
+                  onChangeText={text => setTaskDesc(text)}>
+                </BottomSheetTextInput>
+
+                <View style={styles.subtaskContainer}>
+                {subtasks.map((subtask, index) => (
+                    <Subtask                        
+                        key={index}
+                        id={subtask.id}
+                        text={subtask.text}
+                        completed={subtask.completed}
+                        onToggle={() => toggleNewSubtaskCompletion(index)}
+                        onDelete={() => removeSubtask(index)}></Subtask>
+                ))}
+                </View>
+
+                <View style={styles.subtaskInputContainer}>
+                    <TouchableOpacity
+                        onPress={handleAddSubtask}>
+                        <Ionicons name="add-circle-outline" size={30} color="#937254"/>
+                    </TouchableOpacity>
+
+                    <BottomSheetTextInput
+                        multiline
+                        style={styles.subtaskInput}
+                        placeholder='Add subtask here'
+                        placeholderTextColor={'#AF947B'}
+                        onChangeText={text => setSubtaskInput(text)}
+                        value={subtaskInput}>
+                    </BottomSheetTextInput>
+                </View>
+
+                <Animated.View layout={LinearTransition.duration(500)}>
+                    <View style={{paddingHorizontal: 40, paddingBottom: 10}}>
+                        <View style={{flexDirection: 'row', justifyContent: 'space-between'}}>
+                            <View style={{flexDirection: 'row'}}>
+                                <Ionicons name={expandedTime ? "chevron-down" : "chevron-forward"} size={20} color="#937254"/>
+                                <Text style={styles.scheduleTimeTxt}> Schedule time </Text>
+                            </View>
+                            <Switch
+                              value={expandedTime}
+                              onValueChange={(value) => {
+                                setExpandedTime(value);
+                                if (value && !startTime) {
+                                    const start = combineDateAndTime(date + 'T00:00:00', new Date().toISOString());
+                                    setStartTime(start);
+                                    setEndTime(addMinutes(start, 30));
+                                }
+                                if (!value) { setStartTime(undefined); setEndTime(undefined);
+                                }}
+                              }/>
+                        </View>
+                    </View>
+                    {expandedTime && renderScheduleTime() }
+                </Animated.View>
+
+                <View style={styles.footer}>
+                    <View style={styles.difficultyOptions}>
+                        <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
+                                <Text style={[styles.difficultyTxt, difficulty && {color: '#FFF'}]}>{difficulty ? difficultyLabels[difficulty] : 'Difficulty * '}</Text>
+                        </TouchableOpacity>
+
+                        {expanded && (
+                            <>
+                                <Animated.View
+                                entering={SlideInLeft.duration(500).easing(Easing.inOut(Easing.quad))}
+                                exiting={ SlideOutLeft.duration(500).easing(Easing.inOut(Easing.quad))}>
+                                    <TouchableOpacity
+                                        style={[styles.difficultyBtn, { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E'}]}
+                                        onPress={() => {setDifficulty('easy'); setExpanded(false);}}>
+                                            <Text style={[styles.difficultyTxt, styles.optionTxt]}>Easy 😌</Text>
+                                    </TouchableOpacity>
+                                </Animated.View>
+
+                                <Animated.View
+                                entering={SlideInLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}
+                                exiting={ SlideOutLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}>
+                                    <TouchableOpacity
+                                        style={[styles.difficultyBtn, { backgroundColor: '#EE8F00', borderLeftColor: '#BB7102'}]}
+                                        onPress={() => {setDifficulty('moderate'); setExpanded(false);}}>
+                                            <Text style={[styles.difficultyTxt, styles.optionTxt]}>Moderate 🙂</Text>
+                                    </TouchableOpacity>
+                                    </Animated.View>
+                                
+                                <Animated.View
+                                entering={SlideInLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}
+                                exiting={ SlideOutLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}>
+                                    <TouchableOpacity
+                                        style={[styles.difficultyBtn, {backgroundColor: '#BC0000', borderLeftColor: '#810303'}]}
+                                        onPress={() => {setDifficulty('difficult'); setExpanded(false);}}>
+                                            <Text style={[styles.difficultyTxt, styles.optionTxt]}>Difficult 😥</Text>
+                                    </TouchableOpacity>
+                                </Animated.View>
+                            </>
+                        )}
+                    </View>
+
+                    <TouchableOpacity
+                      onPress={() => setShowDatePicker(!showDatePicker)}>
+                        <Ionicons name="calendar-clear-outline" size={25} color="#937254"/>
+                    </TouchableOpacity>
+
+                    {showDatePicker && openDateTimePicker()}
+
+                </View>
+
+                
+            </BottomSheetScrollView>
+        </BottomSheetModal>
+        
+        
+    );
+});
+
+const styles = StyleSheet.create({
+    container: {
+        position: 'absolute',
+        backgroundColor: '#f7f4e1',
+    },
+    innerContainer: {
+        backgroundColor: '#FFF',
+        height: '100%',
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        paddingHorizontal: 20,
+        paddingVertical: 10,
+    },
+    updateTaskBtn: {
+        backgroundColor: "#937254",
+        borderRadius: 10,
+        justifyContent: "center",
+        alignItems: "center",
+        paddingHorizontal: 10,
+    },
+    addTaskTxt: {
+        fontFamily: "InterBold",
+        color: "#FFF"
+    },
+    addTaskTitle: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: 'center',
+        paddingVertical: 5,
+        paddingHorizontal: 40,
+    },
+    taskInput: {
+        flex: 1,
+        marginHorizontal: 5,
+        textAlignVertical: 'top',
+        fontFamily: "InterBold",
+        color: "#5E4833"
+    },
+    flagContainer: {
+        borderColor: "#937254",
+        borderWidth: 2,
+        borderRadius: 50,
+        height: 30,
+        width: 30,
+        justifyContent: "center",
+        alignItems: "center",
+    },
+    flagDread: {
+        backgroundColor: '#BC0000',
+        borderColor: '#BC0000',
+    },
+    taskDescInput: {
+        borderWidth: 2,
+        borderColor: '#937254',
+        borderRadius: 10,
+        padding: 10,
+        marginVertical: 5,
+        marginHorizontal: 40,
+        color: "#937254"
+    },
+    footer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginHorizontal: 22,
+        paddingBottom: 100,
+        marginTop: 'auto',
+    },
+    difficultyBtn: {
+        backgroundColor: "#D9D9D9",
+        paddingHorizontal: 5,
+        paddingVertical: 5,
+        borderRadius: 10,
+        borderLeftWidth: 4,
+        borderLeftColor: "#787878",
+        marginRight: 2
+    },
+    difficultyOptions: {
+        flexDirection: 'row'
+    },
+    difficultyTxt: {
+        fontFamily: "InterSemiBold",
+        fontSize: 13,
+        color: '#787878',
+    },
+    optionTxt: {
+        fontSize: 10,
+        color: "#FFF",
+    },
+    subtaskContainer: {
+        paddingHorizontal: 75,
+        paddingTop: 5,
+    },
+    subtaskInputContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingBottom: 5,
+        marginHorizontal: 40,
+        marginVertical: 5,
+    },
+    subtaskInput: {
+        marginLeft: 5,
+        flex: 1,
+        color: '#937254'
+    },
+    completedText: {
+        color: 'rgb(94, 72, 51, 0.7)',
+        textDecorationLine: 'line-through',
+    },
+    scheduleTimeTxt: {
+        fontFamily: "InterBold",
+        color: '#937254',
+        fontSize: 15
+    },
+    timeTxt: {
+        fontFamily: 'InterSemiBold',
+        color: '#5E4833'
+    }
+
+});
+
+export default EditTask;
