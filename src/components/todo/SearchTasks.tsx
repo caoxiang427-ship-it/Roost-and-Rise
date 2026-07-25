@@ -8,6 +8,7 @@ import { TaskItem } from '@/types/todo';
 import { useTodoStore, groupTaskByDate, formatDate } from '@/store/useTodoStore';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import { TextInput } from 'react-native-gesture-handler';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 type SearchTasksProps = {
@@ -58,74 +59,82 @@ const SearchTasks = forwardRef<Ref, SearchTasksProps>((props, ref) => {
             backgroundStyle={styles.container}
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
-                <View style={{flex: 1}}>
-                    <View style={{backgroundColor: '#FFF', paddingHorizontal: 20}}>
-                        <View style={styles.header}>
-                            <TouchableOpacity
-                            onPress={props.close}>
-                                <Ionicons name='close' size={30} color="#937254"/>
-                            </TouchableOpacity>
-                        </View>
-
-                        <View style={styles.text}>
-                            <Text style={styles.title}>Search Tasks</Text>
-                            <View style={styles.searchBarContainer}>
-                                <View style={styles.searchBar}>
-                                    <Ionicons name='search' size={25} color='#5E4833'/>
-                                    <TextInput 
-                                      placeholder='Type here to search' 
-                                      placeholderTextColor='#82786f' 
-                                      style={styles.textInput}
-                                      onChangeText={(text) => setSearch(text)}></TextInput>
-                                </View>
-                                <Ionicons name="filter" size={25} color="#5E4833"/>
-                            </View>
-                        </View>
-
-                        <View style={{borderColor: '#5E4833', borderWidth: 0.5, marginHorizontal: -20, marginBottom: 10}}></View>
-
-                    </View>
+                
+                <View>
                 <BottomSheetFlatList
-                contentInsetAdjustmentBehavior='never'
-                data={Object.keys(dict).filter(date => dict[date].length > 0)}
-                contentContainerStyle={styles.innerContainer}
-                keyExtractor={(date) => date}
-                renderItem={({ item: date }) => (
-                    <View>
-                        <Text style={styles.date}>{formatDate(date)}</Text>
-                        {dict[date].map(task => (
-                            <Task 
-                              key={task.id}
-                              id={task.id}
-                              text={task.text}
-                              completed={task.completed}
-                              dread={task.dread}
-                              difficulty={task.difficulty}
-                              scheduledDate={task.scheduledDate}
-                              taskDesc={task.taskDesc}
-                              subtasks={task.subtasks}
-                              xpAwarded={task.xpAwarded}
-                              onPress={() => {setSelectedTask(task); props.openEditTaskSheet();}}/>
-                        ))}
-                        <View style={{borderColor: '#5E4833', borderWidth: 0.5, marginHorizontal: -20, marginBottom: 10}}></View>
-
-                    </View>
-                )}
-                ListEmptyComponent={
-                    <Animated.View entering={FadeIn.duration(300).delay(200)} exiting={FadeOut.duration(300)}>
-                        <View  style={styles.emptyTaskContainer}>
-                            <View style={styles.clipboardContainer}>
-                                <Ionicons name="sad-outline" size={50} color='#937254'/>
+                    contentInsetAdjustmentBehavior='never'
+                    data={Object.keys(dict).filter(date => dict[date].length > 0)}
+                    contentContainerStyle={styles.innerContainer}
+                    keyExtractor={(date) => date}
+                    keyboardShouldPersistTaps='handled'   // so tapping a task while the search keyboard is up still registers
+                    ListHeaderComponent={
+                        <View style={{ backgroundColor: '#FFF' }}>
+                            <View style={styles.header}>
+                                <TouchableOpacity onPress={props.close}>
+                                    <Ionicons name='close' size={30} color="#937254" />
+                                </TouchableOpacity>
                             </View>
-                            <Text style={{ fontFamily: 'InterSemiBold', fontSize: 20, color: '#937254'}}>
-                                {Object.keys(renderedItems).length === 0 ? 'No tasks added yet' : 'Sorry no tasks found'}
-                            </Text>
+
+                            <View style={styles.text}>
+                                <Text style={styles.title}>Search Tasks</Text>
+                                <View style={styles.searchBarContainer}>
+                                    <View style={styles.searchBar}>
+                                        <Ionicons name='search' size={25} color='#5E4833' />
+                                        <TextInput
+                                            placeholder='Type here to search'
+                                            placeholderTextColor='#82786f'
+                                            style={styles.textInput}
+                                            onChangeText={(text) => setSearch(text)} />
+                                    </View>
+                                    <Ionicons name="filter" size={25} color="#5E4833" />
+                                </View>
+                            </View>
+
+                            <View style={{ borderColor: '#5E4833', borderWidth: 0.5, marginBottom: 10 }} />
                         </View>
-                    </Animated.View>
-                }>
+                    }
+                    renderItem={({ item: date }) => (
+                        <View>
+                            <Text style={styles.date}>{formatDate(date)}</Text>
+                            {dict[date].map(task => (
+                                <Task
+                                    key={task.id}
+                                    id={task.id}
+                                    text={task.text}
+                                    completed={task.completed}
+                                    dread={task.dread}
+                                    difficulty={task.difficulty}
+                                    scheduledDate={task.scheduledDate}
+                                    startTime={task.startTime}
+                                    endTime={task.endTime}
+                                    taskDesc={task.taskDesc}
+                                    subtasks={task.subtasks}
+                                    xpAwarded={task.xpAwarded}
+                                    onPress={() => { setSelectedTask(task); props.openEditTaskSheet(); }} />
+                            ))}
+                            <View style={{ borderColor: '#5E4833', borderWidth: 0.5, marginHorizontal: -20, marginBottom: 10 }} />
+                        </View>
+                    )}
+                    ListEmptyComponent={
+                        <Animated.View entering={FadeIn.duration(300).delay(200)} exiting={FadeOut.duration(300)}>
+                            <View  style={styles.emptyTaskContainer}>
+                                <View style={styles.clipboardContainer}>
+                                    <Ionicons name="sad-outline" size={50} color='#937254'/>
+                                </View>
+                                <Text style={{ fontFamily: 'InterSemiBold', fontSize: 20, color: '#937254'}}>
+                                    {Object.keys(renderedItems).length === 0 ? 'No tasks added yet' : 'Sorry no tasks found'}
+                                </Text>
+                            </View>
+                        </Animated.View>
+                    }>
 
                 </BottomSheetFlatList>
                 </View>
+
+                <LinearGradient
+                    colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+                    style={styles.bottomFade}
+                    pointerEvents="none"/>
         </BottomSheet>
         
         
@@ -140,7 +149,6 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingBottom: 90,
         backgroundColor: '#FFF',
-        flex: 1,
     },
     header: {
         flexDirection: 'row',
@@ -218,7 +226,15 @@ const styles = StyleSheet.create({
         paddingHorizontal: 5,
         fontFamily: "InterSemiBold",
         color: '#5E4833'
-    }
+    },
+    bottomFade: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 300,
+        zIndex: 1
+    },
 });
 
 export default SearchTasks;

@@ -1,7 +1,7 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch } from 'react-native';
-import { useState, forwardRef, useCallback } from 'react';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch, Keyboard, Platform } from 'react-native';
+import { useState, forwardRef, useCallback, useEffect } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { NewSubtaskItem } from '@/types/todo';
 import Subtask from './Subtask';
@@ -39,6 +39,20 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     const [expandedTime, setExpandedTime] = useState<boolean>(false);
     const [startTime, setStartTime] = useState<string | undefined>(undefined);
     const [endTime, setEndTime] = useState<string | undefined>(undefined); ;
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
+
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     const difficultyStyles = {
         easy: { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E' },
@@ -153,7 +167,12 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
             enablePanDownToClose={true}
             backgroundStyle={styles.container}
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
-            backdropComponent={renderBackdrop}>
+            backdropComponent={renderBackdrop}
+            onChange={(index) => {
+                if (index === -1) {
+                Keyboard.dismiss();
+                }
+            }}>
             <BottomSheetScrollView style={styles.innerContainer} keyboardShouldPersistTaps='handled'>
                 <View style={styles.header}>
                     <TouchableOpacity
@@ -237,6 +256,8 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                             </View>
                             <Switch
                               value={expandedTime}
+                              trackColor={{ false: '#767577', true: '#0cba00' }}
+                              ios_backgroundColor={'rgb(170, 170, 170)'}
                               onValueChange={(value) => {
                                 setExpandedTime(value);
                                 if (value && !startTime) {
@@ -252,7 +273,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                     {expandedTime && renderScheduleTime() }
                 </Animated.View>
 
-                <View style={styles.footer}>
+                <View style={[styles.footer, {paddingBottom: keyboardVisible ? 20 : 100}]}>
 
                     <View style={styles.difficultyOptions}>
                         <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
@@ -376,7 +397,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 22,
-        paddingBottom: 100,
         marginTop: 'auto',
     },
     difficultyBtn: {

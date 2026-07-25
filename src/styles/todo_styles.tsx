@@ -20,9 +20,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 80,
   },
-  topDisplayLeft: {
-    
-  },
   header: {
     fontFamily: "InterBold",
     fontSize: 24,
@@ -115,7 +112,6 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     bottom: 85,
     right: 25,
-    zIndex: 1,
   },
   noTaskContainer: {
     justifyContent: 'center',

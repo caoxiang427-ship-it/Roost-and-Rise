@@ -3,8 +3,9 @@
  * Only logged in users reach this page.
 */
 
+import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator} from 'react-native';
+import { View, Text, TouchableOpacity, Image, TextInput} from 'react-native';
 import { styles } from '../../styles/index_styles';
 import { ImageBackground } from 'expo-image';
 import { Ionicons } from "@expo/vector-icons";
@@ -52,9 +53,17 @@ export default function HomeScreen() {
   const storeRef = useRef<BottomSheet>(null);
   const inventoryRef = useRef<BottomSheet>(null);
 
+  SplashScreen.preventAutoHideAsync();
+
   useEffect(() => {
     init();
   }, []);
+
+  useEffect(() => {
+    if (!isLoading) {
+      SplashScreen.hideAsync();
+    }
+  }, [isLoading]);
   
   useEffect(() => {
     setChickNameDraft(chickName);
@@ -140,16 +149,6 @@ export default function HomeScreen() {
     const nextLevelXP = totalXpRequiredForLevel(level + 1);
     return (xp - currentLevelXP) / (nextLevelXP - currentLevelXP);
   };
-
-  if (isLoading) {
-    return (
-     <ImageBackground
-      source={require("../../../assets/images/home/home_background.png")}
-      style={[styles.container, {justifyContent: 'center', alignItems: 'center'}]}>
-      <ActivityIndicator size="large" color="#FFF" />
-    </ImageBackground>
-    )
-  }
 
   return (
     <View style={styles.container}>

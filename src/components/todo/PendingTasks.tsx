@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Task from './Task';
 import { useTodoStore, usePendingTaskItems, groupTaskByDate, formatDate } from '@/store/useTodoStore';
 import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 type PendingTasksProps = {
@@ -122,6 +123,8 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
                               dread={task.dread}
                               difficulty={task.difficulty}
                               scheduledDate={task.scheduledDate}
+                              startTime={task.startTime}
+                              endTime={task.endTime}
                               taskDesc={task.taskDesc}
                               subtasks={task.subtasks}
                               xpAwarded={task.xpAwarded}
@@ -143,6 +146,11 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
                 }>
 
                 </BottomSheetFlatList>
+
+                <LinearGradient
+                    colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+                    style={styles.bottomFade}
+                    pointerEvents="none"/>
         </BottomSheet>
         
         
@@ -215,6 +223,14 @@ const styles = StyleSheet.create({
         color: '#5E4833',
         paddingBottom: 10,
         paddingLeft: 10,
+    },
+    bottomFade: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 300,
+        zIndex: 1,
     },
 });
 

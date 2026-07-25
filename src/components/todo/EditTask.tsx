@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch, Keyboard, Platform} from 'react-native';
 import { useState, forwardRef, useCallback, useEffect } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { SubtaskItem, TaskItem } from '@/types/todo';
@@ -41,7 +41,21 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
     // for expandable schedule time thing
     const [expandedTime, setExpandedTime] = useState<boolean>(false);
     const [startTime, setStartTime] = useState<string | undefined>(props.task?.startTime ?? undefined);
-    const [endTime, setEndTime] = useState<string | undefined>(props.task?.endTime ?? undefined); ;
+    const [endTime, setEndTime] = useState<string | undefined>(props.task?.endTime ?? undefined);
+
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     const difficultyStyles = {
         easy: { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E' },
@@ -179,7 +193,12 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
             enablePanDownToClose={true}
             backgroundStyle={styles.container}
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
-            backdropComponent={renderBackdrop}>
+            backdropComponent={renderBackdrop}
+            onChange={(index) => {
+                if (index === -1) {
+                Keyboard.dismiss();
+                }
+            }}>
             <BottomSheetScrollView style={styles.innerContainer} keyboardShouldPersistTaps='handled'>
                 <View style={styles.header}>
                     <TouchableOpacity
@@ -278,7 +297,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                     {expandedTime && renderScheduleTime() }
                 </Animated.View>
 
-                <View style={styles.footer}>
+                <View style={[styles.footer, {paddingBottom: keyboardVisible ? 20 : 100}]}>
                     <View style={styles.difficultyOptions}>
                         <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
                                 <Text style={[styles.difficultyTxt, difficulty && {color: '#FFF'}]}>{difficulty ? difficultyLabels[difficulty] : 'Difficulty * '}</Text>
@@ -401,7 +420,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 22,
-        paddingBottom: 100,
         marginTop: 'auto',
     },
     difficultyBtn: {

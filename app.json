@@ -35,7 +35,7 @@
         {
           "backgroundColor": "#FAF9F6",
           "image": "./assets/images/Roost&Rise_Logo.png",
-          "imageWidth": 200
+          "imageWidth": 300
         }
       ],
       "expo-font",

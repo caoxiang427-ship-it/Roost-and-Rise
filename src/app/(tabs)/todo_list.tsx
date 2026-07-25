@@ -72,7 +72,7 @@ export default function TodoScreen() {
   const openPendingTasksSheet = () => pendingTasksRef.current?.expand();
   const openSearchTasksSheet = () => searchTasksRef.current?.expand();
 
-  const closeAddTaskSheet = () => addTaskRef.current?.close();
+  const closeAddTaskSheet = () => {addTaskRef.current?.close()};
   const closeEditTaskSheet = () => editTaskRef.current?.close();
   const closeCalendarSheet = () => calendarRef.current?.close();
   const closePendingTasksSheet = () => pendingTasksRef.current?.close();
@@ -117,7 +117,7 @@ export default function TodoScreen() {
                 
                 <View style={styles.topDisplay}>
                   <Animated.View key={selectedDayName} entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
-                      <View style={styles.topDisplayLeft}>
+                      <View>
                         <Text style={styles.header}>{selectedDate === todayDate ? "Today" : selectedDayName } </Text>
                         <Text style={styles.date}>{formattedSelectedDate} </Text>
                       </View>
@@ -230,7 +230,12 @@ export default function TodoScreen() {
             </Animated.View>
           }
         />
-        
+
+      <LinearGradient
+        colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+        style={styles.bottomFade}
+        pointerEvents="none"/>
+
       <TouchableOpacity 
             style={styles.addBtn}
             onPress={openAddTaskSheet}>
@@ -242,11 +247,6 @@ export default function TodoScreen() {
       <AddTask ref={addTaskRef} close={closeAddTaskSheet} openCalendar={openCalendarSheet}></AddTask>
       <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
       <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
-
-      <LinearGradient
-        colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
-        style={styles.bottomFade}
-        pointerEvents="none"/>
       
 
     </View>
