@@ -115,6 +115,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     bottom: 85,
     right: 25,
+    zIndex: 1,
   },
   noTaskContainer: {
     justifyContent: 'center',
@@ -144,6 +145,13 @@ export const styles = StyleSheet.create({
     color: '#FFF',
     fontFamily: "InterBold",
     fontSize: 15,
+  },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 170,
   },
 
 

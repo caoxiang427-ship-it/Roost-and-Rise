@@ -327,4 +327,11 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     zIndex: 10,
   },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 170,
+  },
 });

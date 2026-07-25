@@ -23,8 +23,6 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
 
     const {updateEvent, deleteEvent} = usePlannerStore();
     
-
-    const [selectedTab, setSelectedTab] = useState<"event" | "task">('event');
     const [isAllDay, setIsAllDay] = useState<boolean>(props.event?.allDay ?? false);
     const [eventTitle, setEventTitle] = useState<string>(props.event?.title ?? '');
     const [eventDescription, setEventDescription] = useState<string>(props.event?.eventDesc ?? '');
@@ -50,79 +48,6 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
         setDate(start.split('T')[0] + 'T00:00:00');
     }, [props.event?.id]); // everytime selected event changes, refire
 
-    // event tab
-    const renderEventTab = () => (
-        <View style={{paddingTop: 15}}>
-            <BottomSheetTextInput style={styles.textInput} placeholder='Event Title' placeholderTextColor={'#717171'}
-            onChangeText={(value) => setEventTitle(value)} value={eventTitle}></BottomSheetTextInput>
-            <BottomSheetTextInput style={styles.textInput} placeholder='Event Description' placeholderTextColor={'#717171'}
-            onChangeText={(value) => setEventDescription(value)} value={eventDescription}></BottomSheetTextInput>
-            <View style={{alignItems: "center", paddingTop: 10}}>
-                <View>
-                    <Text>Start time:</Text>
-                    <DateTimePicker
-                        value={new Date(startTime)}
-                        mode={'time'}
-                        is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate.toISOString())}
-                    />
-                </View>
-                <View>
-                    <Text>End time: </Text>
-                    <DateTimePicker
-                        value={new Date(endTime)}
-                        mode={'time'}
-                        is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate.toISOString())}
-                    />
-                </View>
-
-                <View style={{paddingTop: 20}}>
-                    <DateTimePicker
-                        value={new Date(date)}
-                        mode={'date'}
-                        is24Hour={true}
-                        onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate.toISOString())}
-                    />
-                    <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
-                    <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
-                        onPress={() => {
-                        const next = !isAllDay;
-                        setIsAllDay(next);
-                        if (next) {
-                        setStartTime(date);
-                        setEndTime(date);
-                        }
-                    }}
-                    >
-                        <Text>All day</Text>
-                    </TouchableOpacity>
-                </View>
-                <View>
-                    <View style={{ padding: 20, }}>
-                        <ColorPicker
-                            style={{ width: '100%' }}
-                            value={color}
-                            onCompleteJS={({ hex }) => setColor(hex)}
-                        >
-                            <Preview />
-                            <Panel3 />
-                            <BrightnessSlider />
-                            <Swatches colors={['#FF7F82', '#F38958', '#ffc955', '#5EE7B7', '#75C0C5', '#b1a1ff', '#F49FD2']} />
-                        </ColorPicker>
-                    </View>
-                </View>
-            </View>
-        </View>
-
-    );
-
-    const renderTaskTab = () => (
-        <View style={{paddingTop: 15}}>
-            <BottomSheetTextInput style={styles.textInput} placeholder='Task title' placeholderTextColor={'#717171'}></BottomSheetTextInput>
-            <BottomSheetTextInput style={styles.textInput} placeholder='Task Description' placeholderTextColor={'#717171'}></BottomSheetTextInput>
-        </View>
-    );
 
     return (
         <BottomSheetModal
@@ -138,15 +63,6 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                     onPress={props.close}>
                         <Ionicons name='close' size={30} color="#3f3f3f"/>
                     </TouchableOpacity>
-                    
-                    <View style={styles.tabContainer}>
-                        <TouchableOpacity style={styles.tab} onPress={() => setSelectedTab('event')}>
-                            <Text>Event</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={styles.tab} onPress={() => setSelectedTab('task')}>
-                            <Text>Task</Text>
-                        </TouchableOpacity>
-                    </View>
 
                     <TouchableOpacity style={styles.button}
                       onPress={async () => {
@@ -166,7 +82,70 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                     </TouchableOpacity>
 
                 </View>
-                {selectedTab === "event" ? renderEventTab() : renderTaskTab()}
+
+                <View style={{paddingTop: 15}}>
+                    <BottomSheetTextInput style={styles.textInput} placeholder='Event Title' placeholderTextColor={'#717171'}
+                    onChangeText={(value) => setEventTitle(value)} value={eventTitle}></BottomSheetTextInput>
+                    <BottomSheetTextInput style={styles.textInput} placeholder='Event Description' placeholderTextColor={'#717171'}
+                    onChangeText={(value) => setEventDescription(value)} value={eventDescription}></BottomSheetTextInput>
+                    <View style={{alignItems: "center", paddingTop: 10}}>
+                        <View>
+                            <Text>Start time:</Text>
+                            <DateTimePicker
+                                value={new Date(startTime)}
+                                mode={'time'}
+                                is24Hour={true}
+                                onValueChange={(event, selectedDate) => selectedDate && setStartTime(selectedDate.toISOString())}
+                            />
+                        </View>
+                        <View>
+                            <Text>End time: </Text>
+                            <DateTimePicker
+                                value={new Date(endTime)}
+                                mode={'time'}
+                                is24Hour={true}
+                                onValueChange={(event, selectedDate) => selectedDate && setEndTime(selectedDate.toISOString())}
+                            />
+                        </View>
+
+                        <View style={{paddingTop: 20}}>
+                            <DateTimePicker
+                                value={new Date(date)}
+                                mode={'date'}
+                                is24Hour={true}
+                                onValueChange={(event, selectedDate) => selectedDate && setDate(selectedDate.toISOString())}
+                            />
+                            <Text>Date: {date.toString()}, all day?: {isAllDay.toString()}</Text>
+                            <TouchableOpacity style={isAllDay ? styles.activeBtn : styles.button} 
+                                onPress={() => {
+                                const next = !isAllDay;
+                                setIsAllDay(next);
+                                if (next) {
+                                setStartTime(date);
+                                setEndTime(date);
+                                }
+                            }}
+                            >
+                                <Text>All day</Text>
+                            </TouchableOpacity>
+                        </View>
+                        <View>
+                            <View style={{ padding: 20, }}>
+                                <ColorPicker
+                                    style={{ width: '100%' }}
+                                    value={color}
+                                    onCompleteJS={({ hex }) => setColor(hex)}
+                                >
+                                    <Preview />
+                                    <Panel3 />
+                                    <BrightnessSlider />
+                                    <Swatches colors={['#FF7F82', '#F38958', '#ffc955', '#5EE7B7', '#75C0C5', '#b1a1ff', '#F49FD2']} />
+                                </ColorPicker>
+                            </View>
+                        </View>
+                    </View>
+                </View>
+
             </BottomSheetView>
         </BottomSheetModal>
     
@@ -176,21 +155,6 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#FFF',
-    },
-    tabContainer: {
-        backgroundColor: '#d0d0d0',
-        borderRadius: 20,
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        alignSelf: 'center',
-    },
-    tab: {
-        backgroundColor: '#FFF',
-        borderRadius: 10,
-        paddingHorizontal: 20,
-        marginHorizontal: 10,
     },
     textInput: {
         backgroundColor: '#d0d0d0',

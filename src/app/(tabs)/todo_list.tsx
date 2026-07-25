@@ -17,6 +17,7 @@ import CalendarDay from '@/components/todo/CalendarDay';
 import { useTodoStore, useRenderedTaskItems, calculateProgress } from '@/store/useTodoStore';
 import PendingTasks from '@/components/todo/PendingTasks';
 import { useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // uhh layout looks weird on android for some reason, fix ltr
 
@@ -101,6 +102,7 @@ export default function TodoScreen() {
           contentInsetAdjustmentBehavior='never'
           data={renderedTaskItems}
           keyExtractor={(item) => item.id.toString()}
+          contentContainerStyle={{paddingBottom: 100}}
           ListHeaderComponent={
             <>
               <Animated.View key={dayState()} entering={FadeIn.duration(300)} exiting={FadeOut.duration(300)}>
@@ -240,6 +242,11 @@ export default function TodoScreen() {
       <AddTask ref={addTaskRef} close={closeAddTaskSheet} openCalendar={openCalendarSheet}></AddTask>
       <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
       <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
+
+      <LinearGradient
+        colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+        style={styles.bottomFade}
+        pointerEvents="none"/>
       
 
     </View>

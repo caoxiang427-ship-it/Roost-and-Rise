@@ -71,6 +71,7 @@ export const styles = StyleSheet.create({
     alignItems: "center",
     bottom: 85,
     right: 25,
+    zIndex: 1,
   },
   hourContainer: {
     borderRadius: 10,
@@ -127,4 +128,11 @@ export const styles = StyleSheet.create({
     fontFamily: 'InterBold', 
     color: '#7D7D7D' },
   taskTitleDone: { textDecorationLine: 'line-through' },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 170,
+  },
 });

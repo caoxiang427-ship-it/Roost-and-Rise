@@ -15,6 +15,7 @@ import { Alert, Text, TouchableOpacity, View, Image } from 'react-native';
 import { styles } from '@/styles/planner_styles';
 import { ImageBackground } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 // for difficulty colour mapping
 const DIFFICULTY_COLOR: Record<string, string> = {
@@ -388,6 +389,12 @@ export default function planner() {
           visible={isModalVisible}
           setVisibility={setisModalVisible}
         />
+
+        <LinearGradient
+          colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+          style={styles.bottomFade}
+          pointerEvents="none"/>
+
       </CalendarContainer>
   );
 }

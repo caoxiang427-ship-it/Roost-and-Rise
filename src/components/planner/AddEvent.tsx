@@ -6,6 +6,7 @@ import { Ionicons } from "@expo/vector-icons";
 import DateTimePicker from '@react-native-community/datetimepicker';
 import ColorPicker, { Panel3, BrightnessSlider, Swatches, Preview } from 'reanimated-color-picker';
 import { usePlannerStore, formatDatetoString } from '@/store/usePlannerStore';
+import AddTask from './AddTask';
 
 type AddEventProps = {
     close: () => void;
@@ -169,34 +170,38 @@ const AddEvent = forwardRef<Ref, AddEventProps>((props, ref) => {
                         </TouchableOpacity>
                     </View>
 
-                    <TouchableOpacity style={styles.button}
-                      onPress={                      
-                        async () => {
-                            if (!eventTitle.trim()) {
-                                return Alert.alert("Input a title", "Please input an event title", [{text: "Ok", style: 'cancel'}])
+                    {selectedTab === 'event' &&
+                        <TouchableOpacity style={styles.button}
+                        onPress={                      
+                            async () => {
+                                if (selectedTab === "event") {
+                                    if (!eventTitle.trim()) {
+                                        return Alert.alert("Input a title", "Please input an event title", [{text: "Ok", style: 'cancel'}])
+                                    }
+                                    if (!isAllDay && startTime === endTime) {
+                                        return Alert.alert("Timing error", "Start time and End time cannot be the same", [{text: 'Ok', style: 'cancel'}])
+                                    }
+                                    await addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription);
+                                    if (!isAllDay) {props.goToEventHour?.(startTime)};
+                                    props.close();
+                                    // reset state
+                                    setEventTitle('');
+                                    setEventDescription('');
+                                    setIsAllDay(false);
+                                    setColor('#ffff9c');
+                                    const formattedSelectedDate = props.selectedDate + 'T00:00:00';
+                                    setDate(formattedSelectedDate);
+                                    setStartTime(combineDateAndTime(formattedSelectedDate, new Date().toISOString()));
+                                    setEndTime(combineDateAndTime(formattedSelectedDate, new Date().toISOString()));
                             }
-                            if (!isAllDay && startTime === endTime) {
-                                return Alert.alert("Timing error", "Start time and End time cannot be the same", [{text: 'Ok', style: 'cancel'}])
-                            }
-                            await addEvent(eventTitle, startTime, endTime, isAllDay, color, eventDescription);
-                            if (!isAllDay) {props.goToEventHour?.(startTime)};
-                            props.close();
-                            // reset state
-                            setEventTitle('');
-                            setEventDescription('');
-                            setIsAllDay(false);
-                            setColor('#ffff9c');
-                            const formattedSelectedDate = props.selectedDate + 'T00:00:00';
-                            setDate(formattedSelectedDate);
-                            setStartTime(combineDateAndTime(formattedSelectedDate, new Date().toISOString()));
-                            setEndTime(combineDateAndTime(formattedSelectedDate, new Date().toISOString()));
-                                                
-                      }}>
-                        <Text>Add Event</Text>
-                    </TouchableOpacity>
+                                                    
+                        }}>
+                            {selectedTab === "event" ? <Text>Add Event</Text> : <Text>Add Task</Text>}
+                        </TouchableOpacity>
+                    }
 
                 </View>
-                {selectedTab === "event" ? renderEventTab() : renderTaskTab()}
+                {selectedTab === "event" ? renderEventTab() : <AddTask selectedDate={props.selectedDate} close={props.close}/>}
             </BottomSheetView>
         </BottomSheetModal>
     
