@@ -7,7 +7,6 @@ import Inventory from '@/components/home/Inventory';
 import LevelUp from '@/components/home/LevelUp';
 import SpeechBubble from '@/components/home/SpeechBubble';
 import Store from '@/components/home/Store';
-import { imageMap } from '@/constants/home';
 import { getTodaysMood } from '@/lib/self-care';
 import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
 import { Ionicons } from "@expo/vector-icons";
@@ -228,12 +227,23 @@ const stage = getStage(level);
                   ></TextInput>
               </View>
               <GestureDetector gesture={pet}>
-                <Image
-                  source={ equippedItemId === null ? STAGE_IMAGES[getStage(level)]
-                    : imageMap[equippedItemId]
-                  }
-                  style={{width: 206, height: 225 }}
-                ></Image>
+                <View style={{ width: 206, height: 225 }}>
+                  <Image
+                    source={STAGE_IMAGES[stage]}
+                    style={{ width: 206, height: 225 }}
+                  />
+                  {equippedItemIds.map((id) => {
+                    const pos = ACCESSORY_POSITIONS[stage]?.[id];
+                    if (!pos) return null;   // no position for this stage = accessory hidden here
+                    return (
+                      <Image
+                        key={id}
+                        source={ACCESSORY_OVERLAYS[id]}
+                        style={[{ position: 'absolute' }, pos]}
+                      />
+                    );
+                  })}
+                </View>
               </GestureDetector>
             </View>
             

@@ -5,7 +5,6 @@
  * and modal for break/focus/recovery.
 */
 
-import { imageMap } from '@/constants/home';
 import { getTodayStudyMinutes, getTodaysFocusSessionCount, sessionRecorder } from '@/lib/sessions';
 import { displayTime, getCyclePosition, isLateNight, isLongBreakNext } from '@/lib/timer';
 import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
@@ -56,7 +55,7 @@ export default function TimerScreen() {
   const [rewardXP, setRewardXP] = useState(0);
  
   // For chicken companion card
-  const { addFocusXp, equippedItemId, chickName, xp } = useProfileStore();
+  const { addFocusXp, equippedItemIds, chickName, xp } = useProfileStore();
 
   // For three-tab card
   const [activeTab, setActiveTab] = useState<'summary' | 'settings' | 'tasks'>('summary');
@@ -437,6 +436,7 @@ export default function TimerScreen() {
             </View>
 
             <View style={styles.companionArtWrap}>
+              {/*
               <Image
                 source={
                   equippedItemId === null
@@ -446,6 +446,7 @@ export default function TimerScreen() {
                 style={styles.companionArt}
                 resizeMode="contain"
               />
+              */}
             </View>
 
             <View style={styles.levelRow}>

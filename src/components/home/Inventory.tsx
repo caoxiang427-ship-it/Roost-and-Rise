@@ -25,7 +25,7 @@ const Inventory = (props: InventoryProps) => {
     const {
         coins,
         ownedItemIds,
-        equippedItemId,
+        equippedItemIds,
         equipItem,
         unequipItem,
     } = useProfileStore();
@@ -35,29 +35,8 @@ const Inventory = (props: InventoryProps) => {
         (item) => item.category === activeTab && ownedItemIds.includes(item.id),
     );
 
-    const onEquip = (itemId: number) => {
-        if (equippedItemId !== null) {
-            Alert.alert(
-                "You alredy have an item equipped",
-                "only one item can be equipped at a time",
-                [{ text: "OK" }]
-            );
-            return;
-        }
-        equipItem(itemId);
-    };
-
-    const onUnequip = (itemId: number) => {
-        if (equippedItemId === null) {
-            Alert.alert(
-                "There's nothing to unequip",
-                "equip or buy more items :)",
-                [{ text: "OK" }]
-            );
-            return;
-        }
-        unequipItem();
-    };
+    const onEquip = (itemId: number) => equipItem(itemId);
+    const onUnequip = (itemId: number) => unequipItem(itemId);
 
     return (
         <Modal
@@ -121,7 +100,7 @@ const Inventory = (props: InventoryProps) => {
                         <InventoryItem
                             imageUrl={item.image}
                             itemName={item.name}
-                            isEquipped={equippedItemId === item.id}
+                            isEquipped={equippedItemIds.includes(item.id)}
                             onEquip={() => onEquip(item.id)}
                             onUnequip={() => onUnequip(item.id)}
                         />
