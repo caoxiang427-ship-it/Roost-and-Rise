@@ -1,9 +1,10 @@
 import { Modal, View, TouchableOpacity, StyleSheet, Text, KeyboardAvoidingView, Platform } from 'react-native';
-import { GiftedChat, IMessage } from 'react-native-gifted-chat'
+import { GiftedChat, IMessage, InputToolbar } from 'react-native-gifted-chat'
 import { useState, useEffect, useCallback } from 'react';
 import { useProfileStore } from '@/store/useProfileStore';
-import { } from 'react-native-gifted-chat';
 import { supabase } from '@/lib/supabase';
+import { Ionicons } from "@expo/vector-icons";
+
 
 
 type AskAiModalProps = {
@@ -17,6 +18,8 @@ const AskAiModal = (props: AskAiModalProps) => {
     const [isTyping, setIsTyping] = useState(false);
 
     const chickName = useProfileStore((state) => state.chickName);
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     useEffect(() => {
         setMessages([
@@ -61,7 +64,7 @@ const AskAiModal = (props: AskAiModalProps) => {
 
         // call edge function and pass messages into gemini
         const { data, error } = await supabase.functions.invoke('ask-ai', {
-            body: { messages: history, chickName: chickName, },
+            body: { messages: history, chickName: chickName, today: today },
         });
 
         // after receiving a response, set typing = false to turn off the typing indicator
@@ -87,7 +90,7 @@ const AskAiModal = (props: AskAiModalProps) => {
               style={styles.chatContainer}
             >
                 <TouchableOpacity onPress={() => props.setVisibility(false)} style={styles.closeBtn}>
-                    <Text>Close</Text>
+                    <Ionicons name="close" size={20} color="#000000"/>
                 </TouchableOpacity>
                 <GiftedChat
                     messages={messages}
@@ -113,6 +116,14 @@ const AskAiModal = (props: AskAiModalProps) => {
                         setMessages(prev => GiftedChat.append(prev, [userMessage]));
                         onSend([userMessage]);
                     }}
+                    renderInputToolbar={(props) => (
+                        <InputToolbar
+                            {...props}
+                            containerStyle={{
+                                borderRadius: 10,
+                            }}
+                        />
+                    )}
                 />
             </KeyboardAvoidingView>
         </View>
@@ -137,7 +148,7 @@ const styles = StyleSheet.create({
   },
   closeBtn: {
     backgroundColor: 'white',
-    borderRadius: 10,
+    borderRadius: 50,
     padding: 10,
     alignSelf: 'flex-start'
   },
