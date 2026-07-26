@@ -38,7 +38,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
     // for expandable schedule time thing
     const [expandedTime, setExpandedTime] = useState<boolean>(false);
     const [startTime, setStartTime] = useState<string | undefined>(undefined);
-    const [endTime, setEndTime] = useState<string | undefined>(undefined); ;
+    const [endTime, setEndTime] = useState<string | undefined>(undefined);
     const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     useEffect(() => {

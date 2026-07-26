@@ -1,24 +1,27 @@
 import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch } from 'react-native';
-import { useState, forwardRef, useCallback } from 'react';
+import { BottomSheetTextInput, BottomSheetScrollView } from '@gorhom/bottom-sheet';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch, Keyboard, Platform } from 'react-native';
+import { useState, useEffect} from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { NewSubtaskItem } from '@/types/todo';
 import Subtask from '../todo/Subtask';
 import Animated, { SlideInLeft, SlideOutLeft, FadeIn, FadeOut, LinearTransition, Easing } from 'react-native-reanimated';
 import { useTodoStore, addMinutes } from '@/store/useTodoStore';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { formatDatetoString } from '@/store/usePlannerStore';
+import { formatDatetoString, combineDateAndTime } from '@/store/usePlannerStore';
 
-type AddTaskProps = {
+type AddTaskFormProps = {
     selectedDate: string;
     close: () => void;
+    goToEventHour: (startTime: string) => void;
+    draggedStartTime?: { dateTime: string; timeZone?: string };
+    draggedEndTime?: { dateTime: string; timeZone?: string };
 };
 
-const AddTask = (props: AddTaskProps) => {
+const AddTaskForm = (props: AddTaskFormProps) => {
     
 
-    const { handleAddTask, selectedDate } = useTodoStore();
+    const { handleAddTask } = useTodoStore();
 
     const [task, setTask] = useState<string>('');
     const [taskDesc, setTaskDesc] = useState<string>('');
@@ -30,12 +33,13 @@ const AddTask = (props: AddTaskProps) => {
     // for expandable difficulty button
     const [expanded, setExpanded] = useState<boolean>(false);
     // for expandable schedule time thing
-    const [expandedTime, setExpandedTime] = useState<boolean>(false);
+    const [expandedTime, setExpandedTime] = useState<boolean>(props.draggedStartTime ? true : false);
     const [date, setDate] = useState<string>(props.selectedDate + 'T00:00:00'); // add 'T00:00:00' to prevent timezone discrepancy
-    const [startTime, setStartTime] = useState<string | undefined>(undefined);
-    const [endTime, setEndTime] = useState<string | undefined>(undefined); ;
+    const [startTime, setStartTime] = useState<string | undefined>(props.draggedStartTime?.dateTime);
+    const [endTime, setEndTime] = useState<string | undefined>(props.draggedEndTime?.dateTime);
 
-    const [showDatePicker, setShowDatePicker] = useState<boolean>(false)
+    const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     const difficultyStyles = {
         easy: { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E' },
@@ -49,14 +53,6 @@ const AddTask = (props: AddTaskProps) => {
         difficult: 'Difficult 😥',
     };
 
-    // coombines selected date with current time into a dateString
-    const combineDateAndTime = (dateStr: string, timeStr: string) => {
-        const d = new Date(dateStr); // dateStr example: "2026-07-21T00:00:00" (midnight safe date string)
-        const t = new Date(timeStr); //timeStr example: "2026-07-21T14:30:00.000Z" (full ISO string)
-        d.setHours(t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds());
-        return d.toISOString();
-    };
-
     const renderScheduleTime = () => (
         <Animated.View
           style={{paddingHorizontal: 65, paddingBottom: 10}}
@@ -68,7 +64,7 @@ const AddTask = (props: AddTaskProps) => {
                 <Text style={styles.timeTxt}>Start Time: </Text>
 
                 <DateTimePicker
-                    value={new Date(startTime ?? combineDateAndTime(date + 'T00:00:00', new Date().toISOString()))}
+                    value={new Date(startTime ?? combineDateAndTime(date, new Date().toISOString()))}
                     mode={'time'}
                     is24Hour={true}
                     onValueChange={(event, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
@@ -78,7 +74,7 @@ const AddTask = (props: AddTaskProps) => {
                 <Text style={styles.timeTxt}>End Time:   </Text>
 
                 <DateTimePicker
-                    value={new Date(endTime ?? combineDateAndTime(date + 'T00:00:00', new Date().toISOString()))} // if endTime, show endTime, if not defaults to selected date + time currently
+                    value={new Date(endTime ?? combineDateAndTime(date, new Date().toISOString()))} // if endTime, show endTime, if not defaults to selected date + time currently
                     mode={'time'}
                     is24Hour={true}
                     onValueChange={(event, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
@@ -143,7 +139,7 @@ const AddTask = (props: AddTaskProps) => {
     };
     
     const openDateTimePicker = () => (
-        <View>
+        <View style={{alignSelf: 'flex-end', paddingRight: 20}}>
             <DateTimePicker
                 value={new Date(date)}
                 mode={'date'}
@@ -160,16 +156,31 @@ const AddTask = (props: AddTaskProps) => {
         </View>
     )
 
+    useEffect(() => {
+            const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+            const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    
+            const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+            const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+    
+            return () => {
+                showSub.remove();
+                hideSub.remove();
+            };
+        }, []);
+
     return (
         <View>
             <BottomSheetScrollView style={styles.innerContainer} keyboardShouldPersistTaps='handled'>
                 <View style={styles.header}>
-
-                    <TouchableOpacity
-                        style={styles.addTaskBtn}
-                        onPress={handleSubmit}>
-                            <Text style={styles.addTaskTxt}>Add Task </Text>
-                    </TouchableOpacity>
+                    <View style={{flexDirection: 'row', flex: 1, justifyContent: 'space-between'}}>
+                        <Text style={styles.titleTxt}> Add New Task:</Text>
+                        <TouchableOpacity
+                            style={styles.addTaskBtn}
+                            onPress={handleSubmit}>
+                                <Text style={styles.addTaskTxt}>Add Task </Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <View style={styles.addTaskTitle}>
@@ -241,10 +252,12 @@ const AddTask = (props: AddTaskProps) => {
                             </View>
                             <Switch
                               value={expandedTime}
+                              trackColor={{ false: '#767577', true: '#0cba00' }}
+                              ios_backgroundColor={'rgb(170, 170, 170)'}
                               onValueChange={(value) => {
                                 setExpandedTime(value);
                                 if (value && !startTime) {
-                                    const start = combineDateAndTime(date + 'T00:00:00', new Date().toISOString());
+                                    const start = combineDateAndTime(date, new Date().toISOString());
                                     setStartTime(start);
                                     setEndTime(addMinutes(start, 30));
                                 }
@@ -255,57 +268,59 @@ const AddTask = (props: AddTaskProps) => {
                     </View>
                     {expandedTime && renderScheduleTime() }
                 </Animated.View>
+                
+                <View style={{paddingBottom: keyboardVisible ? 50 : 100}}>
+                    <View style={styles.footer}>
 
-                <View style={styles.footer}>
+                        <View style={styles.difficultyOptions}>
+                            <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
+                                    <Text style={[styles.difficultyTxt, difficulty && {color: '#FFF'}]}>{difficulty ? difficultyLabels[difficulty] : 'Difficulty * '}</Text>
+                            </TouchableOpacity>
 
-                    <View style={styles.difficultyOptions}>
-                        <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
-                                <Text style={[styles.difficultyTxt, difficulty && {color: '#FFF'}]}>{difficulty ? difficultyLabels[difficulty] : 'Difficulty * '}</Text>
+                            {
+                            expanded && (
+                                <> 
+                                    <Animated.View
+                                    entering={SlideInLeft.duration(500).easing(Easing.inOut(Easing.quad))}
+                                    exiting={ SlideOutLeft.duration(500).easing(Easing.inOut(Easing.quad))}>
+                                        <TouchableOpacity
+                                            style={[styles.difficultyBtn, { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E'}]}
+                                            onPress={() => {setDifficulty('easy'); setExpanded(false);}}>
+                                                <Text style={[styles.difficultyTxt, styles.optionTxt]}>Easy 😌</Text>
+                                        </TouchableOpacity>
+                                    </Animated.View>
+
+                                    <Animated.View
+                                    entering={SlideInLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}
+                                    exiting={ SlideOutLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}>
+                                        <TouchableOpacity
+                                            style={[styles.difficultyBtn, { backgroundColor: '#EE8F00', borderLeftColor: '#BB7102'}]}
+                                            onPress={() => {setDifficulty('moderate'); setExpanded(false);}}>
+                                                <Text style={[styles.difficultyTxt, styles.optionTxt]}>Moderate 🙂</Text>
+                                        </TouchableOpacity>
+                                        </Animated.View>
+                                    
+                                    <Animated.View
+                                    entering={SlideInLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}
+                                    exiting={ SlideOutLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}>
+                                        <TouchableOpacity
+                                            style={[styles.difficultyBtn, {backgroundColor: '#BC0000', borderLeftColor: '#810303'}]}
+                                            onPress={() => {setDifficulty('difficult'); setExpanded(false);}}>
+                                                <Text style={[styles.difficultyTxt, styles.optionTxt]}>Difficult 😥</Text>
+                                        </TouchableOpacity>
+                                    </Animated.View>
+                                </>
+                            )}
+                        </View>
+                        
+                        <TouchableOpacity
+                        onPress={() => setShowDatePicker(!showDatePicker)}>
+                            <Ionicons name="calendar-clear-outline" size={25} color="#937254"/>
                         </TouchableOpacity>
 
-                        { //layout not good on phone, fix visual bug
-                        expanded && (
-                            <> 
-                                <Animated.View
-                                entering={SlideInLeft.duration(500).easing(Easing.inOut(Easing.quad))}
-                                exiting={ SlideOutLeft.duration(500).easing(Easing.inOut(Easing.quad))}>
-                                    <TouchableOpacity
-                                        style={[styles.difficultyBtn, { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E'}]}
-                                        onPress={() => {setDifficulty('easy'); setExpanded(false);}}>
-                                            <Text style={[styles.difficultyTxt, styles.optionTxt]}>Easy 😌</Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-
-                                <Animated.View
-                                entering={SlideInLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}
-                                exiting={ SlideOutLeft.duration(500).delay(100).easing(Easing.inOut(Easing.quad))}>
-                                    <TouchableOpacity
-                                        style={[styles.difficultyBtn, { backgroundColor: '#EE8F00', borderLeftColor: '#BB7102'}]}
-                                        onPress={() => {setDifficulty('moderate'); setExpanded(false);}}>
-                                            <Text style={[styles.difficultyTxt, styles.optionTxt]}>Moderate 🙂</Text>
-                                    </TouchableOpacity>
-                                    </Animated.View>
-                                
-                                <Animated.View
-                                entering={SlideInLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}
-                                exiting={ SlideOutLeft.duration(500).delay(200).easing(Easing.inOut(Easing.quad))}>
-                                    <TouchableOpacity
-                                        style={[styles.difficultyBtn, {backgroundColor: '#BC0000', borderLeftColor: '#810303'}]}
-                                        onPress={() => {setDifficulty('difficult'); setExpanded(false);}}>
-                                            <Text style={[styles.difficultyTxt, styles.optionTxt]}>Difficult 😥</Text>
-                                    </TouchableOpacity>
-                                </Animated.View>
-                            </>
-                        )}
                     </View>
 
-                    <TouchableOpacity
-                      onPress={() => setShowDatePicker(!showDatePicker)}>
-                        <Ionicons name="calendar-clear-outline" size={25} color="#937254"/>
-                    </TouchableOpacity>
-
                     {showDatePicker && openDateTimePicker()}
-
                 </View>
 
                 
@@ -317,9 +332,6 @@ const AddTask = (props: AddTaskProps) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        backgroundColor: '#f7f4e1',
-    },
     innerContainer: {
         backgroundColor: '#FFF',
         height: '100%',
@@ -330,12 +342,21 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
         paddingVertical: 10,
     },
+    titleTxt: {
+        fontFamily: 'InterBold',
+        color: '#5E4833',
+        fontSize: 20,
+        marginLeft: 15
+    },
     addTaskBtn: {
         backgroundColor: "#937254",
         borderRadius: 10,
         justifyContent: "center",
         alignItems: "center",
         paddingHorizontal: 10,
+        paddingVertical: 5,
+        alignSelf: 'flex-end',
+        marginRight: 15,
     },
     addTaskTxt: {
         fontFamily: "InterBold",
@@ -382,7 +403,7 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 22,
-        paddingBottom: 100,
+        paddingBottom: 10,
         marginTop: 'auto',
     },
     difficultyBtn: {
@@ -438,4 +459,4 @@ const styles = StyleSheet.create({
     },
 });
 
-export default AddTask;
+export default AddTaskForm;

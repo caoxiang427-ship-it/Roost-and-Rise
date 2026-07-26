@@ -53,6 +53,11 @@ export default function HomeScreen() {
   const storeRef = useRef<BottomSheet>(null);
   const inventoryRef = useRef<BottomSheet>(null);
 
+  SplashScreen.setOptions({
+    duration: 500,
+    fade: true,
+  });
+
   SplashScreen.preventAutoHideAsync();
 
   useEffect(() => {

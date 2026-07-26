@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
 import { BottomSheetBackdrop, BottomSheetTextInput, BottomSheetScrollView, BottomSheetModal } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert, Switch, Keyboard, Platform} from 'react-native';
 import { useState, forwardRef, useCallback, useEffect } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import { SubtaskItem, TaskItem } from '@/types/todo';
@@ -46,6 +46,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
     const [endTime, setEndTime] = useState<string | undefined>(props.task?.endTime ?? undefined);
 
     const [showDatePicker, setShowDatePicker] = useState<boolean>(false);
+    const [keyboardVisible, setKeyboardVisible] = useState(false);
 
     const difficultyStyles = {
         easy: { backgroundColor: '#00BC22', borderLeftColor: '#2B7C1E' },
@@ -74,6 +75,19 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
         }
         setDeletedSubtaskIds([]);
     };
+
+    useEffect(() => {
+        const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+        const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+
+        const showSub = Keyboard.addListener(showEvent, () => setKeyboardVisible(true));
+        const hideSub = Keyboard.addListener(hideEvent, () => setKeyboardVisible(false));
+
+        return () => {
+            showSub.remove();
+            hideSub.remove();
+        };
+    }, []);
 
     useEffect(() => {
         resetFromTask();
@@ -288,7 +302,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                               onValueChange={(value) => {
                                 setExpandedTime(value);
                                 if (value && !startTime) {
-                                    const start = combineDateAndTime(date + 'T00:00:00', new Date().toISOString());
+                                    const start = combineDateAndTime(date, new Date().toISOString());
                                     setStartTime(start);
                                     setEndTime(addMinutes(start, 30));
                                 }
@@ -300,7 +314,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                     {expandedTime && renderScheduleTime() }
                 </Animated.View>
 
-                <View style={styles.footer}>
+                <View style={[styles.footer, {paddingBottom: keyboardVisible ? 10 : 100}]}>
                     <View style={styles.difficultyOptions}>
                         <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
                                 <Text style={[styles.difficultyTxt, difficulty && {color: '#FFF'}]}>{difficulty ? difficultyLabels[difficulty] : 'Difficulty * '}</Text>
@@ -425,7 +439,6 @@ const styles = StyleSheet.create({
         justifyContent: 'space-between',
         alignItems: 'center',
         marginHorizontal: 22,
-        paddingBottom: 100,
         marginTop: 'auto',
     },
     difficultyBtn: {

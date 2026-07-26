@@ -108,7 +108,7 @@ export const styles = StyleSheet.create({
   // task event look — deliberately different: white card, difficulty accent bar, checkbox
   taskBlock: {
     flex: 1, 
-    flexDirection: 'row', 
+    flexDirection: 'row',
     backgroundColor: '#FFF', 
     borderWidth: 1,
     borderColor: '#AAAAAA',

@@ -185,3 +185,11 @@ export const getDateTimeString = (
             return eventDate.date;
         }
 }
+
+// coombines selected date with current time into a dateString
+export const combineDateAndTime = (dateStr: string, timeStr: string) => {
+    const d = new Date(dateStr); // dateStr example: "2026-07-21T00:00:00" (midnight safe date string)
+    const t = new Date(timeStr); //timeStr example: "2026-07-21T14:30:00.000Z" (full ISO string)
+    d.setHours(t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds());
+    return d.toISOString();
+};

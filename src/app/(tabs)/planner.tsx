@@ -1,4 +1,4 @@
-import AddEvent from '@/components/planner/AddEvent';
+import AddItem from '@/components/planner/AddItem';
 import EditEvent from '@/components/planner/EditEvent';
 import EditTask from '@/components/planner/EditTask';
 import WeeklyCalendar from '@/components/planner/WeeklyCalendar';
@@ -40,7 +40,9 @@ const taskToCalendarEvent = (t: TaskItem) => {
     taskId: t.id,
     completed: t.completed,
     difficulty: t.difficulty,
-    color: 'transparent', // we fully custom-render tasks, so base color is unused
+    color: 'transparent', // fully custom-render tasks, so base color is transparent
+    subtaskTotal: t.subtasks.length,
+    subtaskDone: t.subtasks.filter(s => s.completed).length,
     ...(timed
       ? {
           allDay: false,
@@ -87,15 +89,15 @@ export default function planner() {
   // for taskItem -> guards the checkbox-vs-onPressEvent conflict 
 
   const calendarRef = useRef<CalendarKitHandle>(null);
-  const addEventRef = useRef<BottomSheetModal>(null);
+  const addItemRef = useRef<BottomSheetModal>(null);
   const editEventRef = useRef<BottomSheetModal>(null);
   const editTaskRef= useRef<BottomSheetModal>(null);
 
-  const openAddEventSheet = () => addEventRef.current?.present();
+  const openAddEventSheet = () => addItemRef.current?.present();
   const openEditEventSheet = () => editEventRef.current?.present();
   const openEditTaskSheet = () => editTaskRef.current?.present();
 
-  const closeAddEventSheet = () => addEventRef.current?.dismiss();
+  const closeAddEventSheet = () => addItemRef.current?.dismiss();
   const closeEditEventSheet = () => editEventRef.current?.dismiss();
   const closeEditTaskSheet = () => editTaskRef.current?.dismiss();
 
@@ -156,19 +158,19 @@ export default function planner() {
     if (numberOfDays === 1) {
       return (
         <View style={{ paddingHorizontal: 10, flex: 1}}>
-          <View style={[styles.taskBlock, {padding: 10, gap: 6}, event.completed && styles.taskBlockDone]}>
-            <TouchableOpacity
-              hitSlop={8}
-              onPress={() => {
-                const task = taskItems.find(t => t.id === event.taskId);
-                if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
-              }}>
-              <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={DIFFICULTY_COLOR[event.difficulty]} />
-            </TouchableOpacity>
-            <Text numberOfLines={2} style={[styles.taskTitle, { fontSize: 13 }, event.completed && styles.taskTitleDone]}>
-              {event.title}
-            </Text>
-          </View>
+          <View style={[styles.taskBlock, {gap: 6, padding: 10}, event.completed && styles.taskBlockDone]}>
+              <TouchableOpacity
+                hitSlop={8}
+                onPress={() => {
+                  const task = taskItems.find(t => t.id === event.taskId);
+                  if (task) toggleCompletion(task.id, task.completed, task.subtasks ?? []);
+                }}>
+                <Ionicons name={event.completed ? 'checkmark-circle' : 'ellipse-outline'} size={20} color={DIFFICULTY_COLOR[event.difficulty]} />
+              </TouchableOpacity>
+              <Text numberOfLines={2} style={[styles.taskTitle, { fontSize: 13 }, event.completed && styles.taskTitleDone]}>
+                {event.title}
+              </Text>
+            </View>
         </View>
       );
     }
@@ -255,7 +257,6 @@ export default function planner() {
     }
   };
 
-    
   return (
       <CalendarContainer
         ref={calendarRef}
@@ -364,8 +365,8 @@ export default function planner() {
           <Ionicons name="add" size={40} color="#FFF"/>
         </TouchableOpacity>
         
-        <AddEvent
-          ref={addEventRef}
+        <AddItem
+          ref={addItemRef}
           close={closeAddEventSheet}
           selectedDate={selectedDate}
           goToEventHour={(startTime) => goToEventHour(startTime)}
