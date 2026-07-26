@@ -101,7 +101,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
     );
 
     const openDateTimePicker = () => (
-        <View style={{ alignSelf: 'flex-end', paddingTop: 10 }}>
+        <View style={{ alignSelf: 'flex-end', paddingTop: 10, marginRight: 25 }}>
             <DateTimePicker
                 value={new Date(date)}
                 mode={'date'}
@@ -242,16 +242,19 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                         )}
                     </ColorPicker>
                 </View>
+                
+                <View style={{paddingBottom: keyboardVisible ? 10 : 50}}>
+                    <View style={{flexDirection: 'row', justifyContent: 'space-between', marginHorizontal: 30, paddingTop: 10}}>
+                        <TouchableOpacity onPress={confirmDelete}>
+                            <Ionicons name="trash-outline" size={24} color="#BC0000" />
+                        </TouchableOpacity>
+                        
+                        <TouchableOpacity onPress={() => setShowDatePicker(!showDatePicker)}>
+                            <Ionicons name="calendar-clear-outline" size={25} color="#937254" />
+                        </TouchableOpacity>
+                        
+                    </View>
 
-                <View style={{flexDirection: 'row', paddingBottom: keyboardVisible ? 10 : 50, justifyContent: 'space-between', marginHorizontal: 30, paddingTop: 10}}>
-                    <TouchableOpacity onPress={confirmDelete}>
-                        <Ionicons name="trash-outline" size={24} color="#BC0000" />
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity onPress={() => setShowDatePicker(!showDatePicker)}>
-                        <Ionicons name="calendar-clear-outline" size={25} color="#937254" />
-                    </TouchableOpacity>
-                    
                     {showDatePicker && openDateTimePicker()}
 
                 </View>

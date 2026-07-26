@@ -27,7 +27,8 @@ const AskAiModal = (props: AskAiModalProps) => {
             user: {
             _id: 2,
             name: chickName,
-            avatar: require('../../../assets/images/planner/ai_profile_pic.png'),
+            avatar: require('../../../assets/images/planner/chicken_profile_pic.png'),
+            
             },
             quickReplies: {
                 type: 'radio',           // 'radio' = pick one
@@ -69,7 +70,7 @@ const AskAiModal = (props: AskAiModalProps) => {
             _id: Math.random().toString(),
             text: error ? 'Something went wrong, try again.' : data.reply,
             createdAt: new Date(),
-            user: { _id: 2, name: chickName, avatar: require('../../../assets/images/planner/ai_profile_pic.png') },
+            user: { _id: 2, name: chickName, avatar: require('../../../assets/images/planner/chicken_profile_pic.png') },
         }]));
         }, [messages]);
 

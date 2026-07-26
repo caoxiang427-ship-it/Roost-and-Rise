@@ -21,7 +21,7 @@ type Ref = BottomSheetModal;
 
 const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
 
-    const { handleEditTask, selectedDate } = useTodoStore();
+    const { handleEditTask, selectedDate, deleteTask } = useTodoStore();
     
     const renderBackdrop = useCallback(
         (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
@@ -190,7 +190,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
     );
 
     const openDateTimePicker = () => (
-        <View>
+        <View style={{ alignSelf: 'flex-end', marginRight: 25 }}>
             <DateTimePicker
                 value={new Date(date)}
                 mode={'date'}
@@ -223,11 +223,31 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                             <Ionicons name='close' size={30} color="#937254"/>
                     </TouchableOpacity>
 
-                    <TouchableOpacity
-                        style={styles.updateTaskBtn}
-                        onPress={handleSubmit}>
-                            <Text style={styles.addTaskTxt}>Update Task </Text>
-                    </TouchableOpacity>
+                    <View style={{flexDirection: 'row', gap: 5}}>
+                        <TouchableOpacity
+                            style={styles.updateTaskBtn}
+                            onPress={handleSubmit}>
+                                <Text style={styles.addTaskTxt}>Update Task </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity onPress={() => {
+                            Alert.alert("Delete Task", "Are you sure you want to delete this task?", [
+                            {
+                                text: "Yes",
+                                onPress: () => {
+                                if (props.task?.id !== undefined) {
+                                    deleteTask(props.task.id);
+                                    props.close();
+                                }
+                                }
+                            },
+                            { text: 'No', style: 'cancel' }
+                            ]);
+                        }}>
+                                    <Ionicons name="trash-outline" size={24} color="#BC0000" />
+                        </TouchableOpacity>
+                    </View>
+
                 </View>
 
                 <View style={styles.addTaskTitle}>
@@ -314,7 +334,7 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                     {expandedTime && renderScheduleTime() }
                 </Animated.View>
 
-                <View style={[styles.footer, {paddingBottom: keyboardVisible ? 10 : 100}]}>
+                <View style={[styles.footer, {paddingBottom: 10}]}>
                     <View style={styles.difficultyOptions}>
                         <TouchableOpacity onPress={() => {setExpanded(!expanded); setDifficulty('');}} style={[styles.difficultyBtn, difficulty ? difficultyStyles[difficulty] : null]}>
                                 <Text style={[styles.difficultyTxt, difficulty && {color: '#FFF'}]}>{difficulty ? difficultyLabels[difficulty] : 'Difficulty * '}</Text>
@@ -359,11 +379,12 @@ const EditTask = forwardRef<Ref, EditTaskProps>((props, ref) => {
                       onPress={() => setShowDatePicker(!showDatePicker)}>
                         <Ionicons name="calendar-clear-outline" size={25} color="#937254"/>
                     </TouchableOpacity>
-
-                    {showDatePicker && openDateTimePicker()}
-
+                    
                 </View>
-
+                
+                <View style={{paddingBottom: keyboardVisible ? 10 : 50}}>
+                {showDatePicker && openDateTimePicker()}
+                </View>
                 
             </BottomSheetScrollView>
         </BottomSheetModal>
