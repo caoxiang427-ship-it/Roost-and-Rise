@@ -11,7 +11,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { BottomSheetModal } from '@gorhom/bottom-sheet';
 import { CalendarBody, CalendarContainer, CalendarHeader, CalendarKitHandle } from '@howljs/calendar-kit';
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Alert, Text, TouchableOpacity, View, Image } from 'react-native';
+import { ActivityIndicator, Alert, Text, TouchableOpacity, View, Image } from 'react-native';
 import { styles } from '@/styles/planner_styles';
 import { ImageBackground } from 'expo-image';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -60,9 +60,11 @@ const taskToCalendarEvent = (t: TaskItem) => {
 export default function planner() {
 
   const insets = useSafeAreaInsets();
+  
   const {eventItems, eventsLoading, init, rescheduleEvent} = usePlannerStore();
   const { taskItems, init: initTasks, selectedTask, setSelectedTask, rescheduleTaskTime, toggleCompletion } = useTodoStore();
 
+  const [initialLoading, setInitialLoading] = useState(true);
   const [numberOfDays, setNumberOfDays] = useState(1); // 7 = week, 1 = day
   const [selectedDate, setSelectedDate] = useState<string>(new Date().toISOString().split('T')[0]); //react-native-calendars take in dates in YYYY-MM-DD format
   const selectedDayName = new Date(selectedDate).toLocaleDateString('en-US', {weekday: 'long',});
@@ -110,12 +112,18 @@ export default function planner() {
       });
   };
 
+  
+
   useEffect(() => {
     calendarRef.current?.goToDate({ date: selectedDate, animatedDate: true });
   }, [selectedDate]);
 
-  useEffect(() => { init(); initTasks(); }, []);
-
+  useEffect(() => {
+    (async () => {
+      await Promise.all([init(), initTasks()]);
+      setInitialLoading(false);
+    })();
+  }, []);
 
   // custom hour renderer (for styling purposes)
   const renderHour = useCallback((hour: any) => {
@@ -256,6 +264,15 @@ export default function planner() {
       );
     }
   };
+
+   // loading screen until everything loads in
+  if (initialLoading) {
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#FFF' }}>
+        <ActivityIndicator size="large" color="#7e6751" />
+      </View>
+    );
+  }
 
   return (
       <CalendarContainer

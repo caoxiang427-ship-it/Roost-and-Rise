@@ -1,5 +1,5 @@
 import 'react-native-gesture-handler';
-import { Image, ImageBackground, Text, View, TouchableOpacity, ActivityIndicator, FlatList } from 'react-native';
+import { Image, ImageBackground, Text, View, TouchableOpacity, ActivityIndicator, FlatList, Alert } from 'react-native';
 import { useEffect, useRef } from 'react';
 import { styles } from '../../styles/todo_styles';
 import Task from '@/components/todo/Task';
@@ -18,6 +18,7 @@ import { useTodoStore, useRenderedTaskItems, calculateProgress } from '@/store/u
 import PendingTasks from '@/components/todo/PendingTasks';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
+import FilterModal from '@/components/todo/FilterModal';
 
 // uhh layout looks weird on android for some reason, fix ltr
 
@@ -36,6 +37,8 @@ export default function TodoScreen() {
   const [rewardXP, setRewardXP] = useState(0);
   // after toggle completion, xp will decrease, this is so the "showReward" component can reflect the -XP
   const [decreaseXp, setDecreaseXp] = useState(false);
+  const [hasWarnedWorkload, setHasWarnedWorkload] = useState(false);
+  const [isFilterModalOpen, setisFilterModalOpen] = useState(false);
 
   const triggerReward = (amount: number, decrease?: boolean) => {
     if (amount <= 0) return;
@@ -92,6 +95,38 @@ export default function TodoScreen() {
     if (selectedDate === todayDate) return 'today';
     return 'future';
   };
+
+  const WORKLOAD_THRESHOLD = 35;
+
+  const calculateWorkloadScore = () => {
+    const score: Record<'easy' | 'moderate' | 'difficult', number> = {
+      easy: 1,
+      moderate: 2,
+      difficult: 3,
+    };
+
+    return renderedTaskItems
+      .map((t) => {
+        if (!t.difficulty) return 0; // guard against '' difficulty
+        const base = score[t.difficulty];
+        return t.dread ? base + 1 : base;
+      })
+      .reduce((a, b) => a + b, 0);
+  };
+
+  useEffect(() => {
+    const isHeavy = calculateWorkloadScore() >= WORKLOAD_THRESHOLD;
+    if (isHeavy && !hasWarnedWorkload) {
+      Alert.alert(
+        "Heavy workload detected!",
+        "You seem to have a lot on your plate, consider moving some of it to another day?",
+        [{ text: 'Ok', style: 'cancel' }]
+      );
+      setHasWarnedWorkload(true);
+    } else if (!isHeavy && hasWarnedWorkload) {
+      setHasWarnedWorkload(false); // reset so it can warn again if it climbs back up later
+    }
+  }, [renderedTaskItems]);
 
   return (
     //layout weird on android phone, the header part fix it ltr
@@ -187,7 +222,7 @@ export default function TodoScreen() {
               <View style={styles.todoHeader}>
                 <Text style={styles.taskHeader}>Tasks</Text>
                 <TouchableOpacity
-                      onPress={() => console.log("filter")}>
+                      onPress={() => setisFilterModalOpen(true)}>
                         <Ionicons name="filter" size={25} color="#5E4833"/>
                 </TouchableOpacity>
               </View>
@@ -247,6 +282,8 @@ export default function TodoScreen() {
       <AddTask ref={addTaskRef} close={closeAddTaskSheet} openCalendar={openCalendarSheet}></AddTask>
       <EditTask ref={editTaskRef} task={selectedTask} close={closeEditTaskSheet} openCalendar={openCalendarSheet}></EditTask>
       <CalendarSheet ref={calendarRef} close={closeCalendarSheet}></CalendarSheet>
+
+      <FilterModal visible={isFilterModalOpen} onClose={() => setisFilterModalOpen(false)}></FilterModal>
       
 
     </View>

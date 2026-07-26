@@ -4,12 +4,16 @@ import { Keyboard } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { TaskItem, NewSubtaskItem, SubtaskItem } from '@/types/todo';
 
+type Difficulty = 'easy' | 'moderate' | 'difficult';
+
 type TodoState = {
     userID: string | null;
     taskItems: TaskItem[];
     tasksLoading: boolean;
     selectedDate: string;
     selectedTask: TaskItem | null;
+    difficultyFilter: Difficulty[];
+    dreadOnly: boolean;
 
     init: () => Promise<void>;
     setSelectedDate: (date: string) => void;
@@ -48,6 +52,10 @@ type TodoState = {
     toggleDread: (id: number, dread: boolean) => Promise<void>;
     toggleSubtaskCompletion: (id: number, completed: boolean) => Promise<void>;
     updateTaskXp: (id: number, awarded: number) => Promise<void>;
+    toggleDifficultyFilter: (d: Difficulty) => void;
+    clearFilters: () => void;
+    toggleDreadOnly: () => void;
+    
 };
 
 export const useTodoStore = create<TodoState>((set, get) => ({
@@ -56,6 +64,8 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     tasksLoading: true,
     selectedDate: new Date().toISOString().split('T')[0],
     selectedTask: null,
+    difficultyFilter: [],
+    dreadOnly: false,
 
     // call once on mount instead of the loadUser + useEffect([userID]) pair
     init: async () => {
@@ -287,14 +297,28 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             return;
         }
         get().fetchTasks();
-    }
+    },
+    toggleDifficultyFilter: (d) => set((s) => ({
+    difficultyFilter: s.difficultyFilter.includes(d)
+        ? s.difficultyFilter.filter(x => x !== d)   // uncheck
+        : [...s.difficultyFilter, d],               // check
+    })),
+
+    clearFilters: () => set({ difficultyFilter: [], dreadOnly: false }),
+    toggleDreadOnly: () => set((s) => ({ dreadOnly: !s.dreadOnly })),
 }));
 
 // kept out of state so they can't go stale; useShallow stops a re-render
 // when the filtered result is unchanged, even though .filter() returns
 // a new array reference every call
 export const useRenderedTaskItems = () =>
-    useTodoStore(useShallow((s) => s.taskItems.filter(t => t.scheduledDate === s.selectedDate)));
+    useTodoStore(useShallow((s) =>
+      s.taskItems.filter(t =>
+        t.scheduledDate === s.selectedDate &&
+        (s.difficultyFilter.length === 0 || s.difficultyFilter.includes(t.difficulty as Difficulty)) &&
+        (!s.dreadOnly || t.dread)
+    )
+  ));
 
 export const usePendingTaskItems = () =>
     useTodoStore(useShallow((s) => s.taskItems.filter(t => !t.completed)));
