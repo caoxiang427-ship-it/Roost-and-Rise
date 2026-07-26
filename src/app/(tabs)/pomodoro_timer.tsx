@@ -18,6 +18,8 @@ import { useEffect, useState } from 'react';
 import { Alert, Image, ImageBackground, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
+import { STAGE_IMAGES, getStage, ACCESSORY_OVERLAYS, ACCESSORY_POSITIONS } from '@/constants/home';
+
 
 const DEFAULT_HEADER = require('@/assets/images/timer/header.jpeg');
 
@@ -436,17 +438,25 @@ export default function TimerScreen() {
             </View>
 
             <View style={styles.companionArtWrap}>
-              {/*
-              <Image
-                source={
-                  equippedItemId === null
-                    ? require('@/assets/images/home/chicken_stages/chicken.png')
-                    : imageMap[equippedItemId]
-                }
-                style={styles.companionArt}
-                resizeMode="contain"
-              />
-              */}
+              
+              <View style={{ width: 206, height: 225 }}>
+                <Image
+                  source={STAGE_IMAGES[getStage(petLevel)]}
+                  style={{ width: 206, height: 225 }}
+                />
+                {equippedItemIds.map((id) => {
+                  const pos = ACCESSORY_POSITIONS[getStage(petLevel)]?.[id];
+                  if (!pos) return null;
+                  return (
+                    <Image
+                      key={id}
+                      source={ACCESSORY_OVERLAYS[id]}
+                      style={[{ position: 'absolute' }, pos]}
+                    />
+                  );
+                })}
+              </View>
+
             </View>
 
             <View style={styles.levelRow}>
