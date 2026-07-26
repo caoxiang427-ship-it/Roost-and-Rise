@@ -7,12 +7,12 @@ import { Ionicons } from "@expo/vector-icons";
 
 
 
-type AskAiModalProps = {
+type AiChatModalProps = {
   visible: boolean;
   setVisibility: (visibility: boolean) => void;
 };
 
-const AskAiModal = (props: AskAiModalProps) => {
+const AiChatModal = (props: AiChatModalProps) => {
 
     const [messages, setMessages] = useState<IMessage[]>([]);
     const [isTyping, setIsTyping] = useState(false);
@@ -25,7 +25,7 @@ const AskAiModal = (props: AskAiModalProps) => {
         setMessages([
         {
             _id: 1,
-            text: `Hello! I'm ${chickName}. Even though I'm just a chicken, I'm here to assist you in any way I can. Ask away! ❤️`,
+            text: `Hello! I'm ${chickName}, your virtual friend! I'm here 24/7 so talk to me about whatever. 😊`,
             createdAt: new Date(),
             user: {
             _id: 2,
@@ -37,9 +37,9 @@ const AskAiModal = (props: AskAiModalProps) => {
                 type: 'radio',           // 'radio' = pick one
                 keepIt: false,           // buttons don't stay visible after a reply is picked
                 values: [
-                { title: "Help me plan my schedule for today!", value: 'today_schedule' },
-                { title: "What's my schedule like for today?", value: 'today_schedule' },
-                { title: 'How do I use this study planner?', value: 'planner_guide' },
+                { title: "How do I use this app?", value: 'app_function' },
+                { title: "I want to talk about my day!", value: 'talk' },
+                { title: 'I need someone to talk to ❤️', value: 'mental_health' },
                 ],
             },
         },
@@ -64,7 +64,7 @@ const AskAiModal = (props: AskAiModalProps) => {
 
         // call edge function and pass messages into gemini
         const { data, error } = await supabase.functions.invoke('ask-ai', {
-            body: { messages: history, chickName: chickName, today: today, mode: 'scheduler' },
+            body: { messages: history, chickName: chickName, today: today, mode: 'companion' },
         });
 
         // after receiving a response, set typing = false to turn off the typing indicator
@@ -154,4 +154,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default AskAiModal;
+export default AiChatModal;

@@ -23,6 +23,7 @@ import { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from '../../styles/index_styles';
 import { STAGE_IMAGES, getStage, getPetMsg, ACCESSORY_OVERLAYS, ACCESSORY_POSITIONS } from '@/constants/home';
+import AiChatModal from '@/components/home/AiChatModal';
 
 export default function HomeScreen() {
 
@@ -36,6 +37,7 @@ export default function HomeScreen() {
 
   const [isStoreOpen, setIsStoreOpen] = useState<boolean>(false);
   const [isInventoryOpen, setIsInventoryOpen] = useState<boolean>(false);
+  const [isAiChatOpen, setIsAiChatOpen] = useState<boolean>(false);
 
   const {
     name,
@@ -279,7 +281,11 @@ const stage = getStage(level);
             </View>
           </TouchableOpacity>
 
-            <View style={styles.gameBtnsColumn} />
+            <View style={styles.gameBtnsColumnRight}>
+              <TouchableOpacity style={styles.aiBtn} onPress={() => setIsAiChatOpen(true)} >
+                <Ionicons name='chatbubble' size={25} color='#FFF'/>
+              </TouchableOpacity>
+            </View>
           </View>
 
           <Store 
@@ -297,6 +303,8 @@ const stage = getStage(level);
             level={pendingLevelUp?.level ?? 1}
             coinsEarned={pendingLevelUp?.coinsEarned ?? 0}
           />
+
+          <AiChatModal visible={isAiChatOpen} setVisibility={setIsAiChatOpen}></AiChatModal>
           
       </ImageBackground>
     </View>
