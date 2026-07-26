@@ -3,28 +3,27 @@
  * Only logged in users reach this page.
 */
 
-import * as SplashScreen from 'expo-splash-screen';
-import { useEffect, useState, useRef } from 'react';
-import { View, Text, TouchableOpacity, Image, TextInput} from 'react-native';
-import { styles } from '../../styles/index_styles';
-import { ImageBackground } from 'expo-image';
-import { Ionicons } from "@expo/vector-icons";
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Link } from 'expo-router';
-import { LinearGradient } from 'expo-linear-gradient';
-import Store from '@/components/home/Store';
 import Inventory from '@/components/home/Inventory';
-import BottomSheet from '@gorhom/bottom-sheet';
-import SpeechBubble from '@/components/home/SpeechBubble';
-import { GestureDetector, Gesture } from 'react-native-gesture-handler';
-import { runOnJS } from 'react-native-reanimated';
-import { imageMap } from '@/constants/storeItems';
-import { useRouter } from 'expo-router';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
-import { getTodaysMood } from '@/lib/self-care';
 import LevelUp from '@/components/home/LevelUp';
-import { useProfileStore, calculateXPLevel, totalXpRequiredForLevel } from '@/store/useProfileStore';
+import SpeechBubble from '@/components/home/SpeechBubble';
+import Store from '@/components/home/Store';
+import { imageMap } from '@/constants/home';
+import { getTodaysMood } from '@/lib/self-care';
+import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
+import { Ionicons } from "@expo/vector-icons";
+import BottomSheet from '@gorhom/bottom-sheet';
+import { useFocusEffect } from '@react-navigation/native';
+import { ImageBackground } from 'expo-image';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Link, useRouter } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { styles } from '../../styles/index_styles';
+import { STAGE_IMAGES, getStage, getPetMsg, ACCESSORY_OVERLAYS, ACCESSORY_POSITIONS } from '@/constants/home';
 
 export default function HomeScreen() {
 
@@ -36,10 +35,13 @@ export default function HomeScreen() {
   // temp local copy of chickname while user is typing so it syncs with saved value
   const [chickNameDraft, setChickNameDraft] = useState<string>('');
 
+  const [isStoreOpen, setIsStoreOpen] = useState<boolean>(false);
+  const [isInventoryOpen, setIsInventoryOpen] = useState<boolean>(false);
+
   const {
     name,
     chickName,
-    equippedItemId,
+    equippedItemIds,
     xp,
     coins,
     isLoading,
@@ -50,7 +52,6 @@ export default function HomeScreen() {
   } = useProfileStore();
 
   // ref for store and inventory. bottom sheet
-  const storeRef = useRef<BottomSheet>(null);
   const inventoryRef = useRef<BottomSheet>(null);
 
   SplashScreen.setOptions({
@@ -112,29 +113,6 @@ export default function HomeScreen() {
     return `${day} ${date}`;
   };
   
-
-  // functions to open/ close store and inventory bottom sheets
-  const openStoreSheet = () => storeRef.current?.expand();
-  const openInventorySheet = () => inventoryRef.current?.expand();
-
-  const closeStoreSheet = () => storeRef.current?.close();
-  const closeInventorySheet = () => inventoryRef.current?.close();
-
-  const petMsg = [
-    "You're doing amazing!",
-    "Keep it up, you've got this!",
-    "Time to lock in? or rest! both are great",
-    "Another day, another win!",
-    "Take it one day at a time",
-    "YAY keep going!",
-    "Please don't eat chicken for dinner",
-    "Keep pecking!",
-    "I hate going for lectures",
-    "I'm so sleepy, what about you?",
-    "Take care of yourself <3",
-    "How are you feeling today?"
-  ]
-
   // function to show speech bubble temporarily when being pet
   const showMessage = () => {
     setShowSpeech(true);
@@ -154,6 +132,9 @@ export default function HomeScreen() {
     const nextLevelXP = totalXpRequiredForLevel(level + 1);
     return (xp - currentLevelXP) / (nextLevelXP - currentLevelXP);
   };
+
+const level = calculateXPLevel(xp);
+const stage = getStage(level);
 
   return (
     <View style={styles.container}>
@@ -230,7 +211,7 @@ export default function HomeScreen() {
                   </View>
                   <View style={styles.xpTop}>
                     <Text style={[styles.InterBold, {fontSize: 10, color: '#5E4833'}]}>LVL</Text>
-                    <Text style={[styles.InterBold, {fontSize: 26, color: '#5E4833'}]}>{calculateXPLevel(xp)}</Text>
+                    <Text style={[styles.InterBold, {fontSize: 26, color: '#5E4833'}]}>{level}</Text>
                   </View>
                 </View>
               </View>
@@ -248,7 +229,7 @@ export default function HomeScreen() {
               </View>
               <GestureDetector gesture={pet}>
                 <Image
-                  source={ equippedItemId === null ? require('../../../assets/images/home/chicken.png')
+                  source={ equippedItemId === null ? STAGE_IMAGES[getStage(level)]
                     : imageMap[equippedItemId]
                   }
                   style={{width: 206, height: 225 }}
@@ -259,17 +240,17 @@ export default function HomeScreen() {
             {chickName === '' &&
             <SpeechBubble text='Please give me a name!'></SpeechBubble>
             }
-            {showSpeech && <SpeechBubble text={petMsg[Math.floor(Math.random() * (petMsg.length))]}></SpeechBubble>}
+            {showSpeech && <SpeechBubble text={getPetMsg(level)[Math.floor(Math.random() * (getPetMsg(level).length))]}></SpeechBubble>}
 
           </View>
 
 
           <View style={styles.bottomDisplay}>
             <View style={styles.gameBtnsColumn}>
-              <TouchableOpacity style={styles.gameBtns} onPress={openStoreSheet}>
+              <TouchableOpacity style={styles.gameBtns} onPress={() => setIsStoreOpen(true)}>
                 <Ionicons name="bag-handle" size={30} color="#5E4833"/>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.gameBtns} onPress={openInventorySheet}>
+              <TouchableOpacity style={styles.gameBtns} onPress={() => setIsInventoryOpen(true)}>
                 <Ionicons name="color-palette" size={30} color="#5E4833"/>
               </TouchableOpacity>
             </View>
@@ -292,13 +273,13 @@ export default function HomeScreen() {
           </View>
 
           <Store 
-            ref={storeRef} 
-            close={closeStoreSheet}
+            visible={isStoreOpen}
+            close={() => setIsStoreOpen(false)}
             ></Store>
 
           <Inventory 
-            ref={inventoryRef} 
-            close={closeInventorySheet}></Inventory>
+            visible={isInventoryOpen}
+            close={() => setIsInventoryOpen(false)}></Inventory>
 
           <LevelUp 
             visible={pendingLevelUp !== null} 

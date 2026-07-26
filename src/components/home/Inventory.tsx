@@ -1,42 +1,46 @@
-import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
-import { useCallback, forwardRef } from 'react';
-import { Ionicons } from "@expo/vector-icons";
-import InventoryItem from './InventoryItem';
-import { STORE_ITEMS } from '@/constants/storeItems';
+import { STORE_ITEMS, ItemCategory } from '@/constants/home';
 import { useProfileStore } from '@/store/useProfileStore';
+import { Ionicons } from "@expo/vector-icons";
+import { useState } from 'react';
+import { Alert, Modal, Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList } from 'react-native';
+import 'react-native-gesture-handler';
+import InventoryItem from './InventoryItem';
+import { ImageBackground } from 'expo-image';
 
 type InventoryProps = {
+    visible: boolean,
     close: () => void;
 };
 
-type Ref = BottomSheet;
+const Inventory = (props: InventoryProps) => {
 
-const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
-    
-    const renderBackdrop = useCallback(
-        (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
-        []
+    const TABS: { key: ItemCategory; label: string }[] = [
+        { key: 'hats', label: 'Hats' },
+        { key: 'accessories', label: 'Accessories' },
+        { key: 'others', label: 'Others' },
+    ];
 
-    );
+    const [activeTab, setActiveTab] = useState<ItemCategory>('hats');
 
     const {
-        chickName,
+        coins,
         ownedItemIds,
         equippedItemId,
         equipItem,
         unequipItem,
     } = useProfileStore();
 
-    const INVENTORY_ITEMS = STORE_ITEMS.filter(item => ownedItemIds.includes(item.id));
+    // owned items in the active tab
+    const visibleItems = STORE_ITEMS.filter(
+        (item) => item.category === activeTab && ownedItemIds.includes(item.id),
+    );
 
     const onEquip = (itemId: number) => {
         if (equippedItemId !== null) {
             Alert.alert(
                 "You alredy have an item equipped",
                 "only one item can be equipped at a time",
-                [{ text: "OK" }]                
+                [{ text: "OK" }]
             );
             return;
         }
@@ -48,74 +52,118 @@ const Inventory = forwardRef<Ref, InventoryProps>((props, ref) => {
             Alert.alert(
                 "There's nothing to unequip",
                 "equip or buy more items :)",
-                [{ text: "OK" }]                
+                [{ text: "OK" }]
             );
-            return; 
+            return;
         }
         unequipItem();
-    }
+    };
 
     return (
-        <BottomSheet 
-            ref={ref} 
-            index={-1} 
-            enableDynamicSizing={true}
-            maxDynamicContentSize={700}
-            enablePanDownToClose={true}
-            backgroundStyle={styles.container}
-            handleIndicatorStyle={{backgroundColor: '#5E4833'}}
-            backdropComponent={renderBackdrop}>
-            <BottomSheetFlatList
-              data={INVENTORY_ITEMS}
-              numColumns={3}
-              keyExtractor={(_, index) => index.toString()}
-              renderItem={({ item }) => (
-                <InventoryItem 
-                  imageUrl={item.image} 
-                  itemName={item.name} 
-                  isEquipped={equippedItemId === item.id} 
-                  onEquip={() => onEquip(item.id)}
-                  onUnequip={() => onUnequip(item.id)} />
-            )}
-            ListHeaderComponent={() => (
-                <View>
+        <Modal
+            visible={props.visible}
+            transparent
+            animationType="fade"
+            statusBarTranslucent
+            onRequestClose={props.close} // Android back button
+            >
+            <View style={styles.overlay}>
+                {/* tap outside the card to close */}
+                <Pressable style={StyleSheet.absoluteFill} onPress={props.close} />
+
+                <ImageBackground
+                    source={require("@/assets/images/home/inventory.png")}
+                    contentFit='contain'
+                    style={styles.container}>
+
                     <View style={styles.header}>
-                        <TouchableOpacity
-                        style={styles.closeBtn}
-                        onPress={props.close}>
-                            <Ionicons name='close' size={30} color="#FCF4D2"/>
+                        <TouchableOpacity style={styles.closeBtn} onPress={props.close}>
+                        <Ionicons name="close" size={30} color="#FCF4D2" />
                         </TouchableOpacity>
+
+                        <View style={styles.coin}>
+                            <View style={styles.coinBar}>
+                                <Text style={{ fontFamily: 'InterBold', color: '#937254', fontSize: 13 }}>
+                                {coins}
+                                </Text>
+                            </View>
+                            <Image
+                                source={require('../../../assets/images/home/coin.png')}
+                                style={styles.coinImage}
+                            />
+                        </View>
                     </View>
 
-                    <View style={styles.inventory}>
-                        <Text style={styles.inventoryTitle}>👜 Inventory </Text>
+                    {/* tab bar */}
+                    <View style={styles.tabBar}>
+                        {TABS.map((tab) => {
+                        const active = tab.key === activeTab;
+                        return (
+                            <TouchableOpacity
+                            key={tab.key}
+                            style={[styles.tab, active && styles.tabActive]}
+                            onPress={() => setActiveTab(tab.key)}
+                            >
+                            <Text style={styles.tabText}>
+                                {tab.label}
+                            </Text>
+                            </TouchableOpacity>
+                        );
+                        })}
                     </View>
-                    <Text style={styles.inventorySubtitle}>Dress up {chickName} here!</Text>
-                </View>               
-            )}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}
-            columnWrapperStyle={{ justifyContent: 'flex-start', gap: 20, marginBottom: 5 }}
-            ListEmptyComponent={() => (
-                <View style={{ alignItems: 'center', padding: 20, paddingBottom: 70, }}>
-                    <Text style={{fontFamily: 'InterBold', fontSize: 20, color: '#5E4833'}}>You don't own anything yet</Text>
-                    <Text style={{fontFamily: "InterSemiBold", fontSize: 15, color: '#937254'}}>Buy some things from the store</Text>
-                </View>
-            )}
-            />
-        </BottomSheet>
-                
+
+                    <FlatList
+                        style={styles.list}
+                        data={visibleItems}
+                        numColumns={2}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                        <InventoryItem
+                            imageUrl={item.image}
+                            itemName={item.name}
+                            isEquipped={equippedItemId === item.id}
+                            onEquip={() => onEquip(item.id)}
+                            onUnequip={() => onUnequip(item.id)}
+                        />
+                        )}
+                        contentContainerStyle={{ padding: 20, paddingLeft: 35 }}
+                        columnWrapperStyle={{ justifyContent: 'flex-start', gap: 30, marginBottom: 5 }}
+                        showsVerticalScrollIndicator={true}
+                        ListEmptyComponent={() => (
+                            <View style={{ alignItems: 'center', padding: 20, paddingBottom: 40 }}>
+                                <Text style={{ fontFamily: 'InterBold', fontSize: 20, color: '#5E4833' }}>
+                                    You don't own anything yet
+                                </Text>
+                                <Text style={{ fontFamily: 'InterSemiBold', fontSize: 15, color: '#937254' }}>
+                                    buy some things from the store
+                                </Text>
+                            </View>
+                        )}
+                        />
+                </ImageBackground>
+            </View>
+        </Modal>
 
     );
-});
+};
 
 const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
     container: {
-        backgroundColor: '#f7f4e1',
+        height: '100%',
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingBottom: 10,
+        paddingTop: 120,
+        paddingHorizontal: 40,
+        width: '100%'
     },
     closeBtn: {
         backgroundColor: '#937254',
@@ -123,23 +171,57 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         paddingHorizontal: 2,
     },
-    inventory: {
-        backgroundColor: '#F4E6B0',
+    coin: {
+        marginTop: 2,
         paddingVertical: 5,
-        paddingHorizontal: 20,
-        marginHorizontal: -20,
     },
-    inventoryTitle: {
-        color: "#5E4833",
-        fontFamily: "InterBold",
-        fontSize: 33,
+    coinImage: {
+        height: 30,
+        width: 28,
+        position: 'absolute',
     },
-    inventorySubtitle: {
-        fontFamily: "InterSemiBold",
-        fontSize: 15,
-        color: '#937254',
-        paddingVertical: 10,
+    coinBar: {
+        backgroundColor: '#FCF4D2',
+        borderColor: '#5E4833',
+        borderWidth: 2,
+        borderRadius: 20,
+        paddingVertical: 1,
+        paddingLeft: 20,
+        paddingRight: 15,
+        marginLeft: 10,
+        justifyContent: 'center',
+        alignItems: 'center',
+        alignSelf: 'flex-start',
     },
-});
+    tabBar: {
+        flexDirection: 'row',
+        paddingTop: 90,
+        marginHorizontal: 60,
+        gap: 10
+    },
+    tab: {
+        flex: 1,
+        paddingVertical: 8,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+        alignItems: 'center',
+        backgroundColor: '#c9af8a',
+    },
+    tabActive: {
+        backgroundColor: '#fff2df',
+    },
+    tabText: {
+        fontFamily: 'InterBold',
+        fontSize: 14,
+        color: '#5E4833',
+    },
+    list: {
+        height: 100,
+        width: 310,
+        backgroundColor: '#fff2df',
+        borderRadius: 10,
+        marginBottom: 200,
+    },
+})
 
 export default Inventory;

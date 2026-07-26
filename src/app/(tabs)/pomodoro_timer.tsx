@@ -5,7 +5,7 @@
  * and modal for break/focus/recovery.
 */
 
-import { imageMap } from '@/constants/storeItems';
+import { imageMap } from '@/constants/home';
 import { getTodayStudyMinutes, getTodaysFocusSessionCount, sessionRecorder } from '@/lib/sessions';
 import { displayTime, getCyclePosition, isLateNight, isLongBreakNext } from '@/lib/timer';
 import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
@@ -440,7 +440,7 @@ export default function TimerScreen() {
               <Image
                 source={
                   equippedItemId === null
-                    ? require('@/assets/images/home/chicken.png')
+                    ? require('@/assets/images/home/chicken_stages/chicken.png')
                     : imageMap[equippedItemId]
                 }
                 style={styles.companionArt}
