@@ -69,6 +69,18 @@ Prerequisites: Node.js, the Expo Go app on a physical device.
 - Persistent sessions across app restarts
 - Route protection (logged-out users redirected to sign-in)
 
+**To-do List**
+- Create tasks
+- Easy task rescheduling
+- Calendar, date specific view
+- Search tasks
+
+**XP system & virtual chicken companion**
+- AI chatbot
+- XP & coin reward system
+- Shop items & customisation
+- Narrative progression
+
 **Pomodoro Timer**
 - Customisable focus and break duration
 - Transition modals 
@@ -88,6 +100,12 @@ Prerequisites: Node.js, the Expo Go app on a physical device.
 - Real-time score recomputed from multiple behavioural signals
 - 4 tier classification: Engaged, Balanced, Overextended, Burnout
 - Grounded in MBS-SS
+
+**AI planner**
+- Day & week view
+- Drag to create event
+- Task syncing with to-do list
+- Drag to reschedule
 
 ## Project Structure
 
