@@ -4,12 +4,16 @@ import { Keyboard } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { TaskItem, NewSubtaskItem, SubtaskItem } from '@/types/todo';
 
+type Difficulty = 'easy' | 'moderate' | 'difficult';
+
 type TodoState = {
     userID: string | null;
     taskItems: TaskItem[];
     tasksLoading: boolean;
     selectedDate: string;
     selectedTask: TaskItem | null;
+    difficultyFilter: Difficulty[];
+    dreadOnly: boolean;
 
     init: () => Promise<void>;
     setSelectedDate: (date: string) => void;
@@ -25,6 +29,8 @@ type TodoState = {
         scheduledDate: string,
         taskDesc?: string,
         subtasks?: NewSubtaskItem[],
+        startTime?: string | null,
+        endTime?: string | null
     ) => Promise<void>;
     deleteTask: (id: number) => Promise<void>;
     handleEditTask: (
@@ -37,11 +43,19 @@ type TodoState = {
         taskDesc?: string,
         subtasks?: SubtaskItem[],
         deletedSubtaskIds?: number[],
+        startTime?: string | null,
+        endTime?: string | null
     ) => Promise<void>;
+    rescheduleTaskTime: (id: number, startTime: string, endTime: string) => Promise<void>;
+    rescheduleTask: (id: number, scheduledDate: string) => Promise<void>;
     toggleCompletion: (id: number, completed: boolean, subtasks: SubtaskItem[]) => Promise<void>;
     toggleDread: (id: number, dread: boolean) => Promise<void>;
     toggleSubtaskCompletion: (id: number, completed: boolean) => Promise<void>;
     updateTaskXp: (id: number, awarded: number) => Promise<void>;
+    toggleDifficultyFilter: (d: Difficulty) => void;
+    clearFilters: () => void;
+    toggleDreadOnly: () => void;
+    
 };
 
 export const useTodoStore = create<TodoState>((set, get) => ({
@@ -50,6 +64,8 @@ export const useTodoStore = create<TodoState>((set, get) => ({
     tasksLoading: true,
     selectedDate: new Date().toISOString().split('T')[0],
     selectedTask: null,
+    difficultyFilter: [],
+    dreadOnly: false,
 
     // call once on mount instead of the loadUser + useEffect([userID]) pair
     init: async () => {
@@ -91,16 +107,18 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             completed: task.completed,
             dread: task.dread,
             difficulty: task.difficulty,
-            taskDesc: task.task_desc,
+            taskDesc: task.task_desc ?? '',
             subtasks: task.subtasks ?? [],
             scheduledDate: task.scheduled_date,
             xpAwarded: task.xp_awarded,
+            startTime: task.start_time ?? null,
+            endTime: task.end_time ?? null,
         }));
 
         set({ taskItems: formattedTasks, tasksLoading: false });
     },
 
-    handleAddTask: async (text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = []) => {
+    handleAddTask: async (text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], startTime, endTime) => {
         Keyboard.dismiss();
 
         const { userID, fetchTasks } = get();
@@ -116,6 +134,8 @@ export const useTodoStore = create<TodoState>((set, get) => ({
                 difficulty,
                 task_desc: taskDesc ?? '',
                 scheduled_date: scheduledDate,
+                start_time: startTime,
+                end_time: endTime,
             })
             .select()
             .single();
@@ -148,7 +168,7 @@ export const useTodoStore = create<TodoState>((set, get) => ({
         get().fetchTasks();
     },
 
-    handleEditTask: async (id, text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], deletedSubtaskIds = []) => {
+    handleEditTask: async (id, text, dread, complete, difficulty, scheduledDate, taskDesc = '', subtasks = [], deletedSubtaskIds = [], startTime, endTime) => {
         Keyboard.dismiss();
         if (!text.trim()) return;
 
@@ -161,6 +181,8 @@ export const useTodoStore = create<TodoState>((set, get) => ({
                 difficulty,
                 task_desc: taskDesc ?? '',
                 scheduled_date: scheduledDate,
+                start_time: startTime,
+                end_time: endTime
             })
             .eq('id', id);
 
@@ -196,6 +218,38 @@ export const useTodoStore = create<TodoState>((set, get) => ({
                     completed: subtask.completed,
                 })));
             if (insertError) console.log(insertError);
+        }
+
+        get().fetchTasks();
+    },
+
+    rescheduleTaskTime: async (id, startTime, endTime) => {
+        const scheduledDate = startTime.split('T')[0]; // keep the day field in sync
+        const { error } = await supabase
+            .from('tasks')
+            .update({ start_time: startTime, end_time: endTime, scheduled_date: scheduledDate })
+            .eq('id', id);
+        if (error) return console.log(error);
+        get().fetchTasks();
+    },
+
+    rescheduleTask: async (id, scheduledDate) => {
+        const task = get().taskItems.find(t => t.id === id);
+        const start = task?.startTime ? moveToDate(task.startTime, scheduledDate) : null;
+        const end = start ? (task?.endTime ? moveToDate(task.endTime, scheduledDate) : addMinutes(start, 30)) : null;
+
+        const { error } = await supabase
+            .from('tasks')
+            .update({
+                scheduled_date: scheduledDate,
+                start_time: start,
+                end_time: end,
+            })
+            .eq('id', id);
+
+        if (error) {
+            console.log(error);
+            return;
         }
 
         get().fetchTasks();
@@ -243,14 +297,28 @@ export const useTodoStore = create<TodoState>((set, get) => ({
             return;
         }
         get().fetchTasks();
-    }
+    },
+    toggleDifficultyFilter: (d) => set((s) => ({
+    difficultyFilter: s.difficultyFilter.includes(d)
+        ? s.difficultyFilter.filter(x => x !== d)   // uncheck
+        : [...s.difficultyFilter, d],               // check
+    })),
+
+    clearFilters: () => set({ difficultyFilter: [], dreadOnly: false }),
+    toggleDreadOnly: () => set((s) => ({ dreadOnly: !s.dreadOnly })),
 }));
 
 // kept out of state so they can't go stale; useShallow stops a re-render
 // when the filtered result is unchanged, even though .filter() returns
 // a new array reference every call
 export const useRenderedTaskItems = () =>
-    useTodoStore(useShallow((s) => s.taskItems.filter(t => t.scheduledDate === s.selectedDate)));
+    useTodoStore(useShallow((s) =>
+      s.taskItems.filter(t =>
+        t.scheduledDate === s.selectedDate &&
+        (s.difficultyFilter.length === 0 || s.difficultyFilter.includes(t.difficulty as Difficulty)) &&
+        (!s.dreadOnly || t.dread)
+    )
+  ));
 
 export const usePendingTaskItems = () =>
     useTodoStore(useShallow((s) => s.taskItems.filter(t => !t.completed)));
@@ -272,4 +340,34 @@ export function calculateProgress(tasks: TaskItem[]): number {
 
         return total + taskProgress * percentPerTask;
     }, 0);
+}
+
+// function to group tasks by date scheduled
+export function groupTaskByDate(tasks: TaskItem[]): Record<string, TaskItem[]> {
+    const groupedTasks: Record<string, TaskItem[]> = {};
+    for (const task of tasks) {
+        if (!groupedTasks[task.scheduledDate]) {
+            groupedTasks[task.scheduledDate] = [];
+        }
+        groupedTasks[task.scheduledDate].push(task);
+    }
+    return groupedTasks;
+}
+
+export function formatDate(date: string): string {
+    return new Date(date).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}
+
+export function addMinutes(iso: string, m: number) {
+  return new Date(new Date(iso).getTime() + m * 60000).toISOString();
+}
+
+export function moveToDate(iso: string, dateStr: string) {
+    const t = new Date(iso);
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d, t.getHours(), t.getMinutes(), t.getSeconds(), t.getMilliseconds()).toISOString();
 }

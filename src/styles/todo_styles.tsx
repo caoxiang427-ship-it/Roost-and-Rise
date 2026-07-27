@@ -20,9 +20,6 @@ export const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 80,
   },
-  topDisplayLeft: {
-    
-  },
   header: {
     fontFamily: "InterBold",
     fontSize: 24,
@@ -144,6 +141,13 @@ export const styles = StyleSheet.create({
     color: '#FFF',
     fontFamily: "InterBold",
     fontSize: 15,
+  },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 170,
   },
 
 

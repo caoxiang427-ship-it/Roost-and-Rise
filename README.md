@@ -68,6 +68,7 @@ No Expo account or access to our Expo project is needed — `expo run:ios` build
 ```
 
 ## Features (Milestone 3)
+>>>>>>> 73f05cee2e7348b71cb7ef5f688d1ce0373b2324
 
 **Authentication**
 - Email and password authentication via Supabase

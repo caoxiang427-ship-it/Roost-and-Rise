@@ -1,10 +1,12 @@
 import 'react-native-gesture-handler';
 import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
 import { forwardRef, useCallback } from 'react';
 import { Ionicons } from "@expo/vector-icons";
 import Task from './Task';
-import { useTodoStore, usePendingTaskItems } from '@/store/useTodoStore';
+import { useTodoStore, usePendingTaskItems, groupTaskByDate, formatDate } from '@/store/useTodoStore';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
+import { LinearGradient } from 'expo-linear-gradient';
 
 
 type PendingTasksProps = {
@@ -22,28 +24,65 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
 
     );
 
-    const { setSelectedTask } = useTodoStore();
+    const { setSelectedTask, deleteTask, rescheduleTask } = useTodoStore();
     const now = new Date();
     const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
     // pending task items from the past
     const pastPendingTaskItems = usePendingTaskItems().filter((item) => item.scheduledDate < todayDate);
+    
+    const renderedItems = groupTaskByDate(pastPendingTaskItems);
+
+    const deleteAll = () => {
+        for (const task of pastPendingTaskItems) {
+            deleteTask(task.id);
+        }
+    };
+
+    const moveAll = () => {
+        for (const task of pastPendingTaskItems) {
+            rescheduleTask(task.id, todayDate);
+        }
+    }
+
+    const handleDeleteAll = () => {
+        Alert.alert(
+            "Are you sure you want to delete all pending tasks?",
+            "This action is permanent and can't be undone",
+          [
+            { text: 'No' },
+            { text: 'Yes', onPress: () => deleteAll()},
+          ]
+        )
+    }
+
+    const handleMoveAll = () => {
+        Alert.alert(
+            "Are you sure you want to reschedule all pending tasks to today?",
+            "This action is permanent and can't be undone",
+          [
+            { text: 'No' },
+            { text: 'Yes', onPress: () => moveAll()},
+          ]
+        )
+    }
 
     return (
         <BottomSheet 
             ref={ref} 
             index={-1} 
-            snapPoints={['75%']}
+            snapPoints={['80%']}
             enableDynamicSizing={true}
-            maxDynamicContentSize={750} 
+            maxDynamicContentSize={700} 
             enablePanDownToClose={true}
+            backgroundStyle={styles.container}
             handleIndicatorStyle={{backgroundColor: '#5E4833'}}
             backdropComponent={renderBackdrop}>
                 <BottomSheetFlatList
                 contentInsetAdjustmentBehavior='never'
-                data={pastPendingTaskItems}
-                contentContainerStyle={styles.container}
-                keyExtractor={(item) => item.id.toString()}
+                data={Object.keys(renderedItems)}
+                contentContainerStyle={styles.innerContainer}
+                keyExtractor={(date) => date}
                 ListHeaderComponent={
                     <View>
                         <View style={styles.header}>
@@ -53,11 +92,11 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
                             </TouchableOpacity>
 
                             <View style={{flexDirection: 'row'}}>
-                                <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000', marginRight: 2.5}]}>
+                                <TouchableOpacity style={[styles.Btn, { backgroundColor: '#BC0000', marginRight: 2.5}]} onPress={handleDeleteAll}>
                                     <Text style={styles.btnTxt}>Delete all</Text>
                                 </TouchableOpacity>
 
-                                <TouchableOpacity style={[styles.Btn, { backgroundColor: 'rgb(127, 127, 127)000', marginLeft: 2.5}]}>
+                                <TouchableOpacity style={[styles.Btn, { backgroundColor: 'rgb(127, 127, 127)000', marginLeft: 2.5}]} onPress={handleMoveAll}>
                                     <Text style={styles.btnTxt}>Move all</Text>
                                 </TouchableOpacity>
                             </View>
@@ -65,32 +104,53 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
 
                         <View style={styles.text}>
                             <Text style={styles.title}>Pending Tasks</Text>
-                            <Text style={styles.subtitle}>Incomplete tasks from <Text style={{textDecorationLine: 'underline'}}>past</Text> days</Text>
+                            <Text style={styles.subtitle}>Manage your incomplete tasks from <Text style={{textDecorationLine: 'underline'}}>past</Text> days here!</Text>
                         </View>
+
+                        <View style={{borderColor: '#5E4833', borderWidth: 0.5, marginHorizontal: -20, marginBottom: 10}}></View>
+
                     </View>
                 }
-                renderItem={({ item }) => (
+                renderItem={({ item: date }) => (
                     <View>
-                    <Task
-                        id={item.id}
-                        text={item.text}
-                        completed={item.completed}
-                        dread={item.dread}
-                        difficulty={item.difficulty}
-                        taskDesc={item.taskDesc}
-                        subtasks={item.subtasks}
-                        xpAwarded={item.xpAwarded}
-                        onPress={() => {setSelectedTask(item); props.openEditTaskSheet();}}
-                        />
+                        <Text style={styles.date}>{formatDate(date)}</Text>
+                        {renderedItems[date].map(task => (
+                            <Task 
+                              key={task.id}
+                              id={task.id}
+                              text={task.text}
+                              completed={task.completed}
+                              dread={task.dread}
+                              difficulty={task.difficulty}
+                              scheduledDate={task.scheduledDate}
+                              startTime={task.startTime}
+                              endTime={task.endTime}
+                              taskDesc={task.taskDesc}
+                              subtasks={task.subtasks}
+                              xpAwarded={task.xpAwarded}
+                              onPress={() => {setSelectedTask(task); props.openEditTaskSheet();}}/>
+                        ))}
+                        <View style={{borderColor: '#5E4833', borderWidth: 0.5, marginHorizontal: -20, marginBottom: 10}}></View>
+
                     </View>
                 )}
                 ListEmptyComponent={
-                    <View  style={{paddingBottom: 200}}>
-                        <Text>No pending tasks yet!</Text>
-                    </View>
+                    <Animated.View entering={FadeIn.duration(300).delay(200)} exiting={FadeOut.duration(300)}>
+                        <View  style={styles.emptyTaskContainer}>
+                            <View style={styles.clipboardContainer}>
+                                <Ionicons name="clipboard-outline" size={50} color='#937254'/>
+                            </View>
+                            <Text style={{ fontFamily: 'InterSemiBold', fontSize: 20, color: '#937254'}}>No pending tasks yet!</Text>
+                        </View>
+                    </Animated.View>
                 }>
 
                 </BottomSheetFlatList>
+
+                <LinearGradient
+                    colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+                    style={styles.bottomFade}
+                    pointerEvents="none"/>
         </BottomSheet>
         
         
@@ -99,13 +159,19 @@ const PendingTasks = forwardRef<Ref, PendingTasksProps>((props, ref) => {
 
 const styles = StyleSheet.create({
     container: {
+        backgroundColor: '#f7f4e1',
+    },
+    innerContainer: {
         paddingHorizontal: 20,
         paddingBottom: 90,
+        backgroundColor: '#FFF',
+        flex: 1,
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingVertical: 5,
+        paddingTop: 10,
     },
     Btn: {
         paddingVertical: 5,
@@ -133,6 +199,38 @@ const styles = StyleSheet.create({
         fontFamily: "InterSemiBold",
         fontSize: 16,
         color: '#937254'
+    },
+    emptyTaskContainer: {
+        justifyContent: 'center',
+        alignItems: 'center', 
+        alignSelf: 'center',
+        paddingVertical: 10,
+        paddingHorizontal: 10,
+        marginTop: 40,
+        borderRadius: 20
+    },
+    clipboardContainer: {
+        borderWidth: 3,
+        borderColor: '#937254',
+        borderRadius: 50,
+        paddingVertical: 20,
+        paddingHorizontal: 22,
+        marginBottom: 20,
+    },
+    date: {
+        fontFamily: 'InterBold',
+        fontSize: 20,
+        color: '#5E4833',
+        paddingBottom: 10,
+        paddingLeft: 10,
+    },
+    bottomFade: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        height: 300,
+        zIndex: 1,
     },
 });
 

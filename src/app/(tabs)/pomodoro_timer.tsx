@@ -5,7 +5,6 @@
  * and modal for break/focus/recovery.
 */
 
-import { imageMap } from '@/constants/storeItems';
 import { getTodayStudyMinutes, getTodaysFocusSessionCount, sessionRecorder } from '@/lib/sessions';
 import { displayTime, getCyclePosition, isLateNight, isLongBreakNext } from '@/lib/timer';
 import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
@@ -19,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { Alert, Image, ImageBackground, Modal, Pressable, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
+import { STAGE_IMAGES, getStage, ACCESSORY_OVERLAYS, ACCESSORY_POSITIONS } from '@/constants/home';
 
 const DEFAULT_HEADER = require('@/assets/images/timer/header.jpeg');
 
@@ -56,7 +56,7 @@ export default function TimerScreen() {
   const [rewardXP, setRewardXP] = useState(0);
  
   // For chicken companion card
-  const { addFocusXp, equippedItemId, chickName, xp } = useProfileStore();
+  const { addFocusXp, equippedItemIds, chickName, xp } = useProfileStore();
 
   // For three-tab card
   const [activeTab, setActiveTab] = useState<'summary' | 'settings' | 'tasks'>('summary');
@@ -437,15 +437,25 @@ export default function TimerScreen() {
             </View>
 
             <View style={styles.companionArtWrap}>
-              <Image
-                source={
-                  equippedItemId === null
-                    ? require('@/assets/images/home/chicken.png')
-                    : imageMap[equippedItemId]
-                }
-                style={styles.companionArt}
-                resizeMode="contain"
-              />
+
+              <View style={{ width: 206, height: 225 }}>
+                <Image
+                  source={STAGE_IMAGES[getStage(petLevel)]}
+                  style={{ width: 206, height: 225 }}
+                />
+                {equippedItemIds.map((id) => {
+                  const pos = ACCESSORY_POSITIONS[getStage(petLevel)]?.[id];
+                  if (!pos) return null;
+                  return (
+                    <Image
+                      key={id}
+                      source={ACCESSORY_OVERLAYS[id]}
+                      style={[{ position: 'absolute' }, pos]}
+                    />
+                  );
+                })}
+              </View>
+            
             </View>
 
             <View style={styles.levelRow}>
@@ -595,11 +605,13 @@ export default function TimerScreen() {
               <View style={styles.settingRow}>
                 <Text style={styles.settingLabel}>Focus duration</Text>
                 <View style={styles.stepper}>
+
                   <Pressable onPress={decreaseFocusTime} testID="focus-minus" style={[styles.stepBtn, styles.stepBtnGreen]}>
                     <Ionicons name="remove" size={15} color="#4A7A6E" />
                   </Pressable>
                   <Text style={styles.stepValue}>{`${focusDuration} min`}</Text>
                   <Pressable onPress={increaseFocusTime} testID="focus-plus" style={[styles.stepBtn, styles.stepBtnGreen]}>
+
                     <Ionicons name="add" size={15} color="#4A7A6E" />
                   </Pressable>
                 </View>
@@ -699,11 +711,13 @@ export default function TimerScreen() {
                 {/* editable break length */}
                 <Text style={styles.modalMessage}>How long a breather?</Text>
                 <View style={styles.modalStepper}>
+
                   <Pressable onPress={decreaseModalBreak} testID="modal-break-minus" style={[styles.stepBtn, styles.stepBtnBlue]}>
                     <Ionicons name="remove" size={16} color="#4E7C9B" />
                   </Pressable>
                   <Text style={styles.modalStepperValue}>{`${modalBreakMin} min`}</Text>
                   <Pressable onPress={increaseModalBreak} testID="modal-break-plus" style={[styles.stepBtn, styles.stepBtnBlue]}>
+
                     <Ionicons name="add" size={16} color="#4E7C9B" />
                   </Pressable>
                 </View>
@@ -731,11 +745,13 @@ export default function TimerScreen() {
 
                 <Text style={styles.modalMessage}>How long to focus?</Text>
                 <View style={styles.modalStepper}>
+
                   <Pressable onPress={decreaseModalFocus} testID="modal-focus-minus" style={[styles.stepBtn, styles.stepBtnGreen]}>
                     <Ionicons name="remove" size={16} color="#4A7A6E" />
                   </Pressable>
                   <Text style={styles.modalStepperValue}>{`${modalFocusMin} min`}</Text>
                   <Pressable onPress={increaseModalFocus} testID="modal-focus-plus" style={[styles.stepBtn, styles.stepBtnGreen]}>
+
                     <Ionicons name="add" size={16} color="#4A7A6E" />
                   </Pressable>
                 </View>

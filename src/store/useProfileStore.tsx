@@ -5,6 +5,7 @@
 import { create } from "zustand";
 import { supabase } from "@/lib/supabase";
 import { Alert } from 'react-native';
+import { STORE_ITEMS } from '@/constants/home';
 
 // used in formula to calculate XP level, it controls how fast or slow leveling up feels.
 const LEVEL_COEFFICIENT = 85;
@@ -63,7 +64,7 @@ type ProfileState = {
     userID: string | null;
     name: string;
     chickName: string;
-    equippedItemId: number | null,
+    equippedItemIds: number[];  
     ownedItemIds: number[],
     xp: number,
     coins: number,
@@ -79,7 +80,7 @@ type ProfileState = {
     setChickName: (newName: string) => Promise<void>;
     buyItem: (price: number, itemId: number) => Promise<void>;
     equipItem: (itemId: number) => Promise<void>;
-    unequipItem: () => Promise<void>;
+    unequipItem: (itemId: number) => Promise<void>;
     addFocusXp: (minutes: number, mode: 'focus' | 'break', sessionStreak?: number) => Promise<number>;
     addProgressXp: (difficulty: "easy" | "moderate" | "difficult" | '') => Promise<number>;
     removeProgressXp:(xpAwarded: number) => Promise<number>;
@@ -92,7 +93,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     userID: null,
     name: '',
     chickName: '',
-    equippedItemId: null,
+    equippedItemIds: [],
     ownedItemIds: [],
     xp: 0,
     coins: 0,
@@ -116,7 +117,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
         const { data } = await supabase
         .from('profiles')
-        .select('display_name, chicken_name, equipped_item_id, xp, coins, focus_xp_today, progress_xp_today, daily_xp_reset_date')
+        .select('display_name, chicken_name, equipped_item_ids, xp, coins, focus_xp_today, progress_xp_today, daily_xp_reset_date')
         .eq('id', user.id)
         .single();
 
@@ -125,7 +126,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             userID: user.id,
             name: data.display_name ?? metadataName ?? '',
             chickName: data.chicken_name ?? '',
-            equippedItemId: data.equipped_item_id,
+            equippedItemIds: data.equipped_item_ids ?? [], 
             xp: data.xp ?? 0,
             coins: data.coins ?? 0,
             focusXpToday: data.focus_xp_today ?? 0,
@@ -198,33 +199,33 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
 
-        const { error } = await supabase
-        .from('profiles')
-        .update({ equipped_item_id: itemId })
-        .eq('id', user.id);
+        // one item per category: drop whatever shares this item's category, then add it
+        const category = STORE_ITEMS.find(i => i.id === itemId)?.category;
+        const sameCategoryIds = STORE_ITEMS.filter(i => i.category === category).map(i => i.id);
+        const next = [...get().equippedItemIds.filter(id => !sameCategoryIds.includes(id)), itemId];
 
-        if (error) {
-        console.error(error);
-        return;
-        }
-        set({ equippedItemId: itemId });
+        const { error } = await supabase
+            .from('profiles')
+            .update({ equipped_item_ids: next })
+            .eq('id', user.id);
+
+        if (error) { console.error(error); return; }
+        set({ equippedItemIds: next });
     },
 
-    // no need for itemId argument as only one item can be equipped at one time -> do no need to know
-    unequipItem: async () => {
+    unequipItem: async (itemId) => {
         const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+        if (!user) return;
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ equipped_item_id: null })
-      .eq('id', user.id);
+        const next = get().equippedItemIds.filter(id => id !== itemId);
 
-        if (error) {
-        console.error(error);
-        return;
-        }
-        set({ equippedItemId: null });
+        const { error } = await supabase
+            .from('profiles')
+            .update({ equipped_item_ids: next })
+            .eq('id', user.id);
+
+        if (error) { console.error(error); return; }
+        set({ equippedItemIds: next });
     },
     addFocusXp: async (minutes, mode, sessionStreak) => {
         const { userID } = get();

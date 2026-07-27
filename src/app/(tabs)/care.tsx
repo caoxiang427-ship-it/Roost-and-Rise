@@ -29,6 +29,7 @@ import { Link, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { Alert, ImageBackground, Modal, Pressable, ScrollView, Text, TextInput, View, } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const HEADER_IMG = require('@/assets/images/care/header.jpg');
 
@@ -259,7 +260,9 @@ export default function SelfCareScreen() {
           </Pressable>
         </ImageBackground>
 
+
         {/* BurnoutIndicator */}
+
         <View style={styles.heroCard}>
           <BurnoutIndicator result={burnout} />
         </View>
@@ -403,6 +406,10 @@ export default function SelfCareScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+      <LinearGradient
+        colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+        style={styles.bottomFade}
+        pointerEvents="none"/>
     </View>
   );
 }

@@ -179,9 +179,24 @@ export const styles = StyleSheet.create({
         borderRadius: 20,
     },
     gameBtnsColumn: {
-    flex: 1,
-    paddingLeft: 20,
-    alignItems: 'flex-start',
-    justifyContent: 'center',
+        flex: 1,
+        paddingLeft: 20,
+        alignItems: 'flex-start',
+        justifyContent: 'center',
     },
+    gameBtnsColumnRight: {
+        flex: 1,
+        paddingRight: 20,
+        alignItems: 'flex-end',
+        justifyContent: 'flex-end',
+    },
+    aiBtn: {
+        backgroundColor: '#ffffff4b',
+        borderRadius: 50,
+        borderWidth: 1,
+        borderColor: '#FFF',
+        paddingVertical: 5,
+        paddingHorizontal: 5,
+    }
 });
+

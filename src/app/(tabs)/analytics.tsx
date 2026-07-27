@@ -34,6 +34,7 @@ import {
   getHabitPrediction,
 } from '../../lib/analytics';
 import { getUserSegment, UserSegment } from '../../lib/segmentation';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const CHART_WIDTH = SCREEN_WIDTH - 48;
@@ -233,14 +234,13 @@ export default function AnalyticsScreen() {
               height={180}
               chartConfig={sessionChartConfig}
               withInnerLines={true}
-              withOuterLines={false}
               fromZero
               showValuesOnTopOfBars={false}
               flatColor={true}
               yAxisLabel=""
               yAxisSuffix=""
               segments={Math.max(Math.ceil(Math.max(...sessionData.map(d => d.count), 1)), 2)}
-              formatYLabel={(val) => String(Math.round(Number(val)))}
+              formatYLabel={(val: string) => String(Math.round(Number(val)))}
               style={styles.chart}
             />
           </ScrollView>
@@ -749,6 +749,12 @@ export default function AnalyticsScreen() {
           <View style={{ height: 100 }} />
         </ScrollView>
       )}
+
+      <LinearGradient
+        colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
+        style={styles.bottomFade}
+        pointerEvents="none"/>
+
     </View>
   );
 }
@@ -1044,5 +1050,12 @@ const styles = StyleSheet.create({
     color: COLORS.subtitle,
     marginTop: 4,
     textAlign: 'center',
+  },
+  bottomFade: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 170,
   },
 });

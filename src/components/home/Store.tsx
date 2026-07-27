@@ -1,25 +1,26 @@
-import 'react-native-gesture-handler';
-import BottomSheet, { BottomSheetBackdrop, BottomSheetFlatList } from '@gorhom/bottom-sheet';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
-import { useCallback, forwardRef } from 'react';
-import { Ionicons } from "@expo/vector-icons";
-import StoreItem from './StoreItem'; 
-import { STORE_ITEMS } from '@/constants/storeItems';
+import { STORE_ITEMS, ItemCategory } from '@/constants/home';
 import { useProfileStore } from '@/store/useProfileStore';
+import { Ionicons } from "@expo/vector-icons";
+import { forwardRef, useCallback, useState } from 'react';
+import { Modal, Image, StyleSheet, Text, TouchableOpacity, View, Pressable, FlatList } from 'react-native';
+import 'react-native-gesture-handler';
+import StoreItem from './StoreItem';
+import { ImageBackground } from 'expo-image';
 
 type StoreProps = {
+    visible: boolean,
     close: () => void;
 };
 
-type Ref = BottomSheet;
+const Store = (props: StoreProps) => {
 
-const Store = forwardRef<Ref, StoreProps>((props, ref) => {
-    
-    const renderBackdrop = useCallback(
-        (props: any) => <BottomSheetBackdrop appearsOnIndex={0} disappearsOnIndex={-1} {...props} />,
-        []
+    const TABS: { key: ItemCategory; label: string }[] = [
+    { key: 'hats', label: 'Hats' },
+    { key: 'accessories', label: 'Accessories' },
+    { key: 'others', label: 'Others' },
+    ];
 
-    );
+    const [activeTab, setActiveTab] = useState<ItemCategory>('hats');
 
     const {
         chickName,
@@ -27,74 +28,117 @@ const Store = forwardRef<Ref, StoreProps>((props, ref) => {
         ownedItemIds
     } = useProfileStore();
 
+    // filter out items the user does not own
+    const visibleItems = STORE_ITEMS.filter(
+        (item) => item.category === activeTab && !ownedItemIds.includes(item.id),
+    );
+
+
     return (
-        <BottomSheet 
-            ref={ref} 
-            index={-1} 
-            enableDynamicSizing={true}
-            maxDynamicContentSize={700}
-            enablePanDownToClose={true}
-            backgroundStyle={styles.container}
-            handleIndicatorStyle={{backgroundColor: '#5E4833'}}
-            backdropComponent={renderBackdrop}>
-            <BottomSheetFlatList
-              data={STORE_ITEMS.filter(item => !ownedItemIds.includes(item.id))}
-              numColumns={3}
-              keyExtractor={(_, index) => index.toString()}
-              renderItem={({ item }) => (
-                <StoreItem imageUrl={item.image} itemId={item.id} itemName={item.name} itemPrice={item.price} />
-            )}
-            ListHeaderComponent={() => (
-                <View>
+        <Modal
+            visible={props.visible}
+            transparent
+            animationType="fade"
+            statusBarTranslucent
+            onRequestClose={props.close} // Android back button
+            >
+            <View style={styles.overlay}>
+                {/* tap outside the card to close */}
+                <Pressable style={StyleSheet.absoluteFill} onPress={props.close} />
+
+                <ImageBackground
+                    source={require("@/assets/images/home/store.png")}
+                    contentFit='contain'
+                    style={styles.container}>
+
                     <View style={styles.header}>
-                        <TouchableOpacity
-                        style={styles.closeBtn}
-                        onPress={props.close}>
-                            <Ionicons name='close' size={30} color="#FCF4D2"/>
+                        <TouchableOpacity style={styles.closeBtn} onPress={props.close}>
+                        <Ionicons name="close" size={30} color="#FCF4D2" />
                         </TouchableOpacity>
-                        
+
                         <View style={styles.coin}>
                             <View style={styles.coinBar}>
-                            <Text style={{ fontFamily: "Interbold", color: '#937254', fontSize: 13}}>{coins}</Text>
+                                <Text style={{ fontFamily: 'InterBold', color: '#937254', fontSize: 13 }}>
+                                {coins}
+                                </Text>
                             </View>
-        
                             <Image
-                            source={require('../../../assets/images/home/coin.png')}
-                            style={[styles.coinImage]}
-                            ></Image>
+                                source={require('../../../assets/images/home/coin.png')}
+                                style={styles.coinImage}
+                            />
                         </View>
-
                     </View>
 
-                    <View style={styles.shop}>
-                        <Text style={styles.shopTitle}>🌿 Store </Text>
+
+                    {/* tab bar */}
+                    <View style={styles.tabBar}>
+                        {TABS.map((tab) => {
+                        const active = tab.key === activeTab;
+                        return (
+                            <TouchableOpacity
+                            key={tab.key}
+                            style={[styles.tab, active && styles.tabActive]}
+                            onPress={() => setActiveTab(tab.key)}
+                            >
+                            <Text style={styles.tabText}>
+                                {tab.label}
+                            </Text>
+                            </TouchableOpacity>
+                        );
+                        })}
                     </View>
-                    <Text style={styles.shopSubtitle}>Spend your coins on {chickName} here!</Text>
-                </View>               
-            )}
-            contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 90 }}
-            columnWrapperStyle={{ justifyContent: 'flex-start', gap: 20, marginBottom: 5 }}
-            ListEmptyComponent={() => (
-                <View style={{ alignItems: 'center', padding: 20, paddingBottom: 70, }}>
-                    <Text style={{fontFamily: 'InterBold', fontSize: 20, color: '#5E4833'}}>You've bought everything!</Text>
-                    <Text style={{fontFamily: "InterSemiBold", fontSize: 15, color: '#937254'}}>more to come soon</Text>
-                </View>
-            )}
-            />
-        </BottomSheet>
-                
+
+                        <FlatList
+                        style={styles.list}
+                        data={visibleItems}
+                        numColumns={2}
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                        <StoreItem
+                        imageUrl={item.image}
+                        itemId={item.id}
+                        itemName={item.name}
+                        itemPrice={item.price}
+                        />
+                        )}
+                        contentContainerStyle={{padding: 20, paddingLeft: 35}}
+                        columnWrapperStyle={{ justifyContent: 'flex-start', gap: 30, marginBottom: 5 }}
+                        showsVerticalScrollIndicator={true}
+                        ListEmptyComponent={() => (                        
+                            <View style={{ alignItems: 'center', padding: 20, paddingBottom: 40 }}>                            
+                                <Text style={{ fontFamily: 'InterBold', fontSize: 20, color: '#5E4833' }}>                           
+                                    Nothing here!                            
+                                </Text>                            
+                                <Text style={{ fontFamily: 'InterSemiBold', fontSize: 15, color: '#937254' }}>                            
+                                    you own everything in this tab                            
+                                </Text>                        
+                            </View>                        
+                        )}
+                        />
+                </ImageBackground>
+            </View>
+        </Modal>
 
     );
-});
+};
 
 const styles = StyleSheet.create({
+    overlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
     container: {
-        backgroundColor: '#f7f4e1',
+        height: '100%',
+        width: '100%',
+        justifyContent: 'center',
+        alignItems: 'center',
     },
     header: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        paddingBottom: 10,
+        paddingTop: 120,
+        paddingHorizontal: 40,
+        width: '100%'
     },
     closeBtn: {
         backgroundColor: '#937254',
@@ -102,7 +146,7 @@ const styles = StyleSheet.create({
         paddingVertical: 2,
         paddingHorizontal: 2,
     },
-     coin: {
+    coin: {
         marginTop: 2,
         paddingVertical: 5,
     },
@@ -112,8 +156,8 @@ const styles = StyleSheet.create({
         position: 'absolute',
     },
     coinBar: {
-        backgroundColor: "#FCF4D2",
-        borderColor: "#5E4833",
+        backgroundColor: '#FCF4D2',
+        borderColor: '#5E4833',
         borderWidth: 2,
         borderRadius: 20,
         paddingVertical: 1,
@@ -122,32 +166,37 @@ const styles = StyleSheet.create({
         marginLeft: 10,
         justifyContent: 'center',
         alignItems: 'center',
-        alignSelf: 'flex-start'
+        alignSelf: 'flex-start',
     },
-    shop: {
-        backgroundColor: '#F4E6B0',
-        paddingVertical: 5,
-        paddingHorizontal: 20,
-        marginHorizontal: -20,
-    },
-    shopTitle: {
-        color: "#5E4833",
-        fontFamily: "InterBold",
-        fontSize: 33,
-    },
-    shopSubtitle: {
-        fontFamily: "InterSemiBold",
-        fontSize: 15,
-        color: '#937254',
-        paddingVertical: 10,
-    },
-    storeItemContainer: {
+    tabBar: {
         flexDirection: 'row',
-        paddingHorizontal: 20,
-        flexWrap: 'wrap',
-        paddingBottom: 90,
-        justifyContent: 'space-between'
+        paddingTop: 90,
+        marginHorizontal: 60,
+        gap: 10
     },
-});
+    tab: {
+        flex: 1,
+        paddingVertical: 8,
+        borderTopLeftRadius: 10,
+        borderTopRightRadius: 10,
+        alignItems: 'center',
+        backgroundColor: '#c9af8a',
+    },
+    tabActive: {
+        backgroundColor: '#fff2df',
+    },
+    tabText: {
+        fontFamily: 'InterBold',
+        fontSize: 14,
+        color: '#5E4833',
+    },
+    list: {
+        height: 100,
+        width: 310,        
+        backgroundColor: '#fff2df',
+        borderRadius: 10,
+        marginBottom: 200,
+    },
+})
 
 export default Store;
