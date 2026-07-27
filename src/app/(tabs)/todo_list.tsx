@@ -81,21 +81,6 @@ export default function TodoScreen() {
   const closePendingTasksSheet = () => pendingTasksRef.current?.close();
   const closeSearchTasksSheet = () => searchTasksRef.current?.close();
 
-  if (tasksLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#5E90A1" />
-      </View>
-    )
-  }
-
-  // to calculate if selected date is past or future -> used to conditonally render bg image
-  const dayState = () => {
-    if (selectedDate < todayDate) return 'past';
-    if (selectedDate === todayDate) return 'today';
-    return 'future';
-  };
-
   const WORKLOAD_THRESHOLD = 35;
 
   const calculateWorkloadScore = () => {
@@ -127,6 +112,21 @@ export default function TodoScreen() {
       setHasWarnedWorkload(false); // reset so it can warn again if it climbs back up later
     }
   }, [renderedTaskItems]);
+
+  if (tasksLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#5E90A1" />
+      </View>
+    )
+  }
+
+  // to calculate if selected date is past or future -> used to conditonally render bg image
+  const dayState = () => {
+    if (selectedDate < todayDate) return 'past';
+    if (selectedDate === todayDate) return 'today';
+    return 'future';
+  };
 
   return (
     //layout weird on android phone, the header part fix it ltr

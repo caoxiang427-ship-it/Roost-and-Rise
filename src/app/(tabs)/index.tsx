@@ -2,7 +2,7 @@
  * Home screen. 
  * Only logged in users reach this page.
 */
-
+import { View, Text, TouchableOpacity, Image, TextInput, ActivityIndicator} from 'react-native';
 import Inventory from '@/components/home/Inventory';
 import LevelUp from '@/components/home/LevelUp';
 import SpeechBubble from '@/components/home/SpeechBubble';
@@ -17,7 +17,6 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';

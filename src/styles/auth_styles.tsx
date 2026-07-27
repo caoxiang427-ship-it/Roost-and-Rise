@@ -1,0 +1,146 @@
+import { StyleSheet } from 'react-native';
+
+export const styles = StyleSheet.create({
+  headerImg: {
+    width: '100%',
+    height: 240,
+  },
+  screen: {
+    flex: 1,
+    backgroundColor: '#AFD4EC',
+  },
+  scrollBody: {
+    flexGrow: 1,
+  },
+  card: {
+    flexGrow: 1,
+    backgroundColor: '#FBF6E3',
+  },
+  cardHeader: {
+    backgroundColor: '#AFD4EC',
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 24,
+  },
+  avatar: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 3,
+    borderColor: '#F5C542',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  title: {
+    fontFamily: 'Fredoka',
+    fontSize: 38,
+    fontWeight: 'bold',
+    color: '#3D2914',
+  },
+  subtitle: {
+    fontSize: 13,
+    color: '#5A4426',
+    marginTop: 3,
+  },
+  cardBody: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    backgroundColor: '#FBF6E3',
+    paddingHorizontal: 22,
+    paddingBottom: 120,
+  },
+  label: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#5A4426',
+    marginTop: 4,
+    marginBottom: 4,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E3D9C4',
+    borderWidth: 1,
+    borderRadius: 14,
+    paddingHorizontal: 14,
+  },
+  inputFlex: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: '#3D2914',
+  },
+  forgotLink: {
+    fontSize: 12,
+    color: '#A6791E',
+    textAlign: 'right',
+    marginTop: 6,
+    marginBottom: 4,
+  },
+  button: {
+    backgroundColor: '#F5C542',
+    paddingVertical: 15,
+    borderRadius: 999,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  buttonDisabled: {
+    opacity: 0.6,
+  },
+  buttonText: {
+    color: '#4A3312',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  dividerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 8,
+    gap: 12,
+  },
+  dividerLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: '#E8DFCB',
+  },
+  dividerText: {
+    fontSize: 13,
+    color: '#A89370',
+    fontWeight: '600',
+  },
+  googleButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderColor: '#E3D9C4',
+    borderWidth: 1,
+    paddingVertical: 12,
+    borderRadius: 999,
+    gap: 9,
+  },
+  googleButtonText: {
+    color: '#3D2914',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  footerText: {
+    fontSize: 14,
+    color: '#5A4426',
+    textAlign: 'center',
+    marginTop: 12,
+  },
+  footerLink: {
+    color: '#A6791E',
+    fontWeight: 'bold',
+  },
+  welcomeBlock: {
+    alignItems: 'center',
+    marginBottom: 20,
+    marginTop: 4,
+  },
+});

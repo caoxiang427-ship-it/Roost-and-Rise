@@ -234,14 +234,13 @@ export default function AnalyticsScreen() {
               height={180}
               chartConfig={sessionChartConfig}
               withInnerLines={true}
-              withOuterLines={false}
               fromZero
               showValuesOnTopOfBars={false}
               flatColor={true}
               yAxisLabel=""
               yAxisSuffix=""
               segments={Math.max(Math.ceil(Math.max(...sessionData.map(d => d.count), 1)), 2)}
-              formatYLabel={(val) => String(Math.round(Number(val)))}
+              formatYLabel={(val: string) => String(Math.round(Number(val)))}
               style={styles.chart}
             />
           </ScrollView>
@@ -755,6 +754,7 @@ export default function AnalyticsScreen() {
         colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
         style={styles.bottomFade}
         pointerEvents="none"/>
+
     </View>
   );
 }

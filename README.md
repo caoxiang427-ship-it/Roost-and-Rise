@@ -7,40 +7,62 @@ A gamified study companion mobile app built with React Native + Expo and Supabas
 - **React Native + Expo (SDK 54)** — frontend
 - **Supabase** — authentication and PostgreSQL database
 - **TypeScript**
-- **Jest + jest-expo** - unit testing
+- **Jest + jest-expo + @testing-library/react-native v14** - automated testing
 
 ## Get started
 
-1. Install dependencies
+Prerequisites: Node.js, the Expo Go app on a physical device.
+
+1. Download Expo Go on your phone
+
+   Install [Expo Go](https://expo.dev/go) (free)
+
+2. Clone the project
+
+   git clone https://github.com/caoxiang427-ship-it/Roost-and-Rise
+
+3. Install dependencies
 
 ```bash
    npm install
 ```
 
-2. Set up environment variables
+4. Set up environment variables
 
    Create a `.env` file in the project root with the Supabase credentials
-   (message the team):
+   (Please message the team to get credentials):
 
 ```
    EXPO_PUBLIC_SUPABASE_URL=...
    EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-3. Start the app
+5. Start the app
 
 ```bash
    npx expo start
 ```
 
-4. Open the app on your phone
+6. Open the app on your phone (follow the steps in sequence)
 
-   Install [Expo Go](https://expo.dev/go) (free) and scan the QR code 
-   from the terminal:
-   - **iOS:** open the Camera app, point at the QR, tap the banner
-   - **Android:** open Expo Go and tap "Scan QR code"
+   - Make sure phone and laptop are on the same Wi-Fi. 
+   - Press "s" on your keyboard to switch from development build to **Expo Go**
+     (Make sure it is "Using Expo Go")
+   - Scan the QR code from the terminal:
+     - **iOS:** open the Camera app, point at the QR, tap the banner (exp://192.168.x.x:8081)
+     - **Android:** open Expo Go and tap "Scan QR code"
+   - After tapping the banner, you will be directed to a web page
+     Tap **"Expo Go"** instead of "Development Build"
+   - It takes a few seconds for Expo Go to load the app
+  
+7. Sign up using email
 
-## Features (Milestone 2)
+   Please **do not use** "Sign in with Google" as it is only available in Development Build
+   (explained in **Known Limitation** below)
+  
+
+## Features (Milestone 3)
+>>>>>>> 73f05cee2e7348b71cb7ef5f688d1ce0373b2324
 
 **Authentication**
 - Email and password authentication via Supabase
@@ -48,9 +70,21 @@ A gamified study companion mobile app built with React Native + Expo and Supabas
 - Persistent sessions across app restarts
 - Route protection (logged-out users redirected to sign-in)
 
+**To-do List**
+- Create tasks
+- Easy task rescheduling
+- Calendar, date specific view
+- Search tasks
+
+**XP system & virtual chicken companion**
+- AI chatbot
+- XP & coin reward system
+- Shop items & customisation
+- Narrative progression
+
 **Pomodoro Timer**
 - Customisable focus and break duration
-- Strict focus -> break cycle with forced breaks
+- Transition modals 
 - Longer break every 4th completed focus session
 - Partial session tracking for cancelled cycles
 - Late-night usage warning
@@ -58,41 +92,45 @@ A gamified study companion mobile app built with React Native + Expo and Supabas
 
 **Self-care & Recovery System**
 - 6 default self-care categories
-- Fully customisable: add, rename, change emoji, or delete categories
-- Optional activity notes per log; latest note displayed per category
+- Customisable categories: add or remove categories
+- "Today's self-care" section (including the total counts of activities done)
+- Optional activity notes per log
 - Daily mood check-in on a 5-point emoji scale
 
-**Wellness Indicator**
-- Real-time score computed from multiple behavioural signals
+**Wellness Indicator (Inside recovery system)**
+- Real-time score recomputed from multiple behavioural signals
 - 4 tier classification: Engaged, Balanced, Overextended, Burnout
-- Shown as a compact pill on Home and a full card on the Recovery screen
+- Grounded in MBS-SS
+
+**AI planner**
+- Day & week view
+- Drag to create event
+- Task syncing with to-do list
+- Drag to reschedule
 
 ## Project Structure
 
 - `src/app/` — screens and navigation (Expo Router)
 - `src/app/(auth)/` — sign-in and sign-up screens
-- `src/app/(tabs)/` — main feature screens (Pomodoro, Care, Edit Categories)
-- `src/lib/` — Supabase client and helper functions (auth, sessions, self-care, burnout)
-- `src/components/` — reusable components (BurnoutIndicator, EmojiPicker)
+- `src/app/(tabs)/` — main feature screens (e.g., pomodoro_timer)
+- `src/lib/` — Supabase client and helper functions (e.g., auth)
+- `src/components/` — reusable components (e.g., BurnoutIndicator)
 - `supabase/migrations/` — database schema
-- `__tests__/` — unit tests
+- `__tests__/` — unit + integration + component tests
 
 ## Testing
 
-Roost & Rise includes a Jest unit test suite covering the timer display formatting, wellness score calculation, Pomodoro session cycle logic, and late-night detection. The tests are written in TypeScript and run using the jest-expo preset.
+3 levels test: unit tests, integration tests, and component/UI tests
+
+Test case design on 3 types: typical, edge, and multi-input
 
 To run the tests:
 
 ```bash
    npm test
 ```
-Current coverage: 20 test cases across 4 test files, all passed.
+Current coverage: 336 tests in total, all passed
 
 ## Known Limitations
 
-- Google OAuth sign-in
-- Password reset deep links
-
-## Team
-- Cao Xiang
-- Cheng Ruiyan
+- Google OAuth sign-in (Only works in development build)

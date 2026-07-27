@@ -260,7 +260,9 @@ export default function SelfCareScreen() {
           </Pressable>
         </ImageBackground>
 
-        {/* Hero card = wellness ring (BurnoutIndicator) */}
+
+        {/* BurnoutIndicator */}
+
         <View style={styles.heroCard}>
           <BurnoutIndicator result={burnout} />
         </View>
@@ -404,7 +406,6 @@ export default function SelfCareScreen() {
           </Pressable>
         </Pressable>
       </Modal>
-      
       <LinearGradient
         colors={['rgba(255,255,255,0)', 'rgb(255, 255, 255)']}
         style={styles.bottomFade}

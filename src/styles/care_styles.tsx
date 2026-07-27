@@ -334,4 +334,5 @@ export const styles = StyleSheet.create({
     right: 0,
     height: 170,
   },
+
 });

@@ -2,10 +2,10 @@
  * Reset Password screen.
 */
 
-import { useState } from 'react';
+import { signOut, updatePassword } from '@/lib/auth';
 import { router } from 'expo-router';
-import { updatePassword } from '@/lib/auth';
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
+import { useState } from 'react';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function ResetPasswordScreen() {
   const [newPassword, setNewPassword] = useState('');
@@ -48,6 +48,7 @@ export default function ResetPasswordScreen() {
     if (error) {
       Alert.alert('Error:', error.message);
     } else {
+      await signOut();
       Alert.alert('Password successfully reset!');
       router.replace('/(auth)/sign-in');
     }

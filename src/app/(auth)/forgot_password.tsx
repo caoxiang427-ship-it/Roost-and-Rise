@@ -3,52 +3,60 @@
  * Entering email, will send a password reset link to the user.
 */
 
+import { resetPasswordRequest, verifyResetCode } from '@/lib/auth';
+import { Link, router } from 'expo-router';
 import { useState } from 'react';
-import { Link } from 'expo-router';
-import { resetPasswordRequest } from '@/lib/auth';
-import { View, Text, TextInput, Pressable, StyleSheet, Alert } from 'react-native';
+import { Alert, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 export default function ForgotPasswordScreen() {
   const [email, setEmail] = useState('');
-  const [isEmailSent, setIsEmailSent] = useState(false);
+  const [code, setCode] = useState('');
+  const [step, setStep] = useState<'email' | 'code'>('email');
   const [isLoading, setLoading] = useState(false);
 
-  function checkInput() {
+  async function handleSendCode() {
     if (!email.trim()) {
       Alert.alert('Error:', 'Please enter your email address');
-      return false;
+      return;
     }
-    return true;
-  }
-
-  async function handleRequestForReset() {
-    const isValid = checkInput();
-
-    if (!isValid) return;
 
     setLoading(true);
-
-    const { error } = await resetPasswordRequest(email);
-
+    const { error } = await resetPasswordRequest(email.trim());
     setLoading(false);
 
     if (error) {
       Alert.alert('Error', error.message);
-    } else {
-      setIsEmailSent(true);
+      return;
     }
+    setStep('code');
   }
 
-  // email entry (email hasen't sent) OR confirmation (sent)
+  async function handleVerifyCode() {
+    if (code.trim().length !== 6) {
+      Alert.alert('Error:', 'Please enter the 6-digit code');
+      return;
+    }
+
+    setLoading(true);
+    const { error } = await verifyResetCode(email.trim(), code.trim());
+    setLoading(false);
+
+    if (error) {
+      Alert.alert('Invalid code', error.message);
+      return;
+    }
+    router.replace('/(auth)/reset_password');
+  }
+
   return (
     <View style={styles.container}>
-      {!isEmailSent ? (
+      {step === 'email' ? (
         <View>
           <Text style={styles.title}>Forgot password?</Text>
           <Text style={styles.subtitle}>
-            Enter your email and we will send you a reset link.
+            Enter your email and we will send you a 6-digit code.
           </Text>
-          
+
           <TextInput
             style={styles.input}
             onChangeText={setEmail}
@@ -60,11 +68,11 @@ export default function ForgotPasswordScreen() {
 
           <Pressable
             style={[styles.button, isLoading && styles.buttonDisabled]}
-            onPress={handleRequestForReset}
+            onPress={handleSendCode}
             disabled={isLoading}
           >
             <Text style={styles.buttonText}>
-              {isLoading ? 'Sending...' : 'Send reset link'}
+              {isLoading ? 'Sending...' : 'Send code'}
             </Text>
           </Pressable>
 
@@ -74,13 +82,33 @@ export default function ForgotPasswordScreen() {
         </View>
       ) : (
         <View>
-          <Text style={styles.title}>Check your email inbox 📧</Text>
+          <Text style={styles.title}>Check your inbox 📧</Text>
           <Text style={styles.successMessage}>
-            We sent a reset link to {email}. Tap the link to set a new password.
+            We sent a 6-digit code to {email}.
           </Text>
-          <Link href="/(auth)/sign-in" style={styles.link}>
-            Back to sign in
-          </Link>
+
+          <TextInput
+            style={styles.input}
+            onChangeText={setCode}
+            value={code}
+            placeholder="000000"
+            keyboardType="number-pad"
+            maxLength={6}
+          />
+
+          <Pressable
+            style={[styles.button, isLoading && styles.buttonDisabled]}
+            onPress={handleVerifyCode}
+            disabled={isLoading}
+          >
+            <Text style={styles.buttonText}>
+              {isLoading ? 'Verifying...' : 'Verify code'}
+            </Text>
+          </Pressable>
+
+          <Pressable onPress={() => setStep('email')}>
+            <Text style={styles.link}>Use a different email</Text>
+          </Pressable>
         </View>
       )}
     </View>
