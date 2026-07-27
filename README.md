@@ -11,23 +11,28 @@ A gamified study companion mobile app built with React Native + Expo and Supabas
 
 ## Get started
 
-Prerequisites: Node.js, the Expo Go app on a physical device.
+This app includes native features (the AI planner, Google sign-in), so it runs as a
+**local development build** rather than in Expo Go.
 
-1. Download Expo Go on your phone
+**Prerequisites**
+- macOS with [XCode](https://apps.apple.com/us/app/xcode/id497799835) installed (for the iOS simulator)
+- Node.js
+- [CocoaPods](https://cocoapods.org/) — install with `brew install cocoapods` if you don't have it
 
-   Install [Expo Go](https://expo.dev/go) (free)
+### 1. Clone the project
 
-2. Clone the project
-
+```bash
    git clone https://github.com/caoxiang427-ship-it/Roost-and-Rise
+   cd Roost-and-Rise
+```
 
-3. Install dependencies
+### 2. Install dependencies
 
 ```bash
    npm install
 ```
 
-4. Set up environment variables
+### 3. Set up environment variables
 
    Create a `.env` file in the project root with the Supabase credentials
    (Please message the team to get credentials):
@@ -37,29 +42,30 @@ Prerequisites: Node.js, the Expo Go app on a physical device.
    EXPO_PUBLIC_SUPABASE_ANON_KEY=...
 ```
 
-5. Start the app
+### 4. Build and run
 
+**iOS (macOS only):**
+```bash
+   npx expo run:ios
+```
+Requires Xcode and CocoaPods.
+
+**Android**
+```bash
+   npx expo run:android
+```
+Requires Android Studio with an emulator (or a connected device).
+
+The first build compiles the native code and takes several minutes. This is normal. Later runs are much faster.
+
+Once built, the app opens automatically in the iOS Simulator with all features available.
+
+No Expo account or access to our Expo project is needed — `expo run:ios` builds locally on your own machine.
+
+### 5. Start the app
 ```bash
    npx expo start
 ```
-
-6. Open the app on your phone (follow the steps in sequence)
-
-   - Make sure phone and laptop are on the same Wi-Fi. 
-   - Press "s" on your keyboard to switch from development build to **Expo Go**
-     (Make sure it is "Using Expo Go")
-   - Scan the QR code from the terminal:
-     - **iOS:** open the Camera app, point at the QR, tap the banner (exp://192.168.x.x:8081)
-     - **Android:** open Expo Go and tap "Scan QR code"
-   - After tapping the banner, you will be directed to a web page
-     Tap **"Expo Go"** instead of "Development Build"
-   - It takes a few seconds for Expo Go to load the app
-  
-7. Sign up using email
-
-   Please **do not use** "Sign in with Google" as it is only available in Development Build
-   (explained in **Known Limitation** below)
-  
 
 ## Features (Milestone 3)
 
@@ -129,7 +135,3 @@ To run the tests:
    npm test
 ```
 Current coverage: 336 tests in total, all passed
-
-## Known Limitations
-
-- Google OAuth sign-in (Only works in development build)
