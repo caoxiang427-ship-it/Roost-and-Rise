@@ -124,17 +124,28 @@ No Expo account or access to our Expo project is needed.
 - Persistent sessions across app restarts
 - Route protection (logged-out users redirected to sign-in)
 
+**XP system & virtual chicken companion**
+- AI chatbot
+- XP & coin reward system
+  - XP awarded based on 3 pillars:
+    - Focus (earned through completing focus sessions in the pomodoro timer tab)
+    - Progress (earned through completing tasks in the todo list tab)
+    - Wellbeing (earned through doing daily mood logs or self-care activities in the Self-Care tab)
+  - Coin reward:
+    - Coins earned with every level up, amount earned scaled to the level you're reaching
+    - Extra coins rewarded for completing self care activities
+- Shop items & customisation
+- Narrative progression as level increases
+- "Pet" the chicken for a message
+
 **To-do List**
 - Create tasks
 - Easy task rescheduling
 - Calendar, date specific view
 - Search tasks
-
-**XP system & virtual chicken companion**
-- AI chatbot
-- XP & coin reward system
-- Shop items & customisation
-- Narrative progression
+- Hidden workload score calculator and warning when it exceeds a preset threshold
+- Progress XP cap (no more XP gained after reaching a preset XP cap) to discourage overwork
+  - Warning will appear to encourage users to take care of themselves
 
 **Pomodoro Timer**
 - Customisable focus and break duration
@@ -143,6 +154,8 @@ No Expo account or access to our Expo project is needed.
 - Partial session tracking for cancelled cycles
 - Late-night usage warning
 - Daily summary card showing sessions completed and focus minutes
+- Focus XP cap (no more XP gained after reaching a preset XP cap) to discourage overwork
+  - Warning to encourage users to take care of themselves
 
 **Self-care & Recovery System**
 - 6 default self-care categories
@@ -150,6 +163,7 @@ No Expo account or access to our Expo project is needed.
 - "Today's self-care" section (including the total counts of activities done)
 - Optional activity notes per log
 - Daily mood check-in on a 5-point emoji scale
+- No Wellbeing XP cap since there's no limit to taking care of yourself
 
 **Wellness Indicator (Inside recovery system)**
 - Real-time score recomputed from multiple behavioural signals
@@ -161,6 +175,7 @@ No Expo account or access to our Expo project is needed.
 - Drag to create event
 - Task syncing with to-do list
 - Drag to reschedule
+- Ask AI feature
 
 ## Project Structure
 
