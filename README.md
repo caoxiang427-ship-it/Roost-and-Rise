@@ -48,15 +48,23 @@ npx expo start
 
 ### 6. Open the app on your phone (follow the steps in sequence)
 - Make sure phone and laptop are on the same Wi-Fi.
-- Press "s" on your keyboard to switch from development build to Expo Go (Make sure it is "Using Expo Go").
+- Make sure it says "Using Expo Go"
+- If you have a local development build installed, press "s" on your keyboard to switch from development build to Expo Go.
 - Scan the QR code from the terminal:
   - **iOS:** open the Camera app, point at the QR, tap the banner (`exp://192.168.x.x:8081`).
   - **Android:** open Expo Go and tap "Scan QR code".
-- After tapping the banner, you will be directed to a web page. Tap "Expo Go" instead of "Development Build".
+- You would be directed to the app in Expo Go
+- If you have a local development build installed, after tapping the banner, you will be directed to a web page. Tap "Expo Go" instead of "Development Build".
 - It takes a few seconds for Expo Go to load the app.
 
 ### 7. Sign up using email
 Please do not use "Sign in with Google" as it is only available in Development Build.
+
+Note that you would get a warning or error that says 
+"WARN  'Splashscreen.setOptions' cannot be used in Expo Go. To customize the splash screen, you can use development builds."
+"ERROR  [Error: Uncaught (in promise, id: 0) Error: No native splash screen registered for given view controller. Call 'SplashScreen.show' for given view controller first.] Uncaught (in promise, id: 0) Error: No native splash screen registered for given view controller. Call 'SplashScreen.show' for given view controller first."
+
+The splashscreen is only visible on development builds and not in Expo Go, please ignore this warning/ error, or install and switch to a local development build.
 
 ## Path 2: Local Development Build
 
