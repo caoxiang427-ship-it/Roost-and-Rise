@@ -85,7 +85,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                     value={new Date(startTime ?? combineDateAndTime(date, new Date().toISOString()))}
                     mode={'time'}
                     is24Hour={true}
-                    onValueChange={(e, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
+                    onChange={(e, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
                 />
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -94,7 +94,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                     value={new Date(endTime ?? combineDateAndTime(date, new Date().toISOString()))}
                     mode={'time'}
                     is24Hour={true}
-                    onValueChange={(e, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
+                    onChange={(e, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
                 />
             </View>
         </Animated.View>
@@ -106,7 +106,7 @@ const EditEvent = forwardRef<Ref, EditEventProps>((props, ref) => {
                 value={new Date(date)}
                 mode={'date'}
                 is24Hour={true}
-                onValueChange={(e, selectedDate) => {
+                onChange={(e, selectedDate) => {
                     if (!selectedDate) return;
                     const newDate = formatDatetoString(selectedDate);
                     setDate(newDate);

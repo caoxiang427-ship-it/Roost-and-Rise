@@ -47,7 +47,7 @@ const AddEventForm = (props: AddEventFormProps) => {
                     value={new Date(startTime ?? combineDateAndTime(date, new Date().toISOString()))}
                     mode={'time'}
                     is24Hour={true}
-                    onValueChange={(event, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
+                    onChange={(event, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
                 />
             </View>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -57,7 +57,7 @@ const AddEventForm = (props: AddEventFormProps) => {
                     value={new Date(endTime ?? combineDateAndTime(date, new Date().toISOString()))} // if endTime, show endTime, if not defaults to selected date + time currently
                     mode={'time'}
                     is24Hour={true}
-                    onValueChange={(event, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
+                    onChange={(event, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
                 />
             </View>
         </Animated.View>
@@ -69,7 +69,7 @@ const AddEventForm = (props: AddEventFormProps) => {
                 value={new Date(date)}
                 mode={'date'}
                 is24Hour={true}
-                onValueChange={(event, selectedDate) => {
+                onChange={(event, selectedDate) => {
                     // if date changes, update startTime and endTime to match
                     if (!selectedDate) return;
                         const newDate = formatDatetoString(selectedDate);
