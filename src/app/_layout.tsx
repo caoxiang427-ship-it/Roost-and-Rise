@@ -14,6 +14,7 @@ import { useFonts } from 'expo-font';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, useState } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -33,6 +34,9 @@ export default function RootLayout() {
   const segments = useSegments();
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setLoading] = useState(true);
+  const [hasOnboarded, setHasOnboarded] = useState(false);
+  // after checking if onboarding is completed -> set is Ready
+  const [isReady, setIsReady] = useState(false);
 
     // load custom fonts
   const [fontLoaded, error] = useFonts({
@@ -74,21 +78,32 @@ export default function RootLayout() {
     return () => tracker.subscription.unsubscribe();
   }, []);
 
-  // Redirect the user based on login status
+  // Redirect the user based on login + onboarding status.
+  // Re-reads AsyncStorage on every navigation so it always sees the latest value written by the onboarding screen.
   useEffect(() => {
-    if (isLoading) return;
+    const evaluate = async () => {
+      if (isLoading) return;
 
-    const isViewingAuth = segments[0] === '(auth)';
+      const onboardedValue = await AsyncStorage.getItem('hasOnboarded');
+      const hasOnboarded = onboardedValue === 'true';
 
-    if (!session && !isViewingAuth) {
-      router.replace('/(auth)/sign-in');
-    } else if (session && isViewingAuth) {
-      router.replace('/'); 
-    }
+      const isViewingAuth = segments[0] === '(auth)';
+      const isViewingOnboarding = segments[0] === 'onboarding';
+
+      if (!session && !isViewingAuth) {
+        router.replace('/(auth)/sign-in');
+      } else if (session && !hasOnboarded && !isViewingOnboarding) {
+        router.replace('/onboarding');
+      } else if (session && hasOnboarded && (isViewingAuth || isViewingOnboarding)) {
+        router.replace('/');
+      }
+
+      setIsReady(true);
+    };
+    evaluate();
   }, [session, isLoading, segments]);
 
-  // Loading UI
-  if (isLoading) {
+  if (isLoading || !isReady) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#5E90A1" />
@@ -105,6 +120,7 @@ export default function RootLayout() {
           <Stack screenOptions={{ headerShown: false }}>
             <Stack.Screen name="(auth)/sign-up" options={{ title: 'Sign Up' }} />
             <Stack.Screen name="(auth)/sign-in" options={{ title: 'Sign In' }} />
+            <Stack.Screen name="onboarding" options={{ headerShown: false, gestureEnabled: false }} />
             <Stack.Screen name='(tabs)' options={{ headerShown: false }}/>
             <Stack.Screen name='profile' options={{ animation: 'slide_from_right' }}/>
           </Stack>
