@@ -11,11 +11,12 @@ import { getTodaysMood } from '@/lib/self-care';
 import { calculateXPLevel, totalXpRequiredForLevel, useProfileStore } from '@/store/useProfileStore';
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet from '@gorhom/bottom-sheet';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
+import { TAB_BAR_STYLE } from './_layout';
 import { ImageBackground } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Link, useRouter } from 'expo-router';
-import * as SplashScreen from 'expo-splash-screen';
+import AnimatedSplash from '@/components/AnimatedSplashScreen';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import { runOnJS } from 'react-native-reanimated';
@@ -54,22 +55,14 @@ export default function HomeScreen() {
   // ref for store and inventory. bottom sheet
   const inventoryRef = useRef<BottomSheet>(null);
 
-  SplashScreen.setOptions({
-    duration: 500,
-    fade: true,
-  });
-
-  SplashScreen.preventAutoHideAsync();
+  const [moodLoaded, setMoodLoaded] = useState<boolean>(false);
+  const [minTimeElapsed, setMinTimeElapsed] = useState<boolean>(false);
+  const [showSplash, setShowSplash] = useState<boolean>(true);
+  const navigation = useNavigation();
 
   useEffect(() => {
     init();
   }, []);
-
-  useEffect(() => {
-    if (!isLoading) {
-      SplashScreen.hideAsync();
-    }
-  }, [isLoading]);
   
   useEffect(() => {
     setChickNameDraft(chickName);
@@ -81,9 +74,24 @@ export default function HomeScreen() {
     }, [])
   );
 
+  useEffect(() => {
+    const timer = setTimeout(() => setMinTimeElapsed(true), 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // hide navigation bar when splash screen is showing
+  useEffect(() => {
+    navigation.setOptions({
+      tabBarStyle: showSplash ? { display: 'none' } : TAB_BAR_STYLE,
+    });
+  }, [showSplash]);
+
+  const dataReady = !isLoading && moodLoaded && minTimeElapsed;
+
   async function loadCurrentMood() {
     const mood = await getTodaysMood();
     setCurrentMood(mood);
+    setMoodLoaded(true);
   }
 
   function getMoodEmoji(mood: string | null) {
@@ -306,6 +314,11 @@ const stage = getStage(level);
           <AiChatModal visible={isAiChatOpen} setVisibility={setIsAiChatOpen}></AiChatModal>
           
       </ImageBackground>
+
+      {showSplash && (
+        <AnimatedSplash ready={dataReady} onFinish={() => setShowSplash(false)} />
+      )}
+
     </View>
   );
 }

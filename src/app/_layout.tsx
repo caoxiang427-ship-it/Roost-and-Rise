@@ -46,12 +46,12 @@ export default function RootLayout() {
       Fredoka: require("../../assets/fonts/Fredoka-SemiBold.ttf"), 
     });
 
-    // if fonts aren't loaded, keep splashscreen until it's loaded
+    // keep splashscreen until everything is loaded
   useEffect(() => {
-    if (fontLoaded || error) {
+    if ((fontLoaded || error) && !isLoading && isReady) {
       SplashScreen.hideAsync().catch(() => {});
     }
-  }, [fontLoaded, error]);
+  }, [fontLoaded, error, isLoading, isReady]);
 
   // Load any saved session and track login/logout changes
   useEffect(() => {
@@ -102,14 +102,6 @@ export default function RootLayout() {
     };
     evaluate();
   }, [session, isLoading, segments]);
-
-  if (isLoading || !isReady) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#5E90A1" />
-      </View>
-    );
-  }
   
   if (!fontLoaded && !error) return null;
   
