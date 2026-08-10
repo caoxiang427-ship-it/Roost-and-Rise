@@ -26,7 +26,12 @@ jest.mock('react-native-safe-area-context', () => ({
   useSafeAreaInsets: () => ({ top: 0, bottom: 0, left: 0, right: 0 }),
 }));
 
-jest.mock('@/constants/storeItems', () => ({ imageMap: {} }));
+jest.mock('@/constants/home', () => ({
+  STAGE_IMAGES: {},
+  getStage: () => 'egg',
+  ACCESSORY_OVERLAYS: {},
+  ACCESSORY_POSITIONS: {},
+}));
 
 jest.mock('@/lib/sessions', () => ({
   sessionRecorder: jest.fn(async () => ({ data: null, error: null })),
@@ -37,9 +42,10 @@ jest.mock('@/lib/sessions', () => ({
 jest.mock('@/store/useProfileStore', () => ({
   useProfileStore: () => ({
     addFocusXp: jest.fn(async () => 10),
-    equippedItemId: null,
+    equippedItemIds: [],
     chickName: 'Sunny',
     xp: 0,
+    petLevel: 1,
   }),
   calculateXPLevel: () => 1,
   totalXpRequiredForLevel: (lvl: number) => lvl * 100,
