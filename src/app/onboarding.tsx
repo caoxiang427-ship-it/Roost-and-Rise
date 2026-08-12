@@ -39,7 +39,7 @@ export default function OnboardingScreen() {
       )}
       NextButtonComponent={(props) => (
         <TouchableOpacity {...props} style={{ marginHorizontal: 40, paddingVertical: 10, paddingHorizontal: 15, backgroundColor: '#5E4833', borderRadius: 20 }}>
-          <Text style={{ fontFamily: 'InterBold', fontSize: 16, color: '#ffffff' }}>
+          <Text style={{ fontFamily: 'InterBold', fontSize: 12, color: '#ffffff' }}>
             Next
           </Text>
         </TouchableOpacity>
@@ -93,7 +93,7 @@ export default function OnboardingScreen() {
                   borderRadius: 20,
                   borderColor: '#5E4833',
                   paddingVertical: 8,
-                  fontSize: 16,
+                  fontSize: 12,
                   textAlign: 'center',
                   fontFamily: 'InterBold',
                   color: '#5E4833'

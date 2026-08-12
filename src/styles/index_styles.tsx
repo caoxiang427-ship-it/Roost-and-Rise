@@ -10,7 +10,6 @@ export const styles = StyleSheet.create({
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-      //  backgroundColor: 'red',
         paddingBottom: 10,
     },
     profile: {
@@ -26,6 +25,11 @@ export const styles = StyleSheet.create({
         shadowRadius: 8,
         elevation: 8,
     },
+    profileAvatar: {
+        width: 50,
+        height: 50,
+        borderRadius: 30,
+    },
     headerBtns: {
         flexDirection: 'row',
     },
@@ -33,17 +37,14 @@ export const styles = StyleSheet.create({
         marginRight: 10,
     },
     topDisplay: {
-      //  backgroundColor: 'green',
         flexDirection: 'row',
         justifyContent: 'space-between',
         paddingTop: 10
     },
     topDisplayLeft: {
-      //  backgroundColor: "grey",
         paddingLeft: 25,
     },
     topDisplayRight: {
-      //  backgroundColor: 'blue',
         paddingRight: 20,
     },
     moodTrackerBtn: {
@@ -121,7 +122,6 @@ export const styles = StyleSheet.create({
         overflow: 'hidden' 
     },
     pet: {
-    //   backgroundColor: 'purple',
        justifyContent: 'center',
        alignItems: 'center',
        position: 'absolute',
@@ -140,7 +140,6 @@ export const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     bottomDisplay: {
-      //  backgroundColor: 'red',
         flexDirection: 'row',
         marginTop: 'auto',
         marginBottom: 110,
@@ -157,7 +156,6 @@ export const styles = StyleSheet.create({
         marginVertical: 2 
     },
     focusContainer: {
-     //   backgroundColor: 'black',
         paddingHorizontal: 10,
     },
     focusSession: {

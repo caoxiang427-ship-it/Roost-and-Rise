@@ -50,6 +50,7 @@ export default function HomeScreen() {
     clearLevelUp,
     init,
     setChickName,
+    avatarUrl,
   } = useProfileStore();
 
   // ref for store and inventory. bottom sheet
@@ -151,9 +152,12 @@ const stage = getStage(level);
         style={styles.container}>
           <View style={[styles.header, {paddingTop: insets.top + 12, paddingLeft: insets.left + 25, paddingRight: insets.right + 30}]}>
             <Link href="../profile" asChild>
-            <TouchableOpacity style={styles.profile}>
-              <Ionicons name="person-outline" size={30} color="#5E90A1"/>
-            </TouchableOpacity>
+              <TouchableOpacity style={styles.profile}>
+                <Image
+                  source={avatarUrl ? { uri: avatarUrl } : require('@/assets/images/default_profile.png')}
+                  style={styles.profileAvatar}
+                />
+              </TouchableOpacity>
             </Link>
 
             <View style={styles.headerBtns}>
@@ -161,11 +165,9 @@ const stage = getStage(level);
                 <Ionicons name={isMute ? "volume-mute" : "volume-high"} size={30} color="#FFF"/>
               </TouchableOpacity>
 
-              <Link href="../settings" asChild>
                 <TouchableOpacity onPress={() => console.log('settings')}>
                   <Ionicons name="settings-sharp" size={30} color="#FFF"/>
                 </TouchableOpacity>
-              </Link>
             </View>
 
           </View>

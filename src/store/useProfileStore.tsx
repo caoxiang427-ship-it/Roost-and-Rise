@@ -9,9 +9,6 @@ import { STORE_ITEMS } from '@/constants/home';
 
 // used in formula to calculate XP level, it controls how fast or slow leveling up feels.
 const LEVEL_COEFFICIENT = 85;
-// daily  XP caps for the 2 pillars: progress (todo) and focus (pomodoro)
-const FOCUS_DAILY_CAP = 580;
-const PROGRESS_DAILY_CAP = 180; 
 
 const DIFFICULTY_XP = {
   easy: 5,
@@ -75,8 +72,14 @@ type ProfileState = {
     lastXpCapResetDate: string,
     focusCapAlertShown: boolean,
     progressCapAlertShown: boolean,
+    focusXpCap: number;
+    progressXpCap: number;
+    workloadThreshold: number;
+    avatarUrl: string | null;
+
 
     init: () => Promise<void>;
+    setDisplayName: (newName: string) => Promise<void>;
     setChickName: (newName: string) => Promise<void>;
     buyItem: (price: number, itemId: number) => Promise<void>;
     equipItem: (itemId: number) => Promise<void>;
@@ -87,6 +90,10 @@ type ProfileState = {
     addWellbeingXp: (xpAmount: number, coinsBonus?: number) => Promise<void>;
     ensureDailyXpCapReset: () => void;
     clearLevelUp: () => void;
+    setFocusXpCap: (cap: number) => Promise<void>;
+    setProgressXpCap: (cap: number) => Promise<void>;
+    setWorkloadThreshold: (threshold: number) => Promise<void>;
+    setAvatarPicture: (localUri: string) => Promise<void>;
 }
 
 export const useProfileStore = create<ProfileState>((set, get) => ({
@@ -104,6 +111,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     lastXpCapResetDate: todayDate(),
     focusCapAlertShown: false,
     progressCapAlertShown: false,
+    focusXpCap: 580,
+    progressXpCap: 180,
+    workloadThreshold: 36,
+    avatarUrl: null,
 
     init: async () => {
         const { data: { user } } = await supabase.auth.getUser();
@@ -117,7 +128,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
 
         const { data } = await supabase
         .from('profiles')
-        .select('display_name, chicken_name, equipped_item_ids, xp, coins, focus_xp_today, progress_xp_today, daily_xp_reset_date')
+        .select('display_name, chicken_name, equipped_item_ids, xp, coins, focus_xp_today, progress_xp_today, daily_xp_reset_date, focus_xp_cap, progress_xp_cap, workload_threshold, avatar_url')
         .eq('id', user.id)
         .single();
 
@@ -132,6 +143,10 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             focusXpToday: data.focus_xp_today ?? 0,
             progressXpToday: data.progress_xp_today ?? 0,
             lastXpCapResetDate: data.daily_xp_reset_date ?? todayDate(),
+            focusXpCap: data.focus_xp_cap ?? 580,
+            progressXpCap: data.progress_xp_cap ?? 180,
+            workloadThreshold: data.workload_threshold ?? 36,
+            avatarUrl: data.avatar_url ?? null,
             });
         }
 
@@ -148,7 +163,24 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     // call function getDailyResetCurrent -> checks if it's a new day and resets the daily XP counters if so:
         get().ensureDailyXpCapReset();
     },
+    setDisplayName: async (newName) => {
+        const { userID, name: previousName } = get();
+        if (!userID) return;
 
+        // update immediately so the UI feels instant
+        set({ name: newName });
+
+        const { error } = await supabase
+            .from('profiles')
+            .update({ display_name: newName })
+            .eq('id', userID);
+
+        if (error) {
+            console.error(error);
+            set({ name: previousName }); // roll back on failure
+            return;
+        }
+    },
     setChickName: async (newName) => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return;
@@ -241,8 +273,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         }
 
         // apply daily cap
-        const { focusXpToday, xp, coins } = get();
-        const remaining = FOCUS_DAILY_CAP - focusXpToday;
+        const { focusXpToday, xp, coins, focusXpCap } = get();
+        const remaining = focusXpCap - focusXpToday;
         const awarded = Math.min(rawXP, remaining);
         if (awarded <= 0) {
             if (!get().focusCapAlertShown) {
@@ -281,8 +313,8 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         get().ensureDailyXpCapReset();
     
         const rawXP = DIFFICULTY_XP[difficulty];
-        const { progressXpToday, xp, coins } = get();
-        const remaining = Math.max(0, PROGRESS_DAILY_CAP - progressXpToday);
+        const { progressXpToday, xp, coins, progressXpCap } = get();
+        const remaining = Math.max(0, progressXpCap - progressXpToday);
         const awarded = Math.min(rawXP, remaining);
         if (awarded <= 0) {
             if (!get().progressCapAlertShown) {
@@ -321,7 +353,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
         const { userID } = get();
         if (!userID || xpAwarded <= 0) return 0;
         get().ensureDailyXpCapReset();
-        const { progressXpToday, xp, coins } = get();
+        const { progressXpToday, xp, coins, progressXpCap } = get();
 
 
         const newProgressToday = Math.max(0, progressXpToday - xpAwarded);
@@ -340,7 +372,7 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
             coins: newCoins,
             lastXpCapResetDate: todayDate(),
             // if new XP after removing xp falls below the progress cap, reset the progress cap alert to false so it shows again when it goes over the cap in the future
-            progressCapAlertShown: newProgressToday < PROGRESS_DAILY_CAP ? false : get().progressCapAlertShown,
+            progressCapAlertShown: newProgressToday < progressXpCap ? false : get().progressCapAlertShown,
         });
 
         await supabase.from('profiles').update({
@@ -380,6 +412,70 @@ export const useProfileStore = create<ProfileState>((set, get) => ({
     },
     clearLevelUp: () => {
         set({ pendingLevelUp: null });
+    },
+    setFocusXpCap: async (cap) => {
+        const { userID } = get();
+        if (!userID) return;
+        const { error } = await supabase
+            .from('profiles')
+            .update({ focus_xp_cap: cap })
+            .eq('id', userID);
+        if (error) { console.error(error); return; }
+        set({ focusXpCap: cap, focusCapAlertShown: false }); // reset alert since the cap changed
+    },
+
+    setProgressXpCap: async (cap) => {
+        const { userID } = get();
+        if (!userID) return;
+        const { error } = await supabase
+            .from('profiles')
+            .update({ progress_xp_cap: cap })
+            .eq('id', userID);
+        if (error) { console.error(error); return; }
+        set({ progressXpCap: cap, progressCapAlertShown: false });
+    },
+
+    setWorkloadThreshold: async (threshold) => {
+        const { userID } = get();
+        if (!userID) return;
+        const { error } = await supabase
+            .from('profiles')
+            .update({ workload_threshold: threshold })
+            .eq('id', userID);
+        if (error) { console.error(error); return; }
+        set({ workloadThreshold: threshold });
+    },
+    setAvatarPicture: async (localUri) => {
+        const { userID } = get();
+        if (!userID) return;
+
+        const ext = localUri.split('.').pop() ?? 'jpg';
+        const path = `${userID}/avatar.${ext}`;
+
+        const response = await fetch(localUri);
+        const arrayBuffer = await response.arrayBuffer();
+
+        const { error: uploadError } = await supabase.storage
+            .from('avatars')
+            .upload(path, arrayBuffer, {
+                contentType: `image/${ext}`,
+                upsert: true, // overwrite previous avatar
+            });
+
+        if (uploadError) { console.error(uploadError); return; }
+
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+        // cache-bust so the Image component picks up the new file instead of a stale cached copy
+        const bustedUrl = `${publicUrl}?t=${Date.now()}`;
+
+        const { error: dbError } = await supabase
+            .from('profiles')
+            .update({ avatar_url: bustedUrl })
+            .eq('id', userID);
+
+        if (dbError) { console.error(dbError); return; }
+
+        set({ avatarUrl: bustedUrl });
     },
 
             
