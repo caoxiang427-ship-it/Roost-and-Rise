@@ -88,7 +88,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                     value={new Date(startTime ?? combineDateAndTime(selectedDate + 'T00:00:00', new Date().toISOString()))}
                     mode={'time'}
                     is24Hour={true}
-                    onValueChange={(event, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
+                    onChange={(event, selectedStart) => selectedStart && setStartTime(selectedStart.toISOString())}
                 />
             </View>
             <View style={{flexDirection: 'row', alignItems: 'center'}}>
@@ -98,7 +98,7 @@ const AddTask = forwardRef<Ref, AddTaskProps>((props, ref) => {
                     value={new Date(endTime ?? combineDateAndTime(selectedDate + 'T00:00:00', new Date().toISOString()))} // if endTime, show endTime, if not defaults to selected date + time currently
                     mode={'time'}
                     is24Hour={true}
-                    onValueChange={(event, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
+                    onChange={(event, selectedEnd) => selectedEnd && setEndTime(selectedEnd.toISOString())}
                 />
             </View>
         </Animated.View>

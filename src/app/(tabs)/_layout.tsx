@@ -1,29 +1,30 @@
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { View, Text } from 'react-native';
+import { View, Text, ViewStyle } from 'react-native';
+
+export const TAB_BAR_STYLE: ViewStyle = {
+  position: 'absolute',
+  height: 60,
+  marginBottom: 15,
+  marginHorizontal: 20,
+  borderRadius: 20,
+  backgroundColor: '#FFF',
+  elevation: 8, // Android shadow
+  shadowColor: '#000', // IOS shadow
+  shadowOpacity: 0.15,
+  shadowRadius: 12,
+  shadowOffset: {
+    width: 0,
+    height: 4,},
+};
 
 export default function TabLayout() {
-
   return (
     <Tabs
       screenOptions={{
         tabBarShowLabel: false,
         headerShown: false,
-        tabBarStyle: {
-          position: 'absolute',
-          height: 60,
-          marginBottom: 15,
-          marginHorizontal: 20,
-          borderRadius: 20,
-          backgroundColor: '#FFF',
-          elevation: 8, // Android shadow
-          shadowColor: '#000', // IOS shadow
-          shadowOpacity: 0.15,
-          shadowRadius: 12,
-          shadowOffset: {
-            width: 0,
-            height: 4,},
-        },
+        tabBarStyle: TAB_BAR_STYLE,
         tabBarItemStyle: {
           justifyContent: 'center',
           alignItems: 'center',

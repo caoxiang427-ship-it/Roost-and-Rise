@@ -27,13 +27,13 @@ export const getPetMsg = (level: number) => {
 export const PET_MSG_EGG  = [
     "I can't wait to grow up 🫶",
     "I hope you like eggs",
-    "don't crack under pressure!",
+    "Don't crack under pressure!",
     "Keep rolling, you got this.",
     "I believe in you",
     "Taking breaks keeps your thoughts from being scrambled",
     "I can't believe I have to go for class",
     "Let's work on this together",
-    "slow and steady wins the race",
+    "Slow and steady wins the race",
     "Have you eaten today? (no eggs please)",
     "Take care of yourself <3",
     "How are you feeling today?"
@@ -139,7 +139,6 @@ export const ACCESSORY_OVERLAYS: Record<number, any> = {
 
 export const ACCESSORY_POSITIONS: Record<Stage, Record<number, ImageStyle>> = {
   egg: {
-    // usually you'd leave hats/held items off the egg — add only what makes sense
     0: { top: 0, left: 80, width: 46, height: 46 },  // apple
     1: { top: 100,  left: 72, width: 62, height: 62 },  // bow
     2: { top: -20,  left: 50, width: 100, height: 100 },  // cowboy hat

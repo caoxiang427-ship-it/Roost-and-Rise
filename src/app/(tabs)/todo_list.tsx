@@ -19,6 +19,7 @@ import PendingTasks from '@/components/todo/PendingTasks';
 import { useState } from 'react';
 import { LinearGradient } from 'expo-linear-gradient';
 import FilterModal from '@/components/todo/FilterModal';
+import { useProfileStore } from '@/store/useProfileStore';
 
 // uhh layout looks weird on android for some reason, fix ltr
 
@@ -32,6 +33,8 @@ export default function TodoScreen() {
     setSelectedDate,
     setSelectedTask,
   } = useTodoStore();
+
+  const {workloadThreshold} = useProfileStore();
 
   const [showReward, setShowReward] = useState(false);
   const [rewardXP, setRewardXP] = useState(0);
@@ -81,8 +84,6 @@ export default function TodoScreen() {
   const closePendingTasksSheet = () => pendingTasksRef.current?.close();
   const closeSearchTasksSheet = () => searchTasksRef.current?.close();
 
-  const WORKLOAD_THRESHOLD = 35;
-
   const calculateWorkloadScore = () => {
     const score: Record<'easy' | 'moderate' | 'difficult', number> = {
       easy: 1,
@@ -100,7 +101,7 @@ export default function TodoScreen() {
   };
 
   useEffect(() => {
-    const isHeavy = calculateWorkloadScore() >= WORKLOAD_THRESHOLD;
+    const isHeavy = calculateWorkloadScore() >= workloadThreshold;
     if (isHeavy && !hasWarnedWorkload) {
       Alert.alert(
         "Heavy workload detected!",

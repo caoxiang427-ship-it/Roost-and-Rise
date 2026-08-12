@@ -191,7 +191,7 @@ const styles = StyleSheet.create({
     },
     tabText: {
         fontFamily: 'InterBold',
-        fontSize: 14,
+        fontSize: 12,
         color: '#5E4833',
     },
     list: {

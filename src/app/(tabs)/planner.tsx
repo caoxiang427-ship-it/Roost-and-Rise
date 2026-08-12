@@ -218,7 +218,7 @@ export default function planner() {
       // weekly view
       else {
         return (
-          <View style={[styles.eventBlock, { flex: 0, backgroundColor: event.backgroundColor, paddingVertical: 3, paddingHorizontal: 5}]}>
+          <View style={[styles.eventBlock, { flex: 1, justifyContent: 'center', marginVertical: 4, backgroundColor: event.backgroundColor, paddingVertical: 3, paddingHorizontal: 5}]}>
             <Text numberOfLines={1} style={[styles.eventTitle, { fontSize: 8 }]}>{event.title}</Text>
           </View>
         );
@@ -230,7 +230,7 @@ export default function planner() {
     if (numberOfDays === 1) {
       return (
         <View style={{ paddingHorizontal: 10, flex: 1, paddingBottom: 2}}>
-          <View style={[styles.taskBlock, {paddingVertical: 5, paddingHorizontal: 10, gap: 6}, event.completed && styles.taskBlockDone]}>
+          <View style={[styles.taskBlock, {flex: 1, justifyContent: 'center', paddingVertical: 5, paddingHorizontal: 10, gap: 6}, event.completed && styles.taskBlockDone]}>
             <TouchableOpacity
               hitSlop={8}
               onPress={() => {

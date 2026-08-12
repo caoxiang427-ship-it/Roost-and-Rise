@@ -43,7 +43,7 @@ const InventoryItem = (props: InventoryItemProps) => {
 
 const styles = StyleSheet.create({
     container: {
-        backgroundColor: "#F4E6B0",
+        backgroundColor: "#e7caa1",
         borderWidth: 2,
         borderRadius: 20,
         borderColor: '#5E4833',
@@ -54,7 +54,7 @@ const styles = StyleSheet.create({
     },
     imageContainer: {
         backgroundColor: '#FFF',
-        alignSelf: 'stretch',
+        width: 80,
         justifyContent: 'center',
         alignItems: 'center',
         paddingVertical: 5,

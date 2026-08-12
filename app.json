@@ -34,8 +34,13 @@
         "expo-splash-screen",
         {
           "backgroundColor": "#FAF9F6",
-          "image": "./assets/images/Roost&Rise_Logo.png",
-          "imageWidth": 300
+          "image": "./assets/images/splashscreen.png",
+          "imageWidth": 300,
+          "android": {
+            "backgroundColor": "#FAF9F6",
+            "image": "./assets/images/splashscreen-android.png",
+            "imageWidth": 320
+          }
         }
       ],
       "expo-font",
